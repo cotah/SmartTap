@@ -1,30 +1,33 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { type FormEvent, useState, useTransition } from "react";
 
-import { signInAction } from "./actions";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
-interface Props {
-  next: string;
-}
-
-export function LoginForm({ next }: Props) {
+export function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  async function onSubmit(formData: FormData) {
+  function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const fd = new FormData(event.currentTarget);
+    const email = String(fd.get("email") ?? "");
+    const password = String(fd.get("password") ?? "");
     setError(null);
     startTransition(async () => {
-      const result = await signInAction(formData);
-      if (result?.error) setError(result.error);
+      const supabase = createSupabaseBrowserClient();
+      const { error: err } = await supabase.auth.signInWithPassword({ email, password });
+      if (err) {
+        setError(err.message);
+        return;
+      }
+      window.location.href = "/dashboard";
     });
   }
 
   return (
-    <form action={onSubmit} className="flex flex-col gap-4">
-      <input type="hidden" name="next" value={next} />
-
+    <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <label className="flex flex-col gap-1 text-sm">
         <span>Email</span>
         <input

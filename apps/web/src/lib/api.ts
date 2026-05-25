@@ -20,10 +20,13 @@ export { ApiError };
 export type {
   TapResponse,
   TenantPublic,
+  TenantSummary,
   CustomerSnapshot,
   RewardStateSnapshot,
   RewardAvailable,
   IdentifyResponse,
   ValidateRewardResponse,
   DashboardOverview,
+  MeResponse,
+  BootstrapResponse,
 } from "@smarttap/api";

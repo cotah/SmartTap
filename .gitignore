@@ -56,3 +56,4 @@ apps/mobile/.expo-shared/
 
 # Sentry
 .sentryclirc
+.gstack/

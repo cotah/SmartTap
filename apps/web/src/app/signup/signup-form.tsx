@@ -1,30 +1,51 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { type FormEvent, useState, useTransition } from "react";
 
-import { signUpAction } from "./actions";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
-interface Props {
-  next: string;
-}
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
-export function SignupForm({ next }: Props) {
+export function SignupForm() {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  async function onSubmit(formData: FormData) {
+  function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const fd = new FormData(event.currentTarget);
+    const email = String(fd.get("email") ?? "");
+    const password = String(fd.get("password") ?? "");
+    const businessName = String(fd.get("business_name") ?? "").trim() || null;
     setError(null);
     startTransition(async () => {
-      const result = await signUpAction(formData);
-      if (result?.error) setError(result.error);
+      const supabase = createSupabaseBrowserClient();
+      const { data, error: err } = await supabase.auth.signUp({ email, password });
+      if (err) {
+        setError(err.message);
+        return;
+      }
+      const token = data.session?.access_token;
+      if (token) {
+        try {
+          await fetch(`${API_URL}/v1/me/bootstrap`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ business_name: businessName }),
+          });
+        } catch (e) {
+          console.error("bootstrap_failed_post_signup", e);
+        }
+      }
+      window.location.href = "/dashboard";
     });
   }
 
   return (
-    <form action={onSubmit} className="flex flex-col gap-4">
-      <input type="hidden" name="next" value={next} />
-
+    <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <label className="flex flex-col gap-1 text-sm">
         <span>Email</span>
         <input

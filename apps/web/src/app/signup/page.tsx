@@ -1,13 +1,6 @@
 import { SignupForm } from "./signup-form";
 
-interface PageProps {
-  searchParams: Promise<{ next?: string }>;
-}
-
-export default async function SignupPage({ searchParams }: PageProps) {
-  const params = await searchParams;
-  const next = params.next ?? "/dashboard";
-
+export default function SignupPage() {
   return (
     <main className="container flex min-h-dvh items-center justify-center py-12">
       <div className="w-full max-w-sm space-y-6">
@@ -19,7 +12,7 @@ export default async function SignupPage({ searchParams }: PageProps) {
           </p>
         </div>
 
-        <SignupForm next={next} />
+        <SignupForm />
       </div>
     </main>
   );

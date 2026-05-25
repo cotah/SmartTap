@@ -1,9 +1,11 @@
 from dataclasses import dataclass
-from typing import Annotated
+from typing import Annotated, Any
 
+import httpx
 import structlog
 from fastapi import Depends, Header, HTTPException, status
-from jose import JWTError, jwt
+from jose import jwt
+from jose.exceptions import JWTError
 
 from app.config import Settings, get_settings
 from app.db import tenant_members
@@ -17,6 +19,39 @@ class CurrentUser:
     email: str | None
 
 
+_jwks_cache: dict[str, Any] = {}
+
+
+def _jwks_url(settings: Settings) -> str:
+    base = settings.supabase_url.rstrip("/")
+    return f"{base}/auth/v1/.well-known/jwks.json"
+
+
+def _fetch_jwks(settings: Settings) -> dict[str, Any]:
+    res = httpx.get(_jwks_url(settings), timeout=5.0)
+    res.raise_for_status()
+    body: dict[str, Any] = res.json()
+    return body
+
+
+def _get_key_for_kid(
+    settings: Settings, kid: str, *, allow_refresh: bool = True
+) -> dict[str, Any] | None:
+    jwks = _jwks_cache.get("data")
+    if jwks is None:
+        jwks = _fetch_jwks(settings)
+        _jwks_cache["data"] = jwks
+
+    for key in jwks.get("keys", []):
+        if key.get("kid") == kid:
+            return key  # type: ignore[no-any-return]
+
+    if allow_refresh:
+        _jwks_cache.pop("data", None)
+        return _get_key_for_kid(settings, kid, allow_refresh=False)
+    return None
+
+
 def get_current_user(
     settings: Annotated[Settings, Depends(get_settings)],
     authorization: str | None = Header(default=None),
@@ -24,17 +59,43 @@ def get_current_user(
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing bearer token")
     token = authorization.removeprefix("Bearer ").strip()
-    if not settings.supabase_jwt_secret:
-        raise HTTPException(status_code=500, detail="JWT secret not configured")
+    if not settings.supabase_url:
+        raise HTTPException(status_code=500, detail="Supabase URL not configured")
+
     try:
-        payload = jwt.decode(
-            token,
-            settings.supabase_jwt_secret,
-            algorithms=["HS256"],
-            audience="authenticated",
-        )
+        unverified_header = jwt.get_unverified_header(token)
     except JWTError as exc:
-        log.info("jwt_decode_failed", error=str(exc))
+        raise HTTPException(status_code=401, detail="Malformed token") from exc
+
+    alg = unverified_header.get("alg")
+    kid = unverified_header.get("kid")
+
+    try:
+        if alg == "HS256":
+            if not settings.supabase_jwt_secret:
+                raise HTTPException(status_code=500, detail="JWT secret not configured")
+            payload = jwt.decode(
+                token,
+                settings.supabase_jwt_secret,
+                algorithms=["HS256"],
+                audience="authenticated",
+            )
+        elif alg in {"ES256", "RS256", "EdDSA"}:
+            if not isinstance(kid, str):
+                raise HTTPException(status_code=401, detail="Token missing kid")
+            key = _get_key_for_kid(settings, kid)
+            if key is None:
+                raise HTTPException(status_code=401, detail="Signing key not found in JWKS")
+            payload = jwt.decode(
+                token,
+                key,
+                algorithms=[alg],
+                audience="authenticated",
+            )
+        else:
+            raise HTTPException(status_code=401, detail=f"Unsupported alg: {alg}")
+    except JWTError as exc:
+        log.info("jwt_decode_failed", error=str(exc), alg=alg)
         raise HTTPException(status_code=401, detail="Invalid token") from exc
 
     sub = payload.get("sub")

@@ -1,5 +1,7 @@
 import type {
   Tenant,
+  TenantPlan,
+  BusinessType,
   Customer,
   CustomerIdentify,
   TapEvent,
@@ -87,9 +89,36 @@ export interface DashboardOverview {
   active_stamps_total: number;
 }
 
+export interface TenantSummary {
+  id: string;
+  slug: string;
+  name: string;
+  business_type: BusinessType;
+  plan: TenantPlan;
+  is_active: boolean;
+  trial_ends_at: string | null;
+}
+
+export interface MeResponse {
+  user_id: string;
+  email: string | null;
+  tenant: TenantSummary | null;
+}
+
+export interface BootstrapInput {
+  business_name?: string | null;
+}
+
+export interface BootstrapResponse {
+  tenant: TenantSummary;
+  is_new: boolean;
+}
+
 export interface ApiClient {
   tap: (tagUuid: string, body: TapEvent) => Promise<TapResponse>;
   identifyCustomer: (body: CustomerIdentify) => Promise<IdentifyResponse>;
+  getMe: () => Promise<MeResponse>;
+  bootstrapMe: (body: BootstrapInput) => Promise<BootstrapResponse>;
   getOverview: () => Promise<DashboardOverview>;
   updateTenantSettings: (body: TenantSettingsUpdate) => Promise<{ tenant: Tenant }>;
   updateRewardConfig: (body: RewardConfig) => Promise<{ tenant: Tenant }>;
@@ -126,6 +155,12 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
       }),
     identifyCustomer: (body) =>
       request<IdentifyResponse>(`/v1/customers/identify`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    getMe: () => request<MeResponse>(`/v1/me`),
+    bootstrapMe: (body) =>
+      request<BootstrapResponse>(`/v1/me/bootstrap`, {
         method: "POST",
         body: JSON.stringify(body),
       }),

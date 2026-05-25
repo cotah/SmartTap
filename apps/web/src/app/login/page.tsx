@@ -1,12 +1,11 @@
 import { LoginForm } from "./login-form";
 
 interface PageProps {
-  searchParams: Promise<{ next?: string; error?: string }>;
+  searchParams: Promise<{ error?: string }>;
 }
 
 export default async function LoginPage({ searchParams }: PageProps) {
   const params = await searchParams;
-  const next = params.next ?? "/dashboard";
 
   return (
     <main className="container flex min-h-dvh items-center justify-center py-12">
@@ -23,7 +22,7 @@ export default async function LoginPage({ searchParams }: PageProps) {
           </p>
         ) : null}
 
-        <LoginForm next={next} />
+        <LoginForm />
       </div>
     </main>
   );
