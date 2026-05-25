@@ -30,7 +30,14 @@ export class ApiError extends Error {
 
 export type TenantPublic = Pick<
   Tenant,
-  "id" | "slug" | "name" | "logo_url" | "primary_color" | "accent_color" | "reward_description"
+  | "id"
+  | "slug"
+  | "name"
+  | "logo_url"
+  | "primary_color"
+  | "accent_color"
+  | "reward_description"
+  | "google_review_url"
 >;
 
 export type CustomerSnapshot = Pick<Customer, "id" | "name" | "current_stamps">;

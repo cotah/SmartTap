@@ -47,6 +47,7 @@ def register_tap(tag_uuid: str, body: TapEventIn, request: Request) -> TapRespon
             primary_color=result.tenant["primary_color"],
             accent_color=result.tenant["accent_color"],
             reward_description=result.tenant["reward_description"],
+            google_review_url=result.tenant["google_review_url"],
         ),
         customer=(
             CustomerSnapshot(

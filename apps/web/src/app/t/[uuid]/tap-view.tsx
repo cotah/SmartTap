@@ -1,5 +1,8 @@
 import type { TapResponse } from "@/lib/api";
 
+import { GoogleReviewButton } from "./google-review-button";
+import { OptInForm } from "./opt-in-form";
+
 interface Props {
   data: TapResponse;
 }
@@ -49,21 +52,20 @@ export function TapView({ data }: Props) {
             </p>
           ) : null}
 
-          <div className="flex flex-col gap-3">
-            <button
-              type="button"
-              className="rounded-full px-6 py-3 font-semibold"
-              style={{ backgroundColor: accent, color: "#1A1A1A" }}
-            >
-              ⭐ Leave a Google Review
-            </button>
+          <div className="flex w-full flex-col items-center gap-4">
+            {tenant.google_review_url ? (
+              <GoogleReviewButton
+                url={tenant.google_review_url}
+                tenantSlug={tenant.slug}
+                accentColor={accent}
+              />
+            ) : null}
             {customer === null ? (
-              <button
-                type="button"
-                className="rounded-full border border-white/40 px-6 py-3 text-sm"
-              >
-                📱 Sign up for offers
-              </button>
+              <OptInForm
+                tenantId={tenant.id}
+                tenantName={tenant.name}
+                accentColor={accent}
+              />
             ) : null}
           </div>
         </section>

@@ -17,6 +17,7 @@ class TenantPublic(BaseModel):
     primary_color: str
     accent_color: str
     reward_description: str | None = None
+    google_review_url: str | None = None
 
 
 class CustomerSnapshot(BaseModel):
