@@ -70,6 +70,14 @@ def _ensure_stripe_customer(tenant: dict, email: str | None) -> str:
     return new_id
 
 
+def _is_no_such_customer(exc: Exception) -> bool:
+    """Stripe raises InvalidRequestError("No such customer: cus_...") when the
+    stored id was created against different API keys (e.g. live vs test) or
+    the customer was deleted in the dashboard. We match by message so we don't
+    depend on the exact stripe-python error class layout across versions."""
+    return "No such customer" in str(exc)
+
+
 def create_checkout_session(
     *,
     tenant_id: str,
@@ -91,13 +99,38 @@ def create_checkout_session(
     prices = _prices_for_plan(plan)
     customer_id = _ensure_stripe_customer(tenant, email)
 
-    url = stripe_client.create_checkout_session(
-        tenant_id=tenant_id,
-        customer_id=customer_id,
-        recurring_price_id=prices.recurring,
-        setup_price_id=prices.setup,
-        success_url=success_url,
-        cancel_url=cancel_url,
-    )
+    try:
+        url = stripe_client.create_checkout_session(
+            tenant_id=tenant_id,
+            customer_id=customer_id,
+            recurring_price_id=prices.recurring,
+            setup_price_id=prices.setup,
+            success_url=success_url,
+            cancel_url=cancel_url,
+        )
+    except Exception as exc:
+        if not _is_no_such_customer(exc):
+            raise
+        # Stale customer id (created in a different Stripe env, or deleted in
+        # the dashboard). Reset the stored id, create a fresh customer against
+        # the current keys, and retry exactly once. A second failure propagates.
+        log.warning(
+            "stripe_stale_customer_id_recovered",
+            tenant_id=tenant_id,
+            old_customer_id=customer_id,
+        )
+        # Use the row returned by update() rather than re-fetching — avoids
+        # both a needless round-trip and any chance of read-your-writes lag.
+        refreshed = tenants.update(tenant_id, {"stripe_customer_id": None})
+        customer_id = _ensure_stripe_customer(refreshed, email)
+        url = stripe_client.create_checkout_session(
+            tenant_id=tenant_id,
+            customer_id=customer_id,
+            recurring_price_id=prices.recurring,
+            setup_price_id=prices.setup,
+            success_url=success_url,
+            cancel_url=cancel_url,
+        )
+
     log.info("billing_checkout_created", tenant_id=tenant_id, plan=plan)
     return url
