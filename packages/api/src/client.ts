@@ -128,6 +128,17 @@ export interface TenantSummary {
   plan: TenantPlan;
   is_active: boolean;
   trial_ends_at: string | null;
+  onboarding_complete: boolean;
+}
+
+export interface OnboardingComplete {
+  business_name: string;
+  business_type: BusinessType;
+  google_review_url: string | null;
+  stamps_for_reward: number;
+  reward_description: string;
+  reward_expires_days: number;
+  stamp_rate_limit_minutes: number;
 }
 
 /**
@@ -185,6 +196,7 @@ export interface ApiClient {
   validateReward: (rewardId: string, code: string) => Promise<ValidateRewardResponse>;
   validateRewardByCode: (code: string) => Promise<ValidateRewardResponse>;
   exportCustomersCsv: (params?: Omit<CustomerListParams, "page" | "limit">) => Promise<string>;
+  completeOnboarding: (body: OnboardingComplete) => Promise<TenantSummary>;
 }
 
 export function createApiClient(opts: ApiClientOptions): ApiClient {
@@ -282,5 +294,10 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
       const suffix = qs.toString() ? `?${qs.toString()}` : "";
       return requestText(`/v1/customers/export.csv${suffix}`);
     },
+    completeOnboarding: (body) =>
+      request<TenantSummary>(`/v1/onboarding/complete`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
   };
 }

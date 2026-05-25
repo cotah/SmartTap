@@ -9,6 +9,7 @@ class TenantSummary(BaseModel):
     plan: str
     is_active: bool
     trial_ends_at: str | None = None
+    onboarding_complete: bool
 
 
 class MeResponse(BaseModel):

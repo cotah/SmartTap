@@ -3,8 +3,28 @@ from typing import Any
 
 import pytest
 
+from app.errors import NotFoundError
 from app.services import onboarding_service
-from app.services.onboarding_service import TRIAL_DAYS, bootstrap_owner
+from app.services.onboarding_service import (
+    TRIAL_DAYS,
+    OnboardingPayload,
+    bootstrap_owner,
+    complete_onboarding,
+)
+
+
+def _payload(**over: Any) -> OnboardingPayload:
+    base: dict[str, Any] = {
+        "business_name": "ACME Barber",
+        "business_type": "barbershop",
+        "google_review_url": "https://g.page/r/acme",
+        "stamps_for_reward": 8,
+        "reward_description": "Free haircut",
+        "reward_expires_days": 30,
+        "stamp_rate_limit_minutes": 120,
+    }
+    base.update(over)
+    return OnboardingPayload(**base)
 
 
 def _fake_tenant_create_factory() -> tuple[list[dict[str, Any]], Any]:
@@ -154,3 +174,104 @@ def test_bootstrap_returns_existing_tenant_unchanged(
     )
     assert result.is_new is False
     assert result.tenant is existing_tenant
+
+
+def test_complete_onboarding_writes_all_fields_atomically(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, Any] = {}
+    monkeypatch.setattr(
+        onboarding_service.tenants, "get_by_id", lambda _id: {"id": "t-1"}
+    )
+
+    def fake_update(tenant_id: str, fields: dict[str, Any]) -> dict[str, Any]:
+        captured["tenant_id"] = tenant_id
+        captured["fields"] = fields
+        return {"id": tenant_id, **fields}
+
+    monkeypatch.setattr(onboarding_service.tenants, "update", fake_update)
+
+    complete_onboarding("t-1", _payload())
+
+    assert captured["tenant_id"] == "t-1"
+    assert captured["fields"] == {
+        "name": "ACME Barber",
+        "business_type": "barbershop",
+        "stamps_for_reward": 8,
+        "reward_description": "Free haircut",
+        "reward_expires_days": 30,
+        "stamp_rate_limit_minutes": 120,
+        "google_review_url": "https://g.page/r/acme",
+    }
+
+
+def test_complete_onboarding_strips_whitespace(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, Any] = {}
+    monkeypatch.setattr(
+        onboarding_service.tenants, "get_by_id", lambda _id: {"id": "t-1"}
+    )
+    monkeypatch.setattr(
+        onboarding_service.tenants,
+        "update",
+        lambda tenant_id, fields: captured.update(fields) or {"id": tenant_id, **fields},
+    )
+
+    complete_onboarding(
+        "t-1",
+        _payload(
+            business_name="  ACME  ",
+            reward_description="  Free haircut  ",
+            google_review_url="  https://x.com  ",
+        ),
+    )
+
+    assert captured["name"] == "ACME"
+    assert captured["reward_description"] == "Free haircut"
+    assert captured["google_review_url"] == "https://x.com"
+
+
+def test_complete_onboarding_empty_google_url_becomes_null(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, Any] = {}
+    monkeypatch.setattr(
+        onboarding_service.tenants, "get_by_id", lambda _id: {"id": "t-1"}
+    )
+    monkeypatch.setattr(
+        onboarding_service.tenants,
+        "update",
+        lambda tenant_id, fields: captured.update(fields) or {"id": tenant_id, **fields},
+    )
+
+    complete_onboarding("t-1", _payload(google_review_url=None))
+    assert captured["google_review_url"] is None
+
+    captured.clear()
+    complete_onboarding("t-1", _payload(google_review_url="   "))
+    assert captured["google_review_url"] is None
+
+
+def test_complete_onboarding_rejects_bad_business_type(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        onboarding_service.tenants, "get_by_id", lambda _id: {"id": "t-1"}
+    )
+
+    def fail_update(*_a: Any, **_kw: Any) -> None:
+        raise AssertionError("update must not be called for invalid input")
+
+    monkeypatch.setattr(onboarding_service.tenants, "update", fail_update)
+
+    with pytest.raises(ValueError):
+        complete_onboarding("t-1", _payload(business_type="restaurant"))
+
+
+def test_complete_onboarding_raises_when_tenant_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(onboarding_service.tenants, "get_by_id", lambda _id: None)
+    with pytest.raises(NotFoundError):
+        complete_onboarding("missing", _payload())

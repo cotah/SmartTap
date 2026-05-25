@@ -35,4 +35,5 @@ export type {
   CustomerListItem,
   CustomerListResponse,
   CustomerListParams,
+  OnboardingComplete,
 } from "@smarttap/api";

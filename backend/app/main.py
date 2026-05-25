@@ -13,6 +13,7 @@ from app.routers import (
     dashboard,
     health,
     me,
+    onboarding,
     rewards,
     taps,
     tenants,
@@ -78,6 +79,7 @@ def create_app() -> FastAPI:
     app.include_router(webhooks.router, prefix="/v1")
     app.include_router(me.router, prefix="/v1")
     app.include_router(dashboard.router, prefix="/v1")
+    app.include_router(onboarding.router, prefix="/v1")
 
     return app
 

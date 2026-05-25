@@ -21,4 +21,5 @@ export type {
   CustomerListItem,
   CustomerListResponse,
   CustomerListParams,
+  OnboardingComplete,
 } from "./client";

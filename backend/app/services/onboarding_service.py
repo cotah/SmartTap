@@ -106,3 +106,52 @@ def _attach_stripe_customer(tenant: Row, email: str | None) -> Row:
             error=str(exc),
         )
         return tenant
+
+
+VALID_BUSINESS_TYPES = frozenset(
+    ["barbershop", "cafe", "pet_grooming", "salon", "tattoo", "other"]
+)
+
+
+@dataclass(frozen=True)
+class OnboardingPayload:
+    business_name: str
+    business_type: str
+    google_review_url: str | None
+    stamps_for_reward: int
+    reward_description: str
+    reward_expires_days: int
+    stamp_rate_limit_minutes: int
+
+
+def complete_onboarding(tenant_id: str, payload: OnboardingPayload) -> Row:
+    """Atomic completion of the post-signup wizard.
+
+    All wizard fields land in a single DB update so we never end up with a
+    half-onboarded tenant if a request times out mid-way.
+    """
+    from app.errors import NotFoundError
+
+    if payload.business_type not in VALID_BUSINESS_TYPES:
+        raise ValueError(f"invalid business_type: {payload.business_type}")
+
+    tenant = tenants.get_by_id(tenant_id)
+    if tenant is None:
+        raise NotFoundError("Tenant not found", detail={"tenant_id": tenant_id})
+
+    fields: dict[str, Any] = {
+        "name": payload.business_name.strip(),
+        "business_type": payload.business_type,
+        "stamps_for_reward": payload.stamps_for_reward,
+        "reward_description": payload.reward_description.strip(),
+        "reward_expires_days": payload.reward_expires_days,
+        "stamp_rate_limit_minutes": payload.stamp_rate_limit_minutes,
+        "google_review_url": (payload.google_review_url or "").strip() or None,
+    }
+    updated = tenants.update(tenant_id, fields)
+    log.info(
+        "onboarding_completed",
+        tenant_id=tenant_id,
+        business_type=payload.business_type,
+    )
+    return updated
