@@ -141,6 +141,30 @@ export interface OnboardingComplete {
   stamp_rate_limit_minutes: number;
 }
 
+export type BillingPlanId = "review" | "loyalty" | "pro" | "network";
+
+export interface CheckoutSessionInput {
+  plan: BillingPlanId;
+  success_url: string;
+  cancel_url: string;
+}
+
+export interface PortalSessionInput {
+  return_url: string;
+}
+
+export interface SubscriptionInfo {
+  plan: TenantPlan;
+  is_active: boolean;
+  is_founding_member: boolean;
+  trial_ends_at: string | null;
+  cancelled_at: string | null;
+  has_subscription: boolean;
+  status: string | null;
+  current_period_end: string | null;
+  cancel_at_period_end: boolean | null;
+}
+
 /**
  * Tenant fields returned to the dashboard owner.
  * Excludes billing internals (stripe ids) intentionally.
@@ -197,6 +221,9 @@ export interface ApiClient {
   validateRewardByCode: (code: string) => Promise<ValidateRewardResponse>;
   exportCustomersCsv: (params?: Omit<CustomerListParams, "page" | "limit">) => Promise<string>;
   completeOnboarding: (body: OnboardingComplete) => Promise<TenantSummary>;
+  createCheckoutSession: (body: CheckoutSessionInput) => Promise<{ url: string }>;
+  createPortalSession: (body: PortalSessionInput) => Promise<{ url: string }>;
+  getSubscription: () => Promise<SubscriptionInfo>;
 }
 
 export function createApiClient(opts: ApiClientOptions): ApiClient {
@@ -299,5 +326,16 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
         method: "POST",
         body: JSON.stringify(body),
       }),
+    createCheckoutSession: (body) =>
+      request<{ url: string }>(`/v1/billing/checkout-session`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    createPortalSession: (body) =>
+      request<{ url: string }>(`/v1/billing/portal-session`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    getSubscription: () => request<SubscriptionInfo>(`/v1/billing/subscription`),
   };
 }

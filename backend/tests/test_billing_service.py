@@ -7,7 +7,10 @@ from app.services import billing_service
 from app.services.billing_service import (
     BillingNotConfiguredError,
     MissingPriceError,
+    NoCustomerError,
     create_checkout_session,
+    create_portal_session,
+    get_subscription_summary,
 )
 
 
@@ -347,3 +350,197 @@ def test_create_checkout_propagates_unrelated_stripe_errors(
             cancel_url="https://app.example/cancel",
         )
     assert "No such price" in str(ei.value)
+
+
+# ---------------------------------------------------------------------------
+# create_portal_session
+# ---------------------------------------------------------------------------
+
+
+def test_create_portal_raises_when_stripe_not_configured(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(billing_service.stripe_client, "is_configured", lambda: False)
+    with pytest.raises(BillingNotConfiguredError):
+        create_portal_session(tenant_id="t-1", return_url="https://app.example/billing")
+
+
+def test_create_portal_raises_when_tenant_missing(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(billing_service.stripe_client, "is_configured", lambda: True)
+    monkeypatch.setattr(billing_service.tenants, "get_by_id", lambda _id: None)
+    with pytest.raises(NotFoundError):
+        create_portal_session(tenant_id="missing", return_url="https://app.example/billing")
+
+
+def test_create_portal_raises_when_no_customer_attached(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Tenant exists but never started a checkout / Stripe wasn't configured
+    when they signed up. They have nothing to manage in the portal."""
+    monkeypatch.setattr(billing_service.stripe_client, "is_configured", lambda: True)
+    monkeypatch.setattr(
+        billing_service.tenants,
+        "get_by_id",
+        lambda _id: {"id": "t-1", "stripe_customer_id": None},
+    )
+    with pytest.raises(NoCustomerError):
+        create_portal_session(tenant_id="t-1", return_url="https://app.example/billing")
+
+
+def test_create_portal_happy_path_passes_args(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(billing_service.stripe_client, "is_configured", lambda: True)
+    monkeypatch.setattr(
+        billing_service.tenants,
+        "get_by_id",
+        lambda _id: {"id": "t-1", "stripe_customer_id": "cus_abc"},
+    )
+
+    captured: dict[str, Any] = {}
+
+    def fake_portal(**kwargs: Any) -> str:
+        captured.update(kwargs)
+        return "https://billing.stripe.com/p/session/test_xxx"
+
+    monkeypatch.setattr(
+        billing_service.stripe_client, "create_billing_portal_session", fake_portal
+    )
+
+    url = create_portal_session(tenant_id="t-1", return_url="https://app.example/billing")
+
+    assert url.startswith("https://billing.stripe.com/")
+    assert captured == {
+        "customer_id": "cus_abc",
+        "return_url": "https://app.example/billing",
+    }
+
+
+# ---------------------------------------------------------------------------
+# get_subscription_summary
+# ---------------------------------------------------------------------------
+
+
+def test_summary_raises_when_tenant_missing(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(billing_service.tenants, "get_by_id", lambda _id: None)
+    with pytest.raises(NotFoundError):
+        get_subscription_summary("missing")
+
+
+def test_summary_no_subscription_skips_stripe(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Tenants on trial (no subscription yet) shouldn't trigger a Stripe call."""
+    monkeypatch.setattr(
+        billing_service.tenants,
+        "get_by_id",
+        lambda _id: {
+            "id": "t-1",
+            "plan": "trial",
+            "is_active": True,
+            "is_founding_member": False,
+            "trial_ends_at": "2026-06-25T00:00:00+00:00",
+            "cancelled_at": None,
+            "stripe_subscription_id": None,
+        },
+    )
+
+    def must_not_call(*_a: Any, **_kw: Any) -> dict[str, Any] | None:
+        raise AssertionError("stripe should not be called when no subscription_id")
+
+    monkeypatch.setattr(billing_service.stripe_client, "retrieve_subscription", must_not_call)
+
+    summary = get_subscription_summary("t-1")
+    assert summary.plan == "trial"
+    assert summary.has_subscription is False
+    assert summary.status is None
+    assert summary.current_period_end is None
+
+
+def test_summary_with_subscription_fills_stripe_fields(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """When tenant has a subscription_id, we enrich with status, period end,
+    and cancel_at_period_end pulled from Stripe."""
+    monkeypatch.setattr(
+        billing_service.tenants,
+        "get_by_id",
+        lambda _id: {
+            "id": "t-1",
+            "plan": "loyalty",
+            "is_active": True,
+            "is_founding_member": True,
+            "trial_ends_at": None,
+            "cancelled_at": None,
+            "stripe_subscription_id": "sub_abc",
+        },
+    )
+    monkeypatch.setattr(
+        billing_service.stripe_client,
+        "retrieve_subscription",
+        lambda _sid: {
+            "id": "sub_abc",
+            "status": "active",
+            "current_period_end": 1_900_000_000,  # 2030-03-17ish
+            "cancel_at_period_end": False,
+        },
+    )
+
+    summary = get_subscription_summary("t-1")
+    assert summary.has_subscription is True
+    assert summary.is_founding_member is True
+    assert summary.status == "active"
+    assert summary.current_period_end is not None
+    assert summary.current_period_end.startswith("203")  # year 2030+
+    assert summary.cancel_at_period_end is False
+
+
+def test_summary_degrades_gracefully_when_stripe_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A flaky Stripe call must not 500 the dashboard. The page renders with
+    the DB-only fields and shows nothing for period end."""
+    monkeypatch.setattr(
+        billing_service.tenants,
+        "get_by_id",
+        lambda _id: {
+            "id": "t-1",
+            "plan": "loyalty",
+            "is_active": True,
+            "is_founding_member": False,
+            "trial_ends_at": None,
+            "cancelled_at": None,
+            "stripe_subscription_id": "sub_abc",
+        },
+    )
+
+    def boom(_sid: str) -> dict[str, Any] | None:
+        raise Exception("stripe timeout")
+
+    monkeypatch.setattr(billing_service.stripe_client, "retrieve_subscription", boom)
+
+    summary = get_subscription_summary("t-1")
+    assert summary.plan == "loyalty"
+    assert summary.has_subscription is True
+    assert summary.status is None  # gracefully missing
+
+
+def test_summary_when_stripe_returns_none(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Stored subscription_id no longer exists in Stripe (env switch / manual
+    delete). Don't crash; return the DB view and trust webhooks to clean up."""
+    monkeypatch.setattr(
+        billing_service.tenants,
+        "get_by_id",
+        lambda _id: {
+            "id": "t-1",
+            "plan": "loyalty",
+            "is_active": True,
+            "is_founding_member": False,
+            "trial_ends_at": None,
+            "cancelled_at": None,
+            "stripe_subscription_id": "sub_stale",
+        },
+    )
+    monkeypatch.setattr(
+        billing_service.stripe_client, "retrieve_subscription", lambda _sid: None
+    )
+
+    summary = get_subscription_summary("t-1")
+    assert summary.has_subscription is True
+    assert summary.status is None

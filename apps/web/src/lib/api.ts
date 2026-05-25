@@ -36,4 +36,8 @@ export type {
   CustomerListResponse,
   CustomerListParams,
   OnboardingComplete,
+  BillingPlanId,
+  CheckoutSessionInput,
+  PortalSessionInput,
+  SubscriptionInfo,
 } from "@smarttap/api";

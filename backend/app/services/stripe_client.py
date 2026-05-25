@@ -1,3 +1,5 @@
+from typing import Any, cast
+
 import stripe
 import structlog
 
@@ -87,3 +89,58 @@ def create_checkout_session(
     if not url:
         raise RuntimeError("Stripe Checkout Session did not return a url")
     return str(url)
+
+
+def create_billing_portal_session(
+    *,
+    customer_id: str,
+    return_url: str,
+) -> str:
+    """Create a Stripe Customer Portal session and return the hosted URL.
+
+    The portal handles plan changes, payment method updates, invoice downloads,
+    and cancellation — all on Stripe-hosted pages. We never touch payment data.
+    """
+    if not is_configured():
+        raise RuntimeError("Stripe not configured (STRIPE_SECRET_KEY missing)")
+    configure_stripe()
+
+    session = stripe.billing_portal.Session.create(
+        customer=customer_id,
+        return_url=return_url,
+    )
+    url = session.get("url") if isinstance(session, dict) else session.url
+    log.info(
+        "stripe_portal_session_created",
+        customer_id=customer_id,
+        session_id=session.get("id") if isinstance(session, dict) else session.id,
+    )
+    if not url:
+        raise RuntimeError("Stripe Portal Session did not return a url")
+    return str(url)
+
+
+def retrieve_subscription(subscription_id: str) -> dict[str, Any] | None:
+    """Fetch a Stripe Subscription. Returns None if Stripe says it doesn't exist
+    (e.g. left over from a different Stripe environment). Other Stripe errors
+    propagate so the caller can decide whether to retry or surface to the user.
+
+    Returns a plain dict so callers don't depend on stripe-python's StripeObject
+    in their signatures or tests.
+    """
+    if not is_configured():
+        return None
+    configure_stripe()
+    try:
+        sub = stripe.Subscription.retrieve(subscription_id)
+    except stripe.InvalidRequestError as exc:
+        if "No such subscription" in str(exc):
+            log.warning(
+                "stripe_subscription_not_found",
+                subscription_id=subscription_id,
+            )
+            return None
+        raise
+    # StripeObject is itself a dict subclass; expose it as a plain dict so
+    # callers don't have to import StripeObject types.
+    return cast(dict[str, Any], sub)

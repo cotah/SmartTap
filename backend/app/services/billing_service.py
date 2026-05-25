@@ -1,16 +1,23 @@
 from dataclasses import dataclass
-from typing import Literal
+from datetime import UTC, datetime
+from typing import Any, Literal
 
 import structlog
 
 from app.config import get_settings
 from app.db import tenants
 from app.errors import BusinessError, NotFoundError
+from app.schemas.billing import SubscriptionSummary
 from app.services import stripe_client
 
 log = structlog.get_logger(__name__)
 
 BillingPlan = Literal["review", "loyalty", "pro", "network"]
+
+
+class NoCustomerError(BusinessError):
+    status_code = 422
+    code = "no_stripe_customer"
 
 
 class BillingNotConfiguredError(BusinessError):
@@ -134,3 +141,95 @@ def create_checkout_session(
 
     log.info("billing_checkout_created", tenant_id=tenant_id, plan=plan)
     return url
+
+
+def create_portal_session(*, tenant_id: str, return_url: str) -> str:
+    """Open the Stripe-hosted Customer Portal for this tenant.
+
+    Requires a Stripe customer id on the tenant (created at bootstrap, or
+    backfilled during the first checkout). We don't create one on the fly here:
+    a tenant with no Stripe customer has nothing to manage in the portal.
+    """
+    if not stripe_client.is_configured():
+        raise BillingNotConfiguredError(
+            "Stripe is not configured on this environment",
+            detail={"reason": "no_stripe_key"},
+        )
+
+    tenant = tenants.get_by_id(tenant_id)
+    if tenant is None:
+        raise NotFoundError("Tenant not found", detail={"tenant_id": tenant_id})
+
+    customer_id = tenant.get("stripe_customer_id")
+    if not customer_id:
+        raise NoCustomerError(
+            "Tenant has no Stripe customer attached; start a checkout first.",
+            detail={"tenant_id": tenant_id},
+        )
+
+    url = stripe_client.create_billing_portal_session(
+        customer_id=str(customer_id),
+        return_url=return_url,
+    )
+    log.info("billing_portal_created", tenant_id=tenant_id)
+    return url
+
+
+def _iso_from_epoch(ts: Any) -> str | None:
+    """Stripe returns Unix timestamps; the UI wants ISO strings."""
+    if ts is None:
+        return None
+    try:
+        return datetime.fromtimestamp(int(ts), tz=UTC).isoformat()
+    except (TypeError, ValueError):
+        return None
+
+
+def get_subscription_summary(tenant_id: str) -> SubscriptionSummary:
+    """Snapshot of billing state for the dashboard.
+
+    DB is the source of truth for plan/is_active (kept in sync by webhooks).
+    Stripe is queried lazily for the period end + cancel_at_period_end so we
+    don't have to mirror those into our schema. Stripe failures degrade
+    gracefully — the page still renders with DB-only fields.
+    """
+    tenant = tenants.get_by_id(tenant_id)
+    if tenant is None:
+        raise NotFoundError("Tenant not found", detail={"tenant_id": tenant_id})
+
+    subscription_id = tenant.get("stripe_subscription_id")
+    summary = SubscriptionSummary(
+        plan=tenant["plan"],
+        is_active=bool(tenant.get("is_active", False)),
+        is_founding_member=bool(tenant.get("is_founding_member", False)),
+        trial_ends_at=tenant.get("trial_ends_at"),
+        cancelled_at=tenant.get("cancelled_at"),
+        has_subscription=bool(subscription_id),
+    )
+
+    if not subscription_id:
+        return summary
+
+    try:
+        sub = stripe_client.retrieve_subscription(str(subscription_id))
+    except Exception as exc:
+        # Don't 500 the dashboard if Stripe is flaky. Log and return what we
+        # have; the next page load (or webhook) will recover the missing bits.
+        log.warning(
+            "billing_subscription_fetch_failed",
+            tenant_id=tenant_id,
+            subscription_id=subscription_id,
+            error=str(exc),
+        )
+        return summary
+
+    if sub is None:
+        # Subscription id we stored no longer exists in Stripe (env switch,
+        # manual delete). Keep summary minimal; webhook will eventually fire
+        # `customer.subscription.deleted` and we'll deactivate properly.
+        return summary
+
+    summary.status = sub.get("status")
+    summary.current_period_end = _iso_from_epoch(sub.get("current_period_end"))
+    summary.cancel_at_period_end = bool(sub.get("cancel_at_period_end"))
+    return summary
