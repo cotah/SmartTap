@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "SmartTap",
+    "slug": "smarttap",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "smarttap",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "ie.smarttap.app"
+    },
+    "android": {
+      "package": "ie.smarttap.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#1B4D3E"
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}
