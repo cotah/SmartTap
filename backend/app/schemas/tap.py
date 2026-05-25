@@ -16,6 +16,7 @@ class TenantPublic(BaseModel):
     logo_url: str | None = None
     primary_color: str
     accent_color: str
+    reward_description: str | None = None
 
 
 class CustomerSnapshot(BaseModel):
@@ -24,14 +25,26 @@ class CustomerSnapshot(BaseModel):
     current_stamps: int = Field(ge=0)
 
 
+class RewardStateSnapshot(BaseModel):
+    current_stamps: int = Field(ge=0)
+    stamps_for_reward: int = Field(ge=0)
+    stamps_remaining: int = Field(ge=0)
+    reward_ready: bool
+    progress_percent: int = Field(ge=0, le=100)
+
+
 class RewardAvailable(BaseModel):
     id: str
     validation_code: str
     description: str
+    expires_at: str
 
 
 class TapResponse(BaseModel):
     tenant: TenantPublic
     customer: CustomerSnapshot | None = None
+    tap_id: str
+    stamp_awarded: bool
     stamps_current: int = Field(ge=0)
+    reward_state: RewardStateSnapshot
     reward_available: RewardAvailable | None = None

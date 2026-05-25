@@ -2,10 +2,12 @@ import logging
 
 import sentry_sdk
 import structlog
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.config import get_settings
+from app.errors import BusinessError
 from app.routers import customers, health, rewards, taps, tenants, webhooks
 
 
@@ -45,6 +47,19 @@ def create_app() -> FastAPI:
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["*"],
     )
+
+    @app.exception_handler(BusinessError)
+    async def handle_business_error(_request: Request, exc: BusinessError) -> JSONResponse:
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={
+                "error": {
+                    "code": exc.code,
+                    "message": exc.message,
+                    "detail": exc.detail,
+                }
+            },
+        )
 
     app.include_router(health.router)
     app.include_router(taps.router, prefix="/v1")
