@@ -1,6 +1,7 @@
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, Query
+from fastapi.responses import Response
 
 from app.dependencies import get_current_tenant_id
 from app.schemas.customer import (
@@ -10,8 +11,10 @@ from app.schemas.customer import (
     CustomerListResponse,
 )
 from app.services.customer_service import (
+    ExportCustomersContext,
     IdentifyContext,
     ListCustomersContext,
+    export_customers_csv,
     identify_customer,
     list_customers,
 )
@@ -34,6 +37,30 @@ def identify_customer_endpoint(body: CustomerIdentifyIn) -> CustomerIdentifyOut:
         customer_id=result.customer_id,
         magic_link_token=result.magic_link_token,
         stamps_current=result.stamps_current,
+    )
+
+
+@router.get("/customers/export.csv")
+def export_customers_endpoint(
+    tenant_id: Annotated[str, Depends(get_current_tenant_id)],
+    search: Annotated[str | None, Query(max_length=80)] = None,
+    filter: Annotated[
+        Literal["all", "active", "at_risk", "has_reward"], Query()
+    ] = "all",
+    sort: Annotated[Literal["recent", "visits", "stamps"], Query()] = "recent",
+) -> Response:
+    csv_text = export_customers_csv(
+        ExportCustomersContext(
+            tenant_id=tenant_id,
+            search=search.strip() if search else None,
+            filter_mode=filter,
+            sort=sort,
+        )
+    )
+    return Response(
+        content=csv_text,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="customers.csv"'},
     )
 
 

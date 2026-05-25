@@ -127,3 +127,84 @@ def list_customers(ctx: ListCustomersContext) -> CustomerListPage:
             )
         )
     return CustomerListPage(items=items, total=total, page=ctx.page, limit=ctx.limit)
+
+
+EXPORT_MAX_ROWS = 10_000
+
+
+@dataclass(frozen=True)
+class ExportCustomersContext:
+    tenant_id: str
+    search: str | None
+    filter_mode: FilterMode
+    sort: SortMode
+
+
+def export_customers_csv(ctx: ExportCustomersContext) -> str:
+    """Returns up to EXPORT_MAX_ROWS customers as a CSV string.
+
+    Reuses list_customers paginated under the hood so filtering stays consistent
+    with the dashboard view. Cap prevents accidental megabyte downloads for
+    tenants that grow far beyond MVP assumptions.
+    """
+    import csv
+    import io
+
+    tenant = tenants.get_by_id(ctx.tenant_id)
+    if tenant is None:
+        raise NotFoundError("Tenant not found", detail={"tenant_id": ctx.tenant_id})
+    stamps_for_reward = int(tenant.get("stamps_for_reward") or 0)
+
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(
+        [
+            "id",
+            "name",
+            "phone",
+            "current_stamps",
+            "total_visits",
+            "last_visit_at",
+            "created_at",
+            "has_reward_ready",
+        ]
+    )
+
+    page_size = 500
+    written = 0
+    page = 1
+    while written < EXPORT_MAX_ROWS:
+        rows, total = customers.list_for_tenant(
+            tenant_id=ctx.tenant_id,
+            search=ctx.search,
+            filter_mode=ctx.filter_mode,
+            sort=ctx.sort,
+            page=page,
+            limit=page_size,
+            stamps_for_reward=stamps_for_reward,
+        )
+        if not rows:
+            break
+        for r in rows:
+            if written >= EXPORT_MAX_ROWS:
+                break
+            current = int(r.get("current_stamps") or 0)
+            ready = stamps_for_reward > 0 and current >= stamps_for_reward
+            writer.writerow(
+                [
+                    r["id"],
+                    r.get("name") or "",
+                    r.get("phone") or "",
+                    current,
+                    int(r.get("total_visits") or 0),
+                    r.get("last_visit_at") or "",
+                    r["created_at"],
+                    "yes" if ready else "no",
+                ]
+            )
+            written += 1
+        if page * page_size >= total:
+            break
+        page += 1
+
+    return buf.getvalue()

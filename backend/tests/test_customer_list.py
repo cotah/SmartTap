@@ -4,7 +4,12 @@ import pytest
 
 from app.errors import NotFoundError
 from app.services import customer_service
-from app.services.customer_service import ListCustomersContext, list_customers
+from app.services.customer_service import (
+    ExportCustomersContext,
+    ListCustomersContext,
+    export_customers_csv,
+    list_customers,
+)
 
 
 def _row(**over: Any) -> dict[str, Any]:
@@ -142,3 +147,72 @@ def test_list_customers_passes_filters_through_to_db(
     assert captured["page"] == 2
     assert captured["limit"] == 10
     assert captured["stamps_for_reward"] == 10
+
+
+def test_export_csv_includes_header_and_rows_with_reward_flag(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        customer_service.tenants,
+        "get_by_id",
+        lambda _id: {"id": "t-1", "stamps_for_reward": 10},
+    )
+    monkeypatch.setattr(
+        customer_service.customers,
+        "list_for_tenant",
+        lambda **_: (
+            [
+                _row(id="c-1", name="Alice", current_stamps=10),
+                _row(id="c-2", name=None, phone=None, current_stamps=3),
+            ],
+            2,
+        ),
+    )
+
+    csv_text = export_customers_csv(
+        ExportCustomersContext(
+            tenant_id="t-1", search=None, filter_mode="all", sort="recent"
+        )
+    )
+    lines = csv_text.strip().splitlines()
+    assert lines[0].startswith("id,name,phone,current_stamps,total_visits")
+    assert "Alice" in lines[1] and lines[1].endswith(",yes")
+    # Empty name + phone come through as empty fields, not "None"
+    assert ",,," in lines[2] and lines[2].endswith(",no")
+
+
+def test_export_csv_caps_at_max_rows(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        customer_service.tenants,
+        "get_by_id",
+        lambda _id: {"id": "t-1", "stamps_for_reward": 10},
+    )
+
+    # Pretend the DB always returns a full page so the loop would never stop
+    # on its own — the cap must.
+    page_full = [_row(id=f"c-{i}", current_stamps=0) for i in range(500)]
+    monkeypatch.setattr(
+        customer_service.customers,
+        "list_for_tenant",
+        lambda **_: (page_full, 99_999),
+    )
+
+    csv_text = export_customers_csv(
+        ExportCustomersContext(
+            tenant_id="t-1", search=None, filter_mode="all", sort="recent"
+        )
+    )
+    # 1 header + EXPORT_MAX_ROWS data lines
+    assert len(csv_text.strip().splitlines()) == customer_service.EXPORT_MAX_ROWS + 1
+
+
+def test_export_csv_raises_when_tenant_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(customer_service.tenants, "get_by_id", lambda _id: None)
+    with pytest.raises(NotFoundError):
+        export_customers_csv(
+            ExportCustomersContext(
+                tenant_id="missing", search=None, filter_mode="all", sort="recent"
+            )
+        )

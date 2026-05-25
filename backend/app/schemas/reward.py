@@ -9,3 +9,5 @@ class ValidateRewardOut(BaseModel):
     reward_id: str
     redeemed_at: str
     description: str
+    customer_id: str
+    customer_name: str | None

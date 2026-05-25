@@ -5,6 +5,7 @@ import type { CustomerListFilter, CustomerListSort } from "@/lib/api";
 import { getDashboardContext } from "@/lib/dashboard-data";
 
 import { CustomersTable } from "./customers-table";
+import { ExportButton } from "./export-button";
 
 const PAGE_SIZE = 20;
 
@@ -58,7 +59,7 @@ export default async function CustomersPage({ searchParams }: PageProps) {
 
   return (
     <main className="space-y-6">
-      <header className="flex items-end justify-between gap-4">
+      <header className="flex flex-col items-start justify-between gap-3 md:flex-row md:items-end">
         <div>
           <p className="text-sm text-brand-black/60">
             <Link href="/dashboard" className="underline">
@@ -71,6 +72,7 @@ export default async function CustomersPage({ searchParams }: PageProps) {
             {result.total} total · showing {result.items.length}
           </p>
         </div>
+        <ExportButton search={search} filter={filter} sort={sort} />
       </header>
 
       <CustomersTable

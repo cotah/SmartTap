@@ -79,6 +79,8 @@ export interface ValidateRewardResponse {
   reward_id: string;
   redeemed_at: string;
   description: string;
+  customer_id: string;
+  customer_name: string | null;
 }
 
 export interface DashboardOverview {
@@ -181,6 +183,8 @@ export interface ApiClient {
   updateTenantSettings: (body: TenantSettingsUpdate) => Promise<{ tenant: TenantSelf }>;
   updateRewardConfig: (body: RewardConfig) => Promise<{ tenant: TenantSelf }>;
   validateReward: (rewardId: string, code: string) => Promise<ValidateRewardResponse>;
+  validateRewardByCode: (code: string) => Promise<ValidateRewardResponse>;
+  exportCustomersCsv: (params?: Omit<CustomerListParams, "page" | "limit">) => Promise<string>;
 }
 
 export function createApiClient(opts: ApiClientOptions): ApiClient {
@@ -203,6 +207,22 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
       throw new ApiError(res.status, res.statusText, body);
     }
     return body as T;
+  }
+
+  async function requestText(path: string, init: RequestInit = {}): Promise<string> {
+    const headers: Record<string, string> = {
+      ...(init.headers as Record<string, string> | undefined),
+    };
+    if (opts.getToken) {
+      const token = await opts.getToken();
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+    }
+    const res = await fetchImpl(`${baseUrl}${path}`, { ...init, headers });
+    const text = await res.text();
+    if (!res.ok) {
+      throw new ApiError(res.status, res.statusText, text);
+    }
+    return text;
   }
 
   return {
@@ -249,5 +269,18 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
         method: "POST",
         body: JSON.stringify({ validation_code: code }),
       }),
+    validateRewardByCode: (code) =>
+      request<ValidateRewardResponse>(`/v1/rewards/validate`, {
+        method: "POST",
+        body: JSON.stringify({ validation_code: code }),
+      }),
+    exportCustomersCsv: (params) => {
+      const qs = new URLSearchParams();
+      if (params?.search) qs.set("search", params.search);
+      if (params?.filter) qs.set("filter", params.filter);
+      if (params?.sort) qs.set("sort", params.sort);
+      const suffix = qs.toString() ? `?${qs.toString()}` : "";
+      return requestText(`/v1/customers/export.csv${suffix}`);
+    },
   };
 }

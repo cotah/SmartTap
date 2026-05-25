@@ -26,6 +26,23 @@ export default async function DashboardPage() {
         <OverviewCards overview={overview} />
       </section>
 
+      <section className="rounded-2xl border border-brand-green/30 bg-brand-green/5 p-4">
+        <div className="flex flex-col items-start gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="font-display text-lg">Customer at the counter?</p>
+            <p className="text-sm text-brand-black/60">
+              Validate a 6-digit reward code in seconds.
+            </p>
+          </div>
+          <Link
+            href="/dashboard/redeem"
+            className="rounded-full bg-brand-green px-5 py-2 text-sm font-semibold text-brand-off-white"
+          >
+            Redeem reward
+          </Link>
+        </div>
+      </section>
+
       <section>
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-brand-black/70">
           Manage
