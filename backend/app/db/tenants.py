@@ -19,6 +19,32 @@ def get_by_slug(slug: str) -> Row | None:
     return rows[0] if rows else None
 
 
+def get_by_stripe_subscription(subscription_id: str) -> Row | None:
+    client = get_supabase_admin()
+    res = (
+        client.table("tenants")
+        .select("*")
+        .eq("stripe_subscription_id", subscription_id)
+        .limit(1)
+        .execute()
+    )
+    rows = cast(list[Row], res.data or [])
+    return rows[0] if rows else None
+
+
+def get_by_stripe_customer(customer_id: str) -> Row | None:
+    client = get_supabase_admin()
+    res = (
+        client.table("tenants")
+        .select("*")
+        .eq("stripe_customer_id", customer_id)
+        .limit(1)
+        .execute()
+    )
+    rows = cast(list[Row], res.data or [])
+    return rows[0] if rows else None
+
+
 def update(tenant_id: str, fields: dict[str, Any]) -> Row:
     client = get_supabase_admin()
     res = client.table("tenants").update(fields).eq("id", tenant_id).execute()

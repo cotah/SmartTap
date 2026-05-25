@@ -3,6 +3,7 @@ import structlog
 from fastapi import APIRouter, Header, HTTPException, Request
 
 from app.config import get_settings
+from app.services import webhook_service
 
 router = APIRouter(tags=["webhooks"])
 log = structlog.get_logger(__name__)
@@ -31,5 +32,20 @@ async def stripe_webhook(
         raise HTTPException(status_code=400, detail="Invalid signature") from exc
 
     log.info("stripe_event_received", event_type=event["type"], event_id=event["id"])
+
+    try:
+        webhook_service.handle(event)
+    except Exception as exc:
+        # Infra-level failure (DB down, bug). Returning 5xx tells Stripe to
+        # retry with exponential backoff (up to 3 days). Expected data issues
+        # (unknown tenant, unknown price) are swallowed inside the handler so
+        # they don't trigger a retry loop.
+        log.exception(
+            "stripe_webhook_handler_failed",
+            event_id=event["id"],
+            event_type=event["type"],
+            error=str(exc),
+        )
+        raise HTTPException(status_code=500, detail="Webhook handler error") from exc
 
     return {"received": True}
