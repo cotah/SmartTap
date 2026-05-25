@@ -8,7 +8,16 @@ from fastapi.responses import JSONResponse
 
 from app.config import get_settings
 from app.errors import BusinessError
-from app.routers import customers, health, rewards, taps, tenants, webhooks
+from app.routers import (
+    customers,
+    dashboard,
+    health,
+    me,
+    rewards,
+    taps,
+    tenants,
+    webhooks,
+)
 
 
 def _configure_logging(level: str) -> None:
@@ -67,6 +76,8 @@ def create_app() -> FastAPI:
     app.include_router(tenants.router, prefix="/v1")
     app.include_router(rewards.router, prefix="/v1")
     app.include_router(webhooks.router, prefix="/v1")
+    app.include_router(me.router, prefix="/v1")
+    app.include_router(dashboard.router, prefix="/v1")
 
     return app
 

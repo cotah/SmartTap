@@ -26,3 +26,12 @@ def update(tenant_id: str, fields: dict[str, Any]) -> Row:
     if not rows:
         raise ValueError(f"tenant {tenant_id} not updated")
     return rows[0]
+
+
+def create(fields: dict[str, Any]) -> Row:
+    client = get_supabase_admin()
+    res = client.table("tenants").insert(fields).execute()
+    rows = cast(list[Row], res.data or [])
+    if not rows:
+        raise ValueError("tenant not created")
+    return rows[0]
