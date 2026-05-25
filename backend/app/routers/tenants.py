@@ -3,7 +3,12 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.dependencies import get_current_tenant_id
-from app.schemas.tenant import RewardConfigIn, TenantSelf, TenantSelfResponse
+from app.schemas.tenant import (
+    RewardConfigIn,
+    TenantSelf,
+    TenantSelfResponse,
+    TenantSettingsUpdateIn,
+)
 from app.services import tenant_service
 
 router = APIRouter(tags=["tenants"])
@@ -54,6 +59,26 @@ def update_reward_config_endpoint(
             reward_description=body.reward_description,
             reward_expires_days=body.reward_expires_days,
             stamp_rate_limit_minutes=body.stamp_rate_limit_minutes,
+        ),
+    )
+    return TenantSelfResponse(tenant=_to_self(updated))
+
+
+@router.put("/tenant/settings", response_model=TenantSelfResponse)
+def update_settings_endpoint(
+    body: TenantSettingsUpdateIn,
+    tenant_id: Annotated[str, Depends(get_current_tenant_id)],
+) -> TenantSelfResponse:
+    updated = tenant_service.update_settings(
+        tenant_id,
+        tenant_service.TenantSettings(
+            name=body.name,
+            logo_url=body.logo_url,
+            primary_color=body.primary_color,
+            accent_color=body.accent_color,
+            google_place_id=body.google_place_id,
+            google_review_url=body.google_review_url,
+            google_business_url=body.google_business_url,
         ),
     )
     return TenantSelfResponse(tenant=_to_self(updated))
