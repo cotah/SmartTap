@@ -89,6 +89,35 @@ export interface DashboardOverview {
   active_stamps_total: number;
 }
 
+export type CustomerListFilter = "all" | "active" | "at_risk" | "has_reward";
+export type CustomerListSort = "recent" | "visits" | "stamps";
+
+export interface CustomerListItem {
+  id: string;
+  name: string | null;
+  phone: string | null;
+  current_stamps: number;
+  total_visits: number;
+  last_visit_at: string | null;
+  created_at: string;
+  has_reward_ready: boolean;
+}
+
+export interface CustomerListResponse {
+  items: CustomerListItem[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface CustomerListParams {
+  search?: string;
+  filter?: CustomerListFilter;
+  sort?: CustomerListSort;
+  page?: number;
+  limit?: number;
+}
+
 export interface TenantSummary {
   id: string;
   slug: string;
@@ -120,6 +149,7 @@ export interface ApiClient {
   getMe: () => Promise<MeResponse>;
   bootstrapMe: (body: BootstrapInput) => Promise<BootstrapResponse>;
   getOverview: () => Promise<DashboardOverview>;
+  listCustomers: (params?: CustomerListParams) => Promise<CustomerListResponse>;
   updateTenantSettings: (body: TenantSettingsUpdate) => Promise<{ tenant: Tenant }>;
   updateRewardConfig: (body: RewardConfig) => Promise<{ tenant: Tenant }>;
   validateReward: (rewardId: string, code: string) => Promise<ValidateRewardResponse>;
@@ -165,6 +195,16 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
         body: JSON.stringify(body),
       }),
     getOverview: () => request<DashboardOverview>(`/v1/dashboard/overview`),
+    listCustomers: (params) => {
+      const qs = new URLSearchParams();
+      if (params?.search) qs.set("search", params.search);
+      if (params?.filter) qs.set("filter", params.filter);
+      if (params?.sort) qs.set("sort", params.sort);
+      if (params?.page) qs.set("page", String(params.page));
+      if (params?.limit) qs.set("limit", String(params.limit));
+      const suffix = qs.toString() ? `?${qs.toString()}` : "";
+      return request<CustomerListResponse>(`/v1/customers${suffix}`);
+    },
     updateTenantSettings: (body) =>
       request<{ tenant: Tenant }>(`/v1/tenant/settings`, {
         method: "PUT",

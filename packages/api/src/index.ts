@@ -15,4 +15,9 @@ export type {
   MeResponse,
   BootstrapInput,
   BootstrapResponse,
+  CustomerListFilter,
+  CustomerListSort,
+  CustomerListItem,
+  CustomerListResponse,
+  CustomerListParams,
 } from "./client";

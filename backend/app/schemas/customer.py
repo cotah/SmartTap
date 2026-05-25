@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 
 from pydantic import BaseModel, Field
 
@@ -16,3 +16,21 @@ class CustomerIdentifyOut(BaseModel):
     customer_id: str
     magic_link_token: str
     stamps_current: int = Field(ge=0)
+
+
+class CustomerListItem(BaseModel):
+    id: str
+    name: str | None
+    phone: str | None
+    current_stamps: int = Field(ge=0)
+    total_visits: int = Field(ge=0)
+    last_visit_at: datetime | None
+    created_at: datetime
+    has_reward_ready: bool
+
+
+class CustomerListResponse(BaseModel):
+    items: list[CustomerListItem]
+    total: int = Field(ge=0)
+    page: int = Field(ge=1)
+    limit: int = Field(ge=1)

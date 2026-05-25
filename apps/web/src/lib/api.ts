@@ -29,4 +29,9 @@ export type {
   DashboardOverview,
   MeResponse,
   BootstrapResponse,
+  CustomerListFilter,
+  CustomerListSort,
+  CustomerListItem,
+  CustomerListResponse,
+  CustomerListParams,
 } from "@smarttap/api";

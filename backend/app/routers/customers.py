@@ -1,7 +1,20 @@
-from fastapi import APIRouter
+from typing import Annotated, Literal
 
-from app.schemas.customer import CustomerIdentifyIn, CustomerIdentifyOut
-from app.services.customer_service import IdentifyContext, identify_customer
+from fastapi import APIRouter, Depends, Query
+
+from app.dependencies import get_current_tenant_id
+from app.schemas.customer import (
+    CustomerIdentifyIn,
+    CustomerIdentifyOut,
+    CustomerListItem,
+    CustomerListResponse,
+)
+from app.services.customer_service import (
+    IdentifyContext,
+    ListCustomersContext,
+    identify_customer,
+    list_customers,
+)
 
 router = APIRouter(tags=["customers"])
 
@@ -21,4 +34,44 @@ def identify_customer_endpoint(body: CustomerIdentifyIn) -> CustomerIdentifyOut:
         customer_id=result.customer_id,
         magic_link_token=result.magic_link_token,
         stamps_current=result.stamps_current,
+    )
+
+
+@router.get("/customers", response_model=CustomerListResponse)
+def list_customers_endpoint(
+    tenant_id: Annotated[str, Depends(get_current_tenant_id)],
+    search: Annotated[str | None, Query(max_length=80)] = None,
+    filter: Annotated[
+        Literal["all", "active", "at_risk", "has_reward"], Query()
+    ] = "all",
+    sort: Annotated[Literal["recent", "visits", "stamps"], Query()] = "recent",
+    page: Annotated[int, Query(ge=1, le=10_000)] = 1,
+    limit: Annotated[int, Query(ge=1, le=100)] = 20,
+) -> CustomerListResponse:
+    ctx = ListCustomersContext(
+        tenant_id=tenant_id,
+        search=search.strip() if search else None,
+        filter_mode=filter,
+        sort=sort,
+        page=page,
+        limit=limit,
+    )
+    result = list_customers(ctx)
+    return CustomerListResponse(
+        items=[
+            CustomerListItem(
+                id=row.id,
+                name=row.name,
+                phone=row.phone,
+                current_stamps=row.current_stamps,
+                total_visits=row.total_visits,
+                last_visit_at=row.last_visit_at,  # type: ignore[arg-type]
+                created_at=row.created_at,  # type: ignore[arg-type]
+                has_reward_ready=row.has_reward_ready,
+            )
+            for row in result.items
+        ],
+        total=result.total,
+        page=result.page,
+        limit=result.limit,
     )
