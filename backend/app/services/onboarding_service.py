@@ -7,6 +7,7 @@ from typing import Any
 import structlog
 
 from app.db import tenant_members, tenants
+from app.services import stripe_client
 
 log = structlog.get_logger(__name__)
 
@@ -67,4 +68,41 @@ def bootstrap_owner(
     )
     tenant_members.create(tenant_id=tenant["id"], user_id=user_id, role="owner")
     log.info("bootstrap_created", user_id=user_id, tenant_id=tenant["id"], slug=slug)
+
+    # Best-effort: attach a Stripe Customer so the upgrade flow (S3-W2) can
+    # use it later. If this fails (or Stripe is not configured) the tenant
+    # stays usable; we'll backfill via webhook/retry. Idempotency on the
+    # Stripe side prevents duplicates if bootstrap retries.
+    tenant = _attach_stripe_customer(tenant, email)
+
     return BootstrapResult(tenant=tenant, is_new=True)
+
+
+def _attach_stripe_customer(tenant: Row, email: str | None) -> Row:
+    try:
+        stripe_customer_id = stripe_client.create_customer(
+            tenant_id=tenant["id"],
+            email=email,
+            name=tenant["name"],
+        )
+    except Exception as exc:  # pragma: no cover - network failure path
+        log.warning(
+            "stripe_create_customer_failed",
+            tenant_id=tenant["id"],
+            error=str(exc),
+        )
+        return tenant
+
+    if stripe_customer_id is None:
+        return tenant
+
+    try:
+        return tenants.update(tenant["id"], {"stripe_customer_id": stripe_customer_id})
+    except Exception as exc:  # pragma: no cover - DB failure path
+        log.error(
+            "stripe_customer_id_persist_failed",
+            tenant_id=tenant["id"],
+            stripe_customer_id=stripe_customer_id,
+            error=str(exc),
+        )
+        return tenant

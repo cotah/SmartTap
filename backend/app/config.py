@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     stripe_price_id_review: str = Field(default="")
     stripe_price_id_loyalty: str = Field(default="")
     stripe_price_id_pro: str = Field(default="")
+    stripe_price_id_network: str = Field(default="")
 
     resend_api_key: str = Field(default="")
     resend_from_email: str = Field(default="hello@smarttap.ie")
