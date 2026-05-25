@@ -8,7 +8,9 @@ from jose import jwt
 from jose.exceptions import JWTError
 
 from app.config import Settings, get_settings
-from app.db import tenant_members
+from app.db import tenant_members, tenants
+from app.errors import NotFoundError, SubscriptionInactiveError, TrialExpiredError
+from app.services.trial_service import compute_trial_status
 
 log = structlog.get_logger(__name__)
 
@@ -118,4 +120,37 @@ def get_current_tenant_id(
     tenant_id = first["tenant_id"]
     if not isinstance(tenant_id, str):
         raise HTTPException(status_code=500, detail="Malformed tenant_member")
+    return tenant_id
+
+
+def require_active_tenant(
+    tenant_id: Annotated[str, Depends(get_current_tenant_id)],
+) -> str:
+    """Gate dashboard mutations on trial / subscription state.
+
+    Returns the tenant_id (so the dependency composes seamlessly in place of
+    get_current_tenant_id) but raises 402 when the tenant can't mutate:
+        - trial expired and no subscription → TrialExpiredError
+        - subscription canceled (is_active=false) → SubscriptionInactiveError
+
+    Public NFC routes, billing routes, and read-only routes must NOT use this
+    — they keep using get_current_tenant_id (or no auth at all).
+    """
+    tenant = tenants.get_by_id(tenant_id)
+    if tenant is None:
+        # Same shape as elsewhere: a tenant_member pointing to a deleted tenant
+        # is a real consistency bug, not user error. 404 is honest here.
+        raise NotFoundError("Tenant not found", detail={"tenant_id": tenant_id})
+
+    status = compute_trial_status(tenant)
+    if status == "expired":
+        raise TrialExpiredError(
+            "Your free trial has ended. Upgrade to keep making changes.",
+            detail={"trial_ends_at": str(tenant.get("trial_ends_at") or "")},
+        )
+    if status == "inactive":
+        raise SubscriptionInactiveError(
+            "Your subscription is inactive. Update payment to keep making changes.",
+            detail={"tenant_id": tenant_id},
+        )
     return tenant_id

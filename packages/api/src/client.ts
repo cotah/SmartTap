@@ -120,6 +120,13 @@ export interface CustomerListParams {
   limit?: number;
 }
 
+export type TrialStatus =
+  | "active"
+  | "expiring_soon"
+  | "expired"
+  | "subscribed"
+  | "inactive";
+
 export interface TenantSummary {
   id: string;
   slug: string;
@@ -129,6 +136,7 @@ export interface TenantSummary {
   is_active: boolean;
   trial_ends_at: string | null;
   onboarding_complete: boolean;
+  trial_status: TrialStatus;
 }
 
 export interface OnboardingComplete {
@@ -163,6 +171,7 @@ export interface SubscriptionInfo {
   status: string | null;
   current_period_end: string | null;
   cancel_at_period_end: boolean | null;
+  trial_status: TrialStatus;
 }
 
 /**
@@ -243,7 +252,13 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
     const text = await res.text();
     const body = text ? (JSON.parse(text) as unknown) : null;
     if (!res.ok) {
-      throw new ApiError(res.status, res.statusText, body);
+      // Prefer the user-facing message from the body (BusinessError handler
+      // sets `error.message`); fall back to the HTTP statusText.
+      const businessMessage =
+        body && typeof body === "object" && "error" in body
+          ? ((body as BusinessErrorBody).error?.message ?? null)
+          : null;
+      throw new ApiError(res.status, businessMessage ?? res.statusText, body);
     }
     return body as T;
   }

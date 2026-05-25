@@ -38,3 +38,23 @@ class ExpiredError(BusinessError):
 class InvalidCodeError(BusinessError):
     status_code = 422
     code = "invalid_code"
+
+
+class TrialExpiredError(BusinessError):
+    """Trial period ended and tenant hasn't subscribed yet.
+
+    402 (Payment Required) is the semantically correct status here — Stripe
+    itself uses it for similar scenarios and most HTTP clients pass it through
+    unchanged (vs the more aggressive 403 which can trigger logout flows).
+    """
+
+    status_code = 402
+    code = "trial_expired"
+
+
+class SubscriptionInactiveError(BusinessError):
+    """Tenant had a subscription but it was canceled / payment definitively
+    failed. Same 402 treatment — they need to re-subscribe to mutate."""
+
+    status_code = 402
+    code = "subscription_inactive"

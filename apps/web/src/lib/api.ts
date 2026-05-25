@@ -40,4 +40,5 @@ export type {
   CheckoutSessionInput,
   PortalSessionInput,
   SubscriptionInfo,
+  TrialStatus,
 } from "@smarttap/api";

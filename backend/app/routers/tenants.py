@@ -2,7 +2,7 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.dependencies import get_current_tenant_id
+from app.dependencies import get_current_tenant_id, require_active_tenant
 from app.schemas.tenant import (
     RewardConfigIn,
     TenantSelf,
@@ -50,7 +50,7 @@ def get_self_tenant(
 @router.post("/tenant/reward-config", response_model=TenantSelfResponse)
 def update_reward_config_endpoint(
     body: RewardConfigIn,
-    tenant_id: Annotated[str, Depends(get_current_tenant_id)],
+    tenant_id: Annotated[str, Depends(require_active_tenant)],
 ) -> TenantSelfResponse:
     updated = tenant_service.update_reward_config(
         tenant_id,
@@ -67,7 +67,7 @@ def update_reward_config_endpoint(
 @router.put("/tenant/settings", response_model=TenantSelfResponse)
 def update_settings_endpoint(
     body: TenantSettingsUpdateIn,
-    tenant_id: Annotated[str, Depends(get_current_tenant_id)],
+    tenant_id: Annotated[str, Depends(require_active_tenant)],
 ) -> TenantSelfResponse:
     updated = tenant_service.update_settings(
         tenant_id,

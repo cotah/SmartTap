@@ -26,4 +26,5 @@ export type {
   CheckoutSessionInput,
   PortalSessionInput,
   SubscriptionInfo,
+  TrialStatus,
 } from "./client";

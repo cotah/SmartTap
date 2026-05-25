@@ -9,6 +9,7 @@ from app.db import tenants
 from app.errors import BusinessError, NotFoundError
 from app.schemas.billing import SubscriptionSummary
 from app.services import stripe_client
+from app.services.trial_service import compute_trial_status
 
 log = structlog.get_logger(__name__)
 
@@ -205,6 +206,7 @@ def get_subscription_summary(tenant_id: str) -> SubscriptionSummary:
         trial_ends_at=tenant.get("trial_ends_at"),
         cancelled_at=tenant.get("cancelled_at"),
         has_subscription=bool(subscription_id),
+        trial_status=compute_trial_status(tenant),
     )
 
     if not subscription_id:

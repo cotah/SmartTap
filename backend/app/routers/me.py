@@ -6,6 +6,7 @@ from app.db import tenant_members, tenants
 from app.dependencies import CurrentUser, get_current_user
 from app.schemas.me import BootstrapIn, BootstrapResponse, MeResponse, TenantSummary
 from app.services.onboarding_service import bootstrap_owner
+from app.services.trial_service import compute_trial_status
 
 router = APIRouter(tags=["me"])
 
@@ -20,6 +21,7 @@ def _summary(tenant: dict) -> TenantSummary:  # type: ignore[type-arg]
         is_active=tenant["is_active"],
         trial_ends_at=tenant.get("trial_ends_at"),
         onboarding_complete=bool(tenant.get("reward_description")),
+        trial_status=compute_trial_status(tenant),
     )
 
 

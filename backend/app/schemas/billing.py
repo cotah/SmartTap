@@ -24,6 +24,9 @@ class PortalSessionOut(BaseModel):
     url: str = Field(min_length=1)
 
 
+TrialStatus = Literal["active", "expiring_soon", "expired", "subscribed", "inactive"]
+
+
 class SubscriptionSummary(BaseModel):
     """What the dashboard needs to render the billing page.
 
@@ -42,3 +45,6 @@ class SubscriptionSummary(BaseModel):
     status: str | None = None
     current_period_end: str | None = None
     cancel_at_period_end: bool | None = None
+    # Computed from plan + is_active + trial_ends_at; mirrors the value in
+    # /me so the billing page can render banners without a second fetch.
+    trial_status: TrialStatus = "active"

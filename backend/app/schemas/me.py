@@ -1,4 +1,8 @@
+from typing import Literal
+
 from pydantic import BaseModel
+
+TrialStatus = Literal["active", "expiring_soon", "expired", "subscribed", "inactive"]
 
 
 class TenantSummary(BaseModel):
@@ -10,6 +14,9 @@ class TenantSummary(BaseModel):
     is_active: bool
     trial_ends_at: str | None = None
     onboarding_complete: bool
+    # Derived from plan + is_active + trial_ends_at; the frontend uses this to
+    # decide between green / amber / red banners and which CTAs to surface.
+    trial_status: TrialStatus = "active"
 
 
 class MeResponse(BaseModel):
