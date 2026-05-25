@@ -1,14 +1,21 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
+from fastapi import APIRouter
+
+from app.schemas.reward import ValidateRewardIn, ValidateRewardOut
+from app.services.reward_service import validate_and_redeem
 
 router = APIRouter(tags=["rewards"])
 
 
-class ValidateRewardIn(BaseModel):
-    validation_code: str = Field(min_length=6, max_length=6, pattern=r"^\d{6}$")
-
-
-@router.post("/rewards/{reward_id}/validate")
-def validate_reward(reward_id: str, body: ValidateRewardIn) -> dict[str, str]:
-    _ = body
-    raise HTTPException(status_code=501, detail=f"Not implemented yet (id={reward_id})")
+@router.post("/rewards/{reward_id}/validate", response_model=ValidateRewardOut)
+def validate_reward(reward_id: str, body: ValidateRewardIn) -> ValidateRewardOut:
+    # TODO: gate behind dashboard auth in Sprint 2 (pass current_user_id as redeemed_by_user)
+    result = validate_and_redeem(
+        reward_id=reward_id,
+        validation_code=body.validation_code,
+        redeemed_by_user=None,
+    )
+    return ValidateRewardOut(
+        reward_id=result.reward_id,
+        redeemed_at=result.redeemed_at,
+        description=result.description,
+    )
