@@ -21,7 +21,7 @@ async def stripe_webhook(
 
     payload = await request.body()
     try:
-        event = stripe.Webhook.construct_event(
+        event = stripe.Webhook.construct_event(  # type: ignore[no-untyped-call]
             payload=payload,
             sig_header=stripe_signature,
             secret=settings.stripe_webhook_secret,

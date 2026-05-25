@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.routers import health, taps, customers, tenants, rewards, webhooks
+from app.routers import customers, health, rewards, taps, tenants, webhooks
 
 
 def _configure_logging(level: str) -> None:
