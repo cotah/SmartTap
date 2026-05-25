@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { computeRewardState } from "./compute-reward.js";
-import { canAwardStamp } from "./rate-limit.js";
+import { computeRewardState } from "./compute-reward";
+import { canAwardStamp } from "./rate-limit";
 
 describe("computeRewardState", () => {
   it("returns 0% with no stamps", () => {

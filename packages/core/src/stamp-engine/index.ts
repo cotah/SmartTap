@@ -1,2 +1,2 @@
-export { canAwardStamp } from "./rate-limit.js";
-export { computeRewardState, type RewardState } from "./compute-reward.js";
+export { canAwardStamp } from "./rate-limit";
+export { computeRewardState, type RewardState } from "./compute-reward";

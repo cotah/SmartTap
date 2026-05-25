@@ -1,2 +1,2 @@
-export { formatIrishPhone, isValidIrishPhone } from "./phone-format.js";
-export { generateValidationCode } from "./validation-code.js";
+export { formatIrishPhone, isValidIrishPhone } from "./phone-format";
+export { generateValidationCode } from "./validation-code";

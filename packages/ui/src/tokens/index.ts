@@ -1,2 +1,2 @@
-export { colors, plaColors } from "./colors.js";
-export { fonts } from "./typography.js";
+export { colors, plaColors } from "./colors";
+export { fonts } from "./typography";

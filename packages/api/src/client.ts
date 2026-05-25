@@ -13,6 +13,10 @@ export interface ApiClientOptions {
   fetchImpl?: typeof fetch;
 }
 
+export interface BusinessErrorBody {
+  error: { code: string; message: string; detail: Record<string, string> };
+}
+
 export class ApiError extends Error {
   status: number;
   body: unknown;
@@ -24,11 +28,48 @@ export class ApiError extends Error {
   }
 }
 
+export type TenantPublic = Pick<
+  Tenant,
+  "id" | "slug" | "name" | "logo_url" | "primary_color" | "accent_color" | "reward_description"
+>;
+
+export type CustomerSnapshot = Pick<Customer, "id" | "name" | "current_stamps">;
+
+export interface RewardStateSnapshot {
+  current_stamps: number;
+  stamps_for_reward: number;
+  stamps_remaining: number;
+  reward_ready: boolean;
+  progress_percent: number;
+}
+
+export interface RewardAvailable {
+  id: string;
+  validation_code: string;
+  description: string;
+  expires_at: string;
+}
+
 export interface TapResponse {
-  tenant: Pick<Tenant, "id" | "slug" | "name" | "logo_url" | "primary_color" | "accent_color">;
-  customer: Pick<Customer, "id" | "name" | "current_stamps"> | null;
+  tenant: TenantPublic;
+  customer: CustomerSnapshot | null;
+  tap_id: string;
+  stamp_awarded: boolean;
   stamps_current: number;
-  reward_available: { id: string; validation_code: string; description: string } | null;
+  reward_state: RewardStateSnapshot;
+  reward_available: RewardAvailable | null;
+}
+
+export interface IdentifyResponse {
+  customer_id: string;
+  magic_link_token: string;
+  stamps_current: number;
+}
+
+export interface ValidateRewardResponse {
+  reward_id: string;
+  redeemed_at: string;
+  description: string;
 }
 
 export interface DashboardOverview {
@@ -41,15 +82,11 @@ export interface DashboardOverview {
 
 export interface ApiClient {
   tap: (tagUuid: string, body: TapEvent) => Promise<TapResponse>;
-  identifyCustomer: (body: CustomerIdentify) => Promise<{
-    customer_id: string;
-    magic_link_token: string;
-    stamps_current: number;
-  }>;
+  identifyCustomer: (body: CustomerIdentify) => Promise<IdentifyResponse>;
   getOverview: () => Promise<DashboardOverview>;
   updateTenantSettings: (body: TenantSettingsUpdate) => Promise<{ tenant: Tenant }>;
   updateRewardConfig: (body: RewardConfig) => Promise<{ tenant: Tenant }>;
-  validateReward: (rewardId: string, code: string) => Promise<{ redeemed_at: string }>;
+  validateReward: (rewardId: string, code: string) => Promise<ValidateRewardResponse>;
 }
 
 export function createApiClient(opts: ApiClientOptions): ApiClient {
@@ -81,7 +118,7 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
         body: JSON.stringify(body),
       }),
     identifyCustomer: (body) =>
-      request(`/v1/customers/identify`, {
+      request<IdentifyResponse>(`/v1/customers/identify`, {
         method: "POST",
         body: JSON.stringify(body),
       }),
@@ -97,7 +134,7 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
         body: JSON.stringify(body),
       }),
     validateReward: (rewardId, code) =>
-      request<{ redeemed_at: string }>(`/v1/rewards/${rewardId}/validate`, {
+      request<ValidateRewardResponse>(`/v1/rewards/${rewardId}/validate`, {
         method: "POST",
         body: JSON.stringify({ validation_code: code }),
       }),
