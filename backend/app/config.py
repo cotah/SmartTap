@@ -18,10 +18,16 @@ class Settings(BaseSettings):
 
     stripe_secret_key: str = Field(default="")
     stripe_webhook_secret: str = Field(default="")
-    stripe_price_id_review: str = Field(default="")
-    stripe_price_id_loyalty: str = Field(default="")
-    stripe_price_id_pro: str = Field(default="")
-    stripe_price_id_network: str = Field(default="")
+    # Recurring monthly prices
+    stripe_price_review: str = Field(default="")
+    stripe_price_loyalty: str = Field(default="")
+    stripe_price_pro: str = Field(default="")
+    stripe_price_network: str = Field(default="")
+    # One-time setup fees (added to first invoice on checkout)
+    stripe_price_review_setup: str = Field(default="")
+    stripe_price_loyalty_setup: str = Field(default="")
+    stripe_price_pro_setup: str = Field(default="")
+    stripe_price_network_setup: str = Field(default="")
 
     resend_api_key: str = Field(default="")
     resend_from_email: str = Field(default="hello@smarttap.ie")

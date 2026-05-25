@@ -44,3 +44,46 @@ def create_customer(
     cid = customer.get("id") if isinstance(customer, dict) else customer.id
     log.info("stripe_customer_created", tenant_id=tenant_id, stripe_customer_id=cid)
     return str(cid) if cid else None
+
+
+def create_checkout_session(
+    *,
+    tenant_id: str,
+    customer_id: str,
+    recurring_price_id: str,
+    setup_price_id: str,
+    success_url: str,
+    cancel_url: str,
+) -> str:
+    """Create a Stripe Checkout Session in subscription mode with a one-time
+    setup fee added to the first invoice. Returns the hosted Checkout URL.
+
+    Raises RuntimeError when Stripe is not configured — the caller validates
+    that beforehand.
+    """
+    if not is_configured():
+        raise RuntimeError("Stripe not configured (STRIPE_SECRET_KEY missing)")
+    configure_stripe()
+
+    session = stripe.checkout.Session.create(
+        mode="subscription",
+        customer=customer_id,
+        line_items=[
+            {"price": recurring_price_id, "quantity": 1},
+            {"price": setup_price_id, "quantity": 1},
+        ],
+        success_url=success_url,
+        cancel_url=cancel_url,
+        metadata={"tenant_id": tenant_id},
+        subscription_data={"metadata": {"tenant_id": tenant_id}},
+        allow_promotion_codes=True,
+    )
+    url = session.get("url") if isinstance(session, dict) else session.url
+    log.info(
+        "stripe_checkout_session_created",
+        tenant_id=tenant_id,
+        session_id=session.get("id") if isinstance(session, dict) else session.id,
+    )
+    if not url:
+        raise RuntimeError("Stripe Checkout Session did not return a url")
+    return str(url)
