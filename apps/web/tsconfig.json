@@ -1,19 +1,40 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "ES2022"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "ES2022"
+    ],
     "jsx": "preserve",
     "noEmit": true,
     "incremental": true,
-    "plugins": [{ "name": "next" }],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@smarttap/core": ["../../packages/core/src/index.ts"],
-      "@smarttap/core/*": ["../../packages/core/src/*"],
-      "@smarttap/api": ["../../packages/api/src/index.ts"],
-      "@smarttap/ui": ["../../packages/ui/src/index.ts"],
-      "@smarttap/ui/*": ["../../packages/ui/src/*"]
-    }
+      "@/*": [
+        "./src/*"
+      ],
+      "@smarttap/core": [
+        "../../packages/core/src/index.ts"
+      ],
+      "@smarttap/core/*": [
+        "../../packages/core/src/*"
+      ],
+      "@smarttap/api": [
+        "../../packages/api/src/index.ts"
+      ],
+      "@smarttap/ui": [
+        "../../packages/ui/src/index.ts"
+      ],
+      "@smarttap/ui/*": [
+        "../../packages/ui/src/*"
+      ]
+    },
+    "allowJs": true
   },
   "include": [
     "next-env.d.ts",
@@ -21,5 +42,8 @@
     "src/**/*.tsx",
     ".next/types/**/*.ts"
   ],
-  "exclude": ["node_modules", ".next"]
+  "exclude": [
+    "node_modules",
+    ".next"
+  ]
 }

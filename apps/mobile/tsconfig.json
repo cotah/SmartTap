@@ -8,7 +8,9 @@
       "@/*": ["./src/*"],
       "@smarttap/core": ["../../packages/core/src/index.ts"],
       "@smarttap/core/*": ["../../packages/core/src/*"],
-      "@smarttap/api": ["../../packages/api/src/index.ts"]
+      "@smarttap/api": ["../../packages/api/src/index.ts"],
+      "@smarttap/ui": ["../../packages/ui/src/index.ts"],
+      "@smarttap/ui/tokens": ["../../packages/ui/src/tokens/index.ts"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
