@@ -1,13 +1,19 @@
+import "server-only";
+
 import { ApiError, createApiClient, type ApiClient } from "@smarttap/api";
+
+import { getAccessToken } from "./auth";
 import { publicEnv } from "./env";
 
-let cached: ApiClient | null = null;
-
 export function getApiClient(): ApiClient {
-  if (cached === null) {
-    cached = createApiClient({ baseUrl: publicEnv.NEXT_PUBLIC_API_URL });
-  }
-  return cached;
+  return createApiClient({ baseUrl: publicEnv.NEXT_PUBLIC_API_URL });
+}
+
+export function getAuthApiClient(): ApiClient {
+  return createApiClient({
+    baseUrl: publicEnv.NEXT_PUBLIC_API_URL,
+    getToken: getAccessToken,
+  });
 }
 
 export { ApiError };
@@ -18,4 +24,6 @@ export type {
   RewardStateSnapshot,
   RewardAvailable,
   IdentifyResponse,
+  ValidateRewardResponse,
+  DashboardOverview,
 } from "@smarttap/api";

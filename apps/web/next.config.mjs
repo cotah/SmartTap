@@ -2,9 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ["@smarttap/core", "@smarttap/api", "@smarttap/ui"],
-  experimental: {
-    typedRoutes: false,
-  },
+  typedRoutes: false,
   poweredByHeader: false,
   async headers() {
     return [
