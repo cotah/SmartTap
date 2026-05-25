@@ -128,6 +128,33 @@ export interface TenantSummary {
   trial_ends_at: string | null;
 }
 
+/**
+ * Tenant fields returned to the dashboard owner.
+ * Excludes billing internals (stripe ids) intentionally.
+ */
+export interface TenantSelf {
+  id: string;
+  slug: string;
+  name: string;
+  business_type: BusinessType;
+  logo_url: string | null;
+  primary_color: string;
+  accent_color: string;
+  google_place_id: string | null;
+  google_review_url: string | null;
+  google_business_url: string | null;
+  stamps_for_reward: number;
+  reward_description: string | null;
+  reward_expires_days: number;
+  stamp_rate_limit_minutes: number;
+  plan: TenantPlan;
+  is_active: boolean;
+  is_founding_member: boolean;
+  trial_ends_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface MeResponse {
   user_id: string;
   email: string | null;
@@ -150,8 +177,9 @@ export interface ApiClient {
   bootstrapMe: (body: BootstrapInput) => Promise<BootstrapResponse>;
   getOverview: () => Promise<DashboardOverview>;
   listCustomers: (params?: CustomerListParams) => Promise<CustomerListResponse>;
-  updateTenantSettings: (body: TenantSettingsUpdate) => Promise<{ tenant: Tenant }>;
-  updateRewardConfig: (body: RewardConfig) => Promise<{ tenant: Tenant }>;
+  getTenant: () => Promise<{ tenant: TenantSelf }>;
+  updateTenantSettings: (body: TenantSettingsUpdate) => Promise<{ tenant: TenantSelf }>;
+  updateRewardConfig: (body: RewardConfig) => Promise<{ tenant: TenantSelf }>;
   validateReward: (rewardId: string, code: string) => Promise<ValidateRewardResponse>;
 }
 
@@ -205,13 +233,14 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
       const suffix = qs.toString() ? `?${qs.toString()}` : "";
       return request<CustomerListResponse>(`/v1/customers${suffix}`);
     },
+    getTenant: () => request<{ tenant: TenantSelf }>(`/v1/tenant`),
     updateTenantSettings: (body) =>
-      request<{ tenant: Tenant }>(`/v1/tenant/settings`, {
+      request<{ tenant: TenantSelf }>(`/v1/tenant/settings`, {
         method: "PUT",
         body: JSON.stringify(body),
       }),
     updateRewardConfig: (body) =>
-      request<{ tenant: Tenant }>(`/v1/tenant/reward-config`, {
+      request<{ tenant: TenantSelf }>(`/v1/tenant/reward-config`, {
         method: "POST",
         body: JSON.stringify(body),
       }),

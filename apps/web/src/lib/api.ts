@@ -21,6 +21,7 @@ export type {
   TapResponse,
   TenantPublic,
   TenantSummary,
+  TenantSelf,
   CustomerSnapshot,
   RewardStateSnapshot,
   RewardAvailable,

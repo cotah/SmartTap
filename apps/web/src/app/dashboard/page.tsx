@@ -35,9 +35,7 @@ export default async function DashboardPage() {
           <DashLink href="/dashboard/reward" title="Reward" sub="Set stamps and prize" />
           <DashLink href="/dashboard/settings" title="Settings" sub="Brand and Google" />
         </div>
-        <p className="mt-3 text-xs text-brand-black/50">
-          Reward and Settings pages land in S2-W6 and S2-W7.
-        </p>
+        <p className="mt-3 text-xs text-brand-black/50">Settings page lands in S2-W7.</p>
       </section>
     </main>
   );
