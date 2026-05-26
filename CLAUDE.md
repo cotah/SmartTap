@@ -247,6 +247,44 @@ campaigns (id, tenant_id, name, type, status, config jsonb,
 - `ANTHROPIC_API_KEY` env var (backend)
 - Phone → tenant mapping table (nova migration)
 
+**Sprint 6 — Review Intelligence Dashboard (Semanas 11-14)**
+
+Análise automatizada de reviews com IA — extrai padrões, segmenta clientes pelo histórico de reviews, gera insights acionáveis de marketing. Combina reviews do Google Business + TripAdvisor num único dashboard inteligente. Encaixa naturalmente após a Sprint 5 porque reutiliza a Google Business API + Claude API já configuradas pra Feature 3.
+
+**Stack:** Google Business API (já configurada na Sprint 5 Feature 3) + TripAdvisor (API oficial se aprovado, scraping com Firecrawl como fallback) + Claude API (`claude-sonnet-4-6` para análise de sentimento e extração de temas, `claude-opus-4-7` para insights estratégicos e geração de copy)
+
+**Fontes de dados:**
+- Google Business Reviews (via Google Business API)
+- TripAdvisor (via scraping ou API oficial se disponível)
+
+**Features:**
+
+- [ ] **Feature 1: Padrões identificados automaticamente**
+  - O que clientes elogiam mais (ex: "sempre pontual", "boa conversa", "corte rápido")
+  - O que reclamam mais (ex: "espera longa", "estacionamento", "preço subiu")
+  - Palavras e frases recorrentes agrupadas por sentimento e frequência
+
+- [ ] **Feature 2: Segmentação de clientes por reviews**
+  - Clientes que voltam sempre (múltiplas reviews ao longo do tempo)
+  - O que os regulares valorizam vs o que os novos clientes destacam
+  - Perfil do cliente ideal extraído automaticamente das reviews 5-estrelas (idade, tipo de serviço, horário preferido quando inferível)
+
+- [ ] **Feature 3: Insights de marketing acionáveis**
+  - "Os teus clientes falam muito sobre X mas tu nunca mencionas no marketing" — gap analysis contra o conteúdo público do negócio (Instagram, site, Google posts)
+  - Sugestões de copy para Instagram / Google posts geradas a partir das próprias palavras dos clientes
+  - Alertas em tempo real quando review negativa (≤3 estrelas) aparece — push via WhatsApp pela Feature 1 da Sprint 5
+
+- [ ] **Feature 4: Dashboard visual em `/dashboard/reviews-intelligence`**
+  - Word cloud dos temas mais mencionados, filtrável por período e fonte
+  - Score de sentimento por categoria (atendimento, ambiente, preço, espera, etc)
+  - Evolução temporal — gráfico mensal de sentimento médio + volume de reviews
+
+**Pré-requisitos infra:**
+- Google Business API + OAuth já configurados na Sprint 5 Feature 3 — reutilizar
+- TripAdvisor: aplicar pra Content API oficial; se rejeitado, usar Firecrawl com cooldown + rate-limit por tenant
+- `ANTHROPIC_API_KEY` env var (compartilhado com Sprint 5)
+- Job batch pra reprocessar histórico de reviews no momento do signup (cron diário pra reviews novas + reprocessamento incremental quando muda o modelo)
+
 **Apps Mobile — Estrutura** (deslocado pra Sprint 5.5 ou Fase 3)
 - [ ] React Native + Expo configurado
 - [ ] Compartilhando packages/core e packages/ui
@@ -259,7 +297,7 @@ campaigns (id, tenant_id, name, type, status, config jsonb,
 ### FASE 3 — Escala (Meses 4-12)
 **Objetivo:** 200 clientes, expansão geográfica
 
-**Sprint 6+ — Integração com sistemas de reservas**
+**Sprint 7+ — Integração com sistemas de reservas**
 
 Crítico pro ICP barbearia/salão em Dublin — esses negócios já usam apps de booking. Plugar o SmartTap nesses sistemas tira fricção do staff e dispara o loop fidelidade automaticamente.
 
