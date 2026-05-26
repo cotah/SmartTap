@@ -39,4 +39,9 @@ export type {
   SegmentUpdateInput,
   SegmentCustomerPreview,
   SegmentPreview,
+  NfcTag,
+  NfcTagFormat,
+  NfcTagColor,
+  NfcTagCreateInput,
+  NfcTagUpdateInput,
 } from "./client";

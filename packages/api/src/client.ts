@@ -193,6 +193,61 @@ export interface CampaignUpdateInput {
 }
 
 // ---------------------------------------------------------------------------
+// NFC tags (S5-W0)
+// ---------------------------------------------------------------------------
+
+/**
+ * Mirrors the Pydantic Literal on the backend. Adding a format here
+ * requires a matching DB CHECK constraint update + service-level
+ * acceptance — keep this list in sync with app/schemas/nfc_tag.py.
+ */
+export type NfcTagFormat =
+  | "counter_stand"
+  | "table_tent"
+  | "wall_plaque"
+  | "sticker";
+
+/** PLA filament stock per CLAUDE.md. Keep in sync with the backend Literal. */
+export type NfcTagColor =
+  | "black"
+  | "white"
+  | "grey"
+  | "navy"
+  | "purple"
+  | "red"
+  | "yellow"
+  | "stone_age"
+  | "real_green"
+  | "forest_green";
+
+export interface NfcTag {
+  id: string;
+  tenant_id: string;
+  /** Immutable public path component — `https://smarttap.ie/t/<tag_uuid>`. */
+  tag_uuid: string;
+  format: NfcTagFormat;
+  color: NfcTagColor;
+  location_name: string | null;
+  is_active: boolean;
+  deployed_at: string | null;
+  created_at: string;
+}
+
+export interface NfcTagCreateInput {
+  format: NfcTagFormat;
+  color: NfcTagColor;
+  location_name?: string | null;
+}
+
+export interface NfcTagUpdateInput {
+  format?: NfcTagFormat;
+  color?: NfcTagColor;
+  /** Sending `null` clears the name; omit the key to leave it unchanged. */
+  location_name?: string | null;
+  is_active?: boolean;
+}
+
+// ---------------------------------------------------------------------------
 // Segments (S4-W4)
 // ---------------------------------------------------------------------------
 
@@ -353,6 +408,9 @@ export interface ApiClient {
     body: SegmentCreateInput,
     limit?: number,
   ) => Promise<SegmentPreview>;
+  listTags: () => Promise<{ items: NfcTag[] }>;
+  createTag: (body: NfcTagCreateInput) => Promise<NfcTag>;
+  updateTag: (id: string, body: NfcTagUpdateInput) => Promise<NfcTag>;
 }
 
 export function createApiClient(opts: ApiClientOptions): ApiClient {
@@ -564,5 +622,16 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
         body: JSON.stringify(body),
       });
     },
+    listTags: () => request<{ items: NfcTag[] }>(`/v1/tags`),
+    createTag: (body) =>
+      request<NfcTag>(`/v1/tags`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    updateTag: (id, body) =>
+      request<NfcTag>(`/v1/tags/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
   };
 }

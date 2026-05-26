@@ -16,6 +16,7 @@ from app.routers import (
     dashboard,
     health,
     me,
+    nfc_tags,
     onboarding,
     reports,
     rewards,
@@ -90,6 +91,7 @@ def create_app() -> FastAPI:
     app.include_router(cron.router, prefix="/v1")
     app.include_router(reports.router, prefix="/v1")
     app.include_router(segments.router, prefix="/v1")
+    app.include_router(nfc_tags.router, prefix="/v1")
 
     return app
 
