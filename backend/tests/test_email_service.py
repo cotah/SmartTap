@@ -196,6 +196,86 @@ def test_resend_failure_does_not_propagate(monkeypatch: pytest.MonkeyPatch) -> N
     email_service.send_welcome(tenant=_tenant(), email="owner@acme.test")
 
 
+# ---------------------------------------------------------------------------
+# send_reactivation — recipient comes from the customer row, NOT owner lookup
+# ---------------------------------------------------------------------------
+
+
+def _customer(**over: Any) -> dict[str, Any]:
+    base: dict[str, Any] = {
+        "id": "c-1",
+        "name": "Alex",
+        "email": "alex@example.test",
+        "current_stamps": 3,
+        "magic_link_token": "tok_xyz",
+    }
+    base.update(over)
+    return base
+
+
+def test_send_reactivation_targets_customer_email_not_owner(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Critical — the recipient must be the END customer, never the merchant.
+    A regression that swaps these would email the shop owner about themselves."""
+    sent = _stub_resend(monkeypatch)
+
+    sent_flag = email_service.send_reactivation(
+        tenant=_tenant(stamps_for_reward=10, reward_description="a free cut"),
+        customer=_customer(email="alex@example.test"),
+        magic_link_url="https://smarttap.ie/m/tok_xyz",
+        opt_out_url="https://smarttap.ie/u/tok_xyz",
+    )
+
+    assert sent_flag is True
+    assert len(sent) == 1
+    assert sent[0]["to"] == "alex@example.test"
+    assert {"name": "event", "value": "reactivation"} in sent[0]["tags"]
+    # Tenant id propagated as a tag for Resend dashboard filtering.
+    assert any(t.get("name") == "tenant_id" for t in sent[0]["tags"])
+
+
+def test_send_reactivation_returns_false_when_email_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Belt-and-suspenders: even if the upstream filter is bypassed, never
+    crash. The bool return lets the orchestrator skip the cooldown write."""
+    sent = _stub_resend(monkeypatch)
+
+    sent_flag = email_service.send_reactivation(
+        tenant=_tenant(),
+        customer=_customer(email=None),
+        magic_link_url="https://smarttap.ie/m/tok",
+        opt_out_url="https://smarttap.ie/u/tok",
+    )
+
+    assert sent_flag is False
+    assert sent == []
+
+
+def test_send_reactivation_resend_failure_does_not_propagate(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Same containment contract as the other email functions — the cron
+    must not blow up if Resend is down."""
+    monkeypatch.setattr(email_service.resend_client, "is_configured", lambda: True)
+    monkeypatch.setattr(
+        email_service.resend_client,
+        "send",
+        lambda **_kw: (_ for _ in ()).throw(RuntimeError("resend down")),
+    )
+
+    # Must not raise. The return value can still be True because we count
+    # "attempted" not "delivered" — the cooldown should still apply so we
+    # don't retry tomorrow.
+    email_service.send_reactivation(
+        tenant=_tenant(),
+        customer=_customer(),
+        magic_link_url="https://smarttap.ie/m/tok",
+        opt_out_url="https://smarttap.ie/u/tok",
+    )
+
+
 def test_owner_lookup_failure_inside_users_module_is_swallowed(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

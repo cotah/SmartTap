@@ -1,6 +1,6 @@
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Path, Query
 from fastapi.responses import Response
 
 from app.dependencies import get_current_tenant_id
@@ -10,6 +10,7 @@ from app.schemas.customer import (
     CustomerListItem,
     CustomerListResponse,
 )
+from app.services import reactivation_service
 from app.services.customer_service import (
     ExportCustomersContext,
     IdentifyContext,
@@ -20,6 +21,25 @@ from app.services.customer_service import (
 )
 
 router = APIRouter(tags=["customers"])
+
+
+@router.post("/customers/opt-out/{magic_link_token}", status_code=204)
+def opt_out_customer(
+    magic_link_token: Annotated[str, Path(min_length=8, max_length=128)],
+) -> Response:
+    """Public, one-click GDPR opt-out triggered from the email footer.
+
+    Idempotent — clicking the link twice still returns 204. The router lets
+    the service raise NotFoundError when the token doesn't match anything;
+    the global handler turns that into a 404 without revealing whether the
+    token was malformed or just unknown (prevents enumeration).
+
+    Not protected by auth: the magic token IS the bearer. It's bound to a
+    single customer row and only used here, so leak surface is the same as
+    a one-time unsubscribe link.
+    """
+    reactivation_service.opt_out(magic_link_token)
+    return Response(status_code=204)
 
 
 @router.post("/customers/identify", response_model=CustomerIdentifyOut)

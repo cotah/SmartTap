@@ -48,6 +48,86 @@ def get_by_magic_token(magic_link_token: str) -> Row | None:
     return rows[0] if rows else None
 
 
+def find_inactive_for_reactivation(
+    *,
+    tenant_id: str,
+    inactive_cutoff: datetime,
+    cooldown_cutoff: datetime,
+    limit: int = 500,
+) -> list[Row]:
+    """Customers eligible to receive a reactivation email right now.
+
+    The cron passes:
+        inactive_cutoff = now - 30 days   (last_visit_at must be older than this)
+        cooldown_cutoff = now - 90 days   (don't re-email until at least this old)
+
+    Filters enforced in SQL — we never pull a customer who didn't consent or
+    doesn't have an email, so accidentally calling `send_reactivation` on the
+    full result is safe by construction.
+
+    `limit` caps the per-tenant batch so a tenant with thousands of dormant
+    customers doesn't monopolize the cron run; the next day picks up the rest.
+    """
+    client = get_supabase_admin()
+    iso_inactive = inactive_cutoff.isoformat()
+    iso_cooldown = cooldown_cutoff.isoformat()
+
+    # gdpr_consent + email-not-null are duplicated as filters here (already in
+    # the partial index) so even if the index gets dropped, we still respect
+    # consent.
+    res = (
+        client.table("customers")
+        .select("id,name,email,current_stamps,magic_link_token,last_visit_at")
+        .eq("tenant_id", tenant_id)
+        .eq("gdpr_consent", True)
+        .not_.is_("email", "null")
+        .not_.is_("last_visit_at", "null")
+        .lt("last_visit_at", iso_inactive)
+        # PostgREST has no native "x IS NULL OR x < y" — `or_` is the escape
+        # hatch. The string syntax is finicky; keep it literal and tested.
+        .or_(
+            f"last_reactivation_sent_at.is.null,"
+            f"last_reactivation_sent_at.lt.{iso_cooldown}"
+        )
+        .order("last_visit_at", desc=False)  # oldest no-show first
+        .limit(limit)
+        .execute()
+    )
+    return cast(list[Row], res.data or [])
+
+
+def mark_reactivation_sent(customer_id: str, sent_at: datetime) -> None:
+    """Best-effort marker for cooldown enforcement. Writes BEFORE the actual
+    email send is acknowledged so that a partial failure (cron crash mid-loop)
+    won't re-send to the same customer on the next run — at worst a customer
+    misses one email cycle, which is far better than getting it twice."""
+    client = get_supabase_admin()
+    client.table("customers").update(
+        {"last_reactivation_sent_at": sent_at.isoformat()}
+    ).eq("id", customer_id).execute()
+
+
+def revoke_consent_via_magic_token(magic_link_token: str) -> Row | None:
+    """One-click GDPR opt-out from an email link. Idempotent: hitting the URL
+    twice after a successful opt-out still returns the row and stays at
+    consent=false. Returns None if the token doesn't match any customer
+    (treated by the caller as a soft 404 — never reveal which is which)."""
+    client = get_supabase_admin()
+    res = (
+        client.table("customers")
+        .update(
+            {
+                "gdpr_consent": False,
+                "gdpr_consent_at": None,
+            }
+        )
+        .eq("magic_link_token", magic_link_token)
+        .execute()
+    )
+    rows = cast(list[Row], res.data or [])
+    return rows[0] if rows else None
+
+
 def create(
     *,
     tenant_id: str,

@@ -161,3 +161,48 @@ def send_subscription_canceled(*, tenant_id: str, tenant: dict[str, Any]) -> Non
         tenant_id=tenant_id,
         event_name="subscription_canceled",
     )
+
+
+def send_reactivation(
+    *,
+    tenant: dict[str, Any],
+    customer: dict[str, Any],
+    magic_link_url: str,
+    opt_out_url: str,
+) -> bool:
+    """Sent by the daily cron to a dormant customer of this tenant.
+
+    Unlike the merchant-facing emails above, the recipient is the END CUSTOMER
+    (not the tenant owner). The address comes off the customer row — we trust
+    the caller (reactivation_service) to have already filtered out customers
+    without an email or without GDPR consent.
+
+    Returns True when a send was actually attempted (or no-op'd cleanly in dev),
+    False when the customer had no email and we skipped. The caller uses this
+    to decide whether to record the cooldown.
+    """
+    to = (customer.get("email") or "").strip() or None
+    if not to:
+        # Belt-and-suspenders — DB query already filters, but if a caller ever
+        # invokes this directly we don't want a confusing crash.
+        log.info(
+            "reactivation_skip_no_email",
+            tenant_id=tenant.get("id"),
+            customer_id=customer.get("id"),
+        )
+        return False
+
+    rendered = templates.reactivation_email(
+        tenant=tenant,
+        customer=customer,
+        magic_link_url=magic_link_url,
+        opt_out_url=opt_out_url,
+    )
+    _safe_send(
+        to=to,
+        rendered=rendered,
+        tenant_id=tenant.get("id"),
+        event_name="reactivation",
+        tags=[{"name": "tenant_id", "value": str(tenant.get("id") or "unknown")}],
+    )
+    return True

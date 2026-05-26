@@ -11,6 +11,7 @@ from app.errors import BusinessError
 from app.routers import (
     billing,
     campaigns,
+    cron,
     customers,
     dashboard,
     health,
@@ -84,6 +85,7 @@ def create_app() -> FastAPI:
     app.include_router(onboarding.router, prefix="/v1")
     app.include_router(billing.router, prefix="/v1")
     app.include_router(campaigns.router, prefix="/v1")
+    app.include_router(cron.router, prefix="/v1")
 
     return app
 

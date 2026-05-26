@@ -210,6 +210,93 @@ def payment_failed_email(
     )
 
 
+def reactivation_email(
+    *,
+    tenant: dict[str, Any],
+    customer: dict[str, Any],
+    magic_link_url: str,
+    opt_out_url: str,
+) -> RenderedEmail:
+    """Sent on behalf of the merchant to a dormant customer.
+
+    Tone is the merchant's, not SmartTap's — the "From" is still hello@smarttap.ie
+    but the subject + body speak as if from the local business. The footer
+    explicitly attributes SmartTap so it's not deceptive."""
+    business = (tenant.get("name") or "us").strip()
+    customer_name = (customer.get("name") or "").strip()
+    greeting = f"Hey {_escape(customer_name.split(' ')[0])}," if customer_name else "Hey there,"
+    current = int(customer.get("current_stamps") or 0)
+    threshold = int(tenant.get("stamps_for_reward") or 0)
+    reward = (tenant.get("reward_description") or "your reward").strip()
+    stamps_remaining = max(0, threshold - current)
+
+    progress_line = (
+        f"You're <strong>{stamps_remaining}</strong> stamps away from "
+        f"<strong>{_escape(reward)}</strong>."
+        if stamps_remaining > 0 and threshold > 0
+        else f"Your reward — <strong>{_escape(reward)}</strong> — is waiting."
+    )
+    progress_text = (
+        f"You're {stamps_remaining} stamps away from {reward}."
+        if stamps_remaining > 0 and threshold > 0
+        else f"Your reward — {reward} — is waiting."
+    )
+
+    body_html = f"""
+        <h1 style="margin:0 0 12px 0;font-size:22px;color:{BLACK};">We miss you at {_escape(business)}</h1>
+        <p style="margin:0 0 12px 0;">{greeting}</p>
+        <p style="margin:0 0 12px 0;">It's been a while since your last visit to <strong>{_escape(business)}</strong>. {progress_line}</p>
+        <p style="margin:0 0 12px 0;">Come back and we'll be glad to see you.</p>
+    """
+
+    text = (
+        f"We miss you at {business}\n\n"
+        f"It's been a while since your last visit to {business}.\n"
+        f"{progress_text}\n\n"
+        f"Show your stamps: {magic_link_url}\n\n"
+        f"Don't email me again: {opt_out_url}\n"
+    )
+
+    # The custom footer below replaces the generic one in _layout — easier
+    # than parameterising _layout for this one case. We hand-roll the shell.
+    html = f"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{_escape(business)}</title>
+</head>
+<body style="margin:0;padding:0;background-color:{OFF_WHITE};font-family:'DM Sans',Helvetica,Arial,sans-serif;color:{BLACK};">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">{progress_text}</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:{OFF_WHITE};">
+    <tr><td align="center" style="padding:24px 12px;">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:12px;overflow:hidden;border:1px solid rgba(0,0,0,0.06);">
+        <tr><td style="background-color:{GREEN};padding:20px 24px;">
+          <p style="margin:0;color:{OFF_WHITE};font-size:12px;letter-spacing:4px;text-transform:uppercase;">{_escape(business)}</p>
+        </td></tr>
+        <tr><td style="padding:32px 24px;font-size:15px;line-height:1.55;color:{BLACK};">
+          {body_html}
+          <p style="margin:28px 0 0 0;">
+            <a href="{_escape(magic_link_url)}" style="display:inline-block;background-color:{AMBER};color:{BLACK};text-decoration:none;padding:12px 24px;border-radius:999px;font-weight:600;font-size:14px;">Show my stamps</a>
+          </p>
+        </td></tr>
+        <tr><td style="padding:20px 24px;border-top:1px solid rgba(0,0,0,0.06);font-size:12px;color:{GREY};">
+          <p style="margin:0;">You're getting this because you opted in at {_escape(business)}.</p>
+          <p style="margin:6px 0 0 0;">Sent via SmartTap · <a href="{_escape(opt_out_url)}" style="color:{GREY};text-decoration:underline;">Don't email me again</a></p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"""
+
+    return RenderedEmail(
+        subject=f"We miss you at {business}",
+        html=html,
+        text=text,
+    )
+
+
 def subscription_canceled_email(*, tenant: dict[str, Any]) -> RenderedEmail:
     body_html = f"""
         <h1 style="margin:0 0 12px 0;font-size:22px;color:{BLACK};">Your subscription was canceled</h1>

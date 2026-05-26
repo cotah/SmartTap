@@ -34,6 +34,16 @@ class Settings(BaseSettings):
 
     sentry_dsn: str = Field(default="")
 
+    # Shared secret for the daily cron HTTP trigger. Empty disables the cron
+    # endpoint entirely (returns 503), which is the safe default for envs
+    # that don't have a scheduler wired up yet.
+    cron_token: str = Field(default="")
+
+    # Public origin used to build links inside transactional emails. Same
+    # value as NEXT_PUBLIC_SITE_URL on the frontend; kept here so backend
+    # never has to depend on frontend env files.
+    site_url: str = Field(default="https://smarttap.ie")
+
     @property
     def cors_origins_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]

@@ -260,6 +260,7 @@ export interface BootstrapResponse {
 export interface ApiClient {
   tap: (tagUuid: string, body: TapEvent) => Promise<TapResponse>;
   identifyCustomer: (body: CustomerIdentify) => Promise<IdentifyResponse>;
+  optOutCustomer: (magicLinkToken: string) => Promise<void>;
   getMe: () => Promise<MeResponse>;
   bootstrapMe: (body: BootstrapInput) => Promise<BootstrapResponse>;
   getOverview: () => Promise<DashboardOverview>;
@@ -335,6 +336,13 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
         method: "POST",
         body: JSON.stringify(body),
       }),
+    optOutCustomer: async (magicLinkToken) => {
+      // 204 No Content — request<T> assumes a JSON body, so use requestText
+      // and discard. Idempotent on the server: hitting it twice still 204s.
+      await requestText(`/v1/customers/opt-out/${encodeURIComponent(magicLinkToken)}`, {
+        method: "POST",
+      });
+    },
     getMe: () => request<MeResponse>(`/v1/me`),
     bootstrapMe: (body) =>
       request<BootstrapResponse>(`/v1/me/bootstrap`, {

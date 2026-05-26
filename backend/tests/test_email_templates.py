@@ -169,6 +169,7 @@ def test_subscription_canceled_keeps_resubscribe_path() -> None:
         "Your SmartTap subscription is active",
         "We couldn't charge your card for SmartTap",
         "Your SmartTap subscription was canceled",
+        "We miss you at ACME Barber",
     ],
 )
 def test_subjects_have_no_emoji_or_exclamation(subject: str) -> None:
@@ -176,3 +177,118 @@ def test_subjects_have_no_emoji_or_exclamation(subject: str) -> None:
     assert "!" not in subject
     # Rough ASCII check — no emoji.
     assert all(ord(c) < 128 or c == "'" for c in subject)
+
+
+# ---------------------------------------------------------------------------
+# reactivation — sent on behalf of the merchant to a dormant customer
+# ---------------------------------------------------------------------------
+
+
+def _customer(**over: Any) -> dict[str, Any]:
+    base: dict[str, Any] = {
+        "id": "c-1",
+        "name": "Alex",
+        "email": "alex@example.test",
+        "current_stamps": 3,
+        "magic_link_token": "tok_abc12345",
+    }
+    base.update(over)
+    return base
+
+
+def test_reactivation_subject_uses_business_name() -> None:
+    rendered = templates.reactivation_email(
+        tenant=_tenant(name="ACME Barber", stamps_for_reward=10, reward_description="a free cut"),
+        customer=_customer(),
+        magic_link_url="https://smarttap.ie/m/tok_abc12345",
+        opt_out_url="https://smarttap.ie/u/tok_abc12345",
+    )
+    assert rendered.subject == "We miss you at ACME Barber"
+
+
+def test_reactivation_progress_line_when_stamps_remaining() -> None:
+    """3 current / 10 threshold → 7 stamps to reward."""
+    rendered = templates.reactivation_email(
+        tenant=_tenant(stamps_for_reward=10, reward_description="a free cut"),
+        customer=_customer(current_stamps=3),
+        magic_link_url="https://smarttap.ie/m/t1",
+        opt_out_url="https://smarttap.ie/u/t1",
+    )
+    assert "7" in rendered.text
+    assert "free cut" in rendered.text
+
+
+def test_reactivation_says_reward_is_waiting_when_already_reached() -> None:
+    """Customer has enough stamps but never claimed — pitch the reward, not
+    the missing count."""
+    rendered = templates.reactivation_email(
+        tenant=_tenant(stamps_for_reward=10, reward_description="a free coffee"),
+        customer=_customer(current_stamps=10),
+        magic_link_url="https://smarttap.ie/m/t1",
+        opt_out_url="https://smarttap.ie/u/t1",
+    )
+    assert "waiting" in rendered.text.lower()
+    assert "free coffee" in rendered.text
+
+
+def test_reactivation_uses_first_name_in_greeting() -> None:
+    rendered = templates.reactivation_email(
+        tenant=_tenant(),
+        customer=_customer(name="Alex Murphy"),
+        magic_link_url="https://smarttap.ie/m/t1",
+        opt_out_url="https://smarttap.ie/u/t1",
+    )
+    # First name only — don't use the full name in the greeting.
+    assert "Hey Alex," in rendered.html
+
+
+def test_reactivation_falls_back_when_customer_has_no_name() -> None:
+    rendered = templates.reactivation_email(
+        tenant=_tenant(),
+        customer=_customer(name=None),
+        magic_link_url="https://smarttap.ie/m/t1",
+        opt_out_url="https://smarttap.ie/u/t1",
+    )
+    assert "Hey there," in rendered.html
+
+
+def test_reactivation_escapes_business_name() -> None:
+    """Defensive — merchant could put anything in their business name."""
+    rendered = templates.reactivation_email(
+        tenant=_tenant(name="<script>evil()</script>"),
+        customer=_customer(),
+        magic_link_url="https://smarttap.ie/m/t1",
+        opt_out_url="https://smarttap.ie/u/t1",
+    )
+    assert "<script>" not in rendered.html
+    assert "&lt;script&gt;" in rendered.html
+
+
+def test_reactivation_includes_both_cta_and_opt_out_links() -> None:
+    """The primary CTA should be the magic link; the opt-out belongs in the
+    footer. Both must be present and clickable."""
+    rendered = templates.reactivation_email(
+        tenant=_tenant(),
+        customer=_customer(),
+        magic_link_url="https://smarttap.ie/m/tok_abc12345",
+        opt_out_url="https://smarttap.ie/u/tok_abc12345",
+    )
+    assert 'href="https://smarttap.ie/m/tok_abc12345"' in rendered.html
+    assert 'href="https://smarttap.ie/u/tok_abc12345"' in rendered.html
+    # Plain-text fallback should also expose both URLs for non-HTML clients.
+    assert "https://smarttap.ie/m/tok_abc12345" in rendered.text
+    assert "https://smarttap.ie/u/tok_abc12345" in rendered.text
+
+
+def test_reactivation_footer_is_customer_facing_not_merchant() -> None:
+    """The shared layout footer addresses tenant owners ("you signed up as
+    the owner"). Reactivation hand-rolls its own shell so the footer makes
+    sense for end customers."""
+    rendered = templates.reactivation_email(
+        tenant=_tenant(name="ACME Barber"),
+        customer=_customer(),
+        magic_link_url="https://smarttap.ie/m/t1",
+        opt_out_url="https://smarttap.ie/u/t1",
+    )
+    assert "signed up as the owner" not in rendered.html
+    assert "opted in at ACME Barber" in rendered.html
