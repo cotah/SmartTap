@@ -48,7 +48,15 @@ export function FoundingCallout() {
         <p className="font-display text-2xl leading-tight tracking-tight text-neutral-900 md:text-[26px]">
           First{" "}
           <span className="text-amber-600">
-            {visible ? value : 0} of {FOUNDING_TOTAL}
+            {/* Visual animating count — hidden from screen readers so the
+             * tween doesn't trigger N announcements as it climbs. */}
+            <span aria-hidden="true">
+              {visible ? value : 0} of {FOUNDING_TOTAL}
+            </span>
+            {/* sr-only static value — single announcement on entry. */}
+            <span className="sr-only">
+              {FOUNDING_SPOTS_REMAINING} of {FOUNDING_TOTAL}
+            </span>
           </span>{" "}
           Dublin shops:&nbsp;stand&nbsp;free,&nbsp;60&nbsp;days&nbsp;free, €29/mo locked for life.
         </p>

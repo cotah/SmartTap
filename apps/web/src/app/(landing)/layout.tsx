@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import * as React from "react";
 
 import { Footer } from "./_components/footer";
+import { LandingJsonLd } from "./_components/json-ld";
 import { TopBanner } from "./_components/top-banner";
 
 /**
@@ -28,6 +29,7 @@ export default function LandingLayout({
 }) {
   return (
     <div className="flex min-h-dvh flex-col bg-cream text-neutral-900">
+      <LandingJsonLd />
       <TopBanner />
       {/* Skip link for keyboard users — surfaces on :focus only. */}
       <a
