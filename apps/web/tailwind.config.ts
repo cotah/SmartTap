@@ -22,6 +22,26 @@ const config: Config = {
           "off-white": "#F7F5F0",
           black: "#1A1A1A",
         },
+        // Derived landing palette per LANDING-SPEC.md §4. green-900 +
+        // amber-500 are the brand base; -50/-600/-800 are tinted/darker
+        // variants for hover, highlighted card backgrounds, focus rings.
+        // Amber is restricted: never on body text (2.6:1 vs cream fails AA).
+        cream: "#F7F5F0",
+        green: {
+          50: "#EAF0EE",
+          800: "#245C4B",
+          900: "#1B4D3E",
+        },
+        amber: {
+          50: "#FBF3E4",
+          500: "#E8A020",
+          600: "#C8861A",
+        },
+        neutral: {
+          300: "#D8D5CD",
+          600: "#5A5A5A",
+          900: "#1A1A1A",
+        },
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
@@ -49,6 +69,11 @@ const config: Config = {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      transitionTimingFunction: {
+        // Default ease-out for landing — matches Linear / Stripe polish.
+        // Named `smooth-out`; used by every framer-motion fade-in.
+        "smooth-out": "cubic-bezier(0.16, 1, 0.3, 1)",
       },
     },
   },

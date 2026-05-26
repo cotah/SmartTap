@@ -22,6 +22,17 @@
     @apply border-border;
   }
 
+  /* Smooth-scroll for anchor links (#pricing, #faq, etc) used across the
+   * landing. Respects prefers-reduced-motion via the media query below. */
+  html {
+    scroll-behavior: smooth;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
   body {
     @apply bg-background text-foreground font-sans antialiased;
   }
