@@ -1,5 +1,7 @@
 import * as React from "react";
 
+import { AnimatedDemo } from "./_components/animated-demo/animated-demo";
+import { Hero } from "./_components/hero/hero";
 import { Section, SectionEyebrow } from "./_components/section";
 
 /**
@@ -17,23 +19,11 @@ import { Section, SectionEyebrow } from "./_components/section";
 export default function LandingPage() {
   return (
     <>
-      {/* 1. Hero — Phase 2 */}
-      <Section as="section" id="hero" containerSize="hero" className="lg:pt-24 lg:pb-32">
-        <Placeholder
-          eyebrow="Section 1 · Hero"
-          title="One tap. Reviews go up. Regulars come back."
-          subtitle="Hero block lands in Phase 2 — H1, subhead, two CTAs, photo of the real stand, founder microtrust line."
-        />
-      </Section>
+      {/* 1. Hero */}
+      <Hero />
 
-      {/* 2. Animated demo — Phase 2 */}
-      <Section as="section" id="demo">
-        <Placeholder
-          eyebrow="Section 2 · Demo"
-          title="This is what your customers see."
-          subtitle="Animated SVG: stand pulse → phone slide → tap ripple → review submitted. 4.5s loop, pauses off-screen, simplified on mobile, static for reduced-motion."
-        />
-      </Section>
+      {/* 2. Animated demo */}
+      <AnimatedDemo />
 
       {/* 3. How it works — Phase 3 */}
       <Section as="section" id="how-it-works">
