@@ -17,4 +17,11 @@ COPY app ./app
 
 EXPOSE 8000
 
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Exec-form CMD with `sh -c` so ${PORT} gets expanded at runtime AND signals
+# propagate cleanly. Railway and Fly inject the port via the PORT env var;
+# locally we fall back to 8000 so `docker run -p 8000:8000 …` keeps working
+# without extra flags. The `exec` before `uv run` replaces the shell with
+# the uv process so SIGTERM from the orchestrator reaches it directly
+# (without `exec`, sh would catch the signal and the container would hang
+# until Railway force-kills it on redeploy).
+CMD ["sh", "-c", "exec uv run uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
