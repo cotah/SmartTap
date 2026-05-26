@@ -7,9 +7,11 @@ import structlog
 
 from app.db import customers, nfc_tags, rewards, stamps, taps, tenants
 from app.errors import InactiveError, NotFoundError
+from app.services import campaign_service
 from app.services.stamp_engine import (
     can_award_stamp,
     generate_validation_code,
+    multiplier_for_campaign,
     reward_expiry,
 )
 
@@ -36,6 +38,13 @@ class TapResult:
     reward_available: Row | None
     tap_id: str
     stamp_awarded: bool
+    # Active double_stamp campaign at the moment of this tap, or None. Used
+    # by the customer-facing page to render a "2x today" badge.
+    active_campaign: Row | None = None
+    # How many stamps this tap actually awarded (1 normally; 2..5 during a
+    # double_stamp campaign). Surfaced so the UI can say "+2 stamps" instead
+    # of always showing "+1".
+    stamps_awarded_count: int = 0
 
 
 def _hash_ip(ip: str | None) -> str | None:
@@ -81,24 +90,36 @@ def process_tap(ctx: TapContext) -> TapResult:
 
     stamp_awarded = False
     reward_available: Row | None = None
+    awarded_count = 0
+
+    # Look up the active double_stamp campaign once per tap. None when no
+    # campaign is live — the common path. Lookup is cheap (partial index).
+    now = datetime.now(UTC)
+    active_campaign = campaign_service.find_active_for_tap(tenant["id"], now=now)
+    multiplier = multiplier_for_campaign(active_campaign)
 
     if customer is not None:
         last_stamp = stamps.last_for_customer(customer["id"])
         last_at = _parse_iso(last_stamp["created_at"]) if last_stamp else None
-        if can_award_stamp(last_at, tenant["stamp_rate_limit_minutes"], datetime.now(UTC)):
+        if can_award_stamp(last_at, tenant["stamp_rate_limit_minutes"], now):
+            # Single stamp row per tap, but its multiplier captures campaign
+            # weight. current_stamps moves by `multiplier`, so the customer's
+            # card visibly jumps 2 (or N) during a double_stamp window.
             stamps.create(
                 customer_id=customer["id"],
                 tenant_id=tenant["id"],
                 tap_id=tap["id"],
+                multiplier=multiplier,
             )
             stamp_awarded = True
+            awarded_count = multiplier
             updated = customers.update(
                 customer["id"],
                 {
-                    "current_stamps": customer["current_stamps"] + 1,
-                    "total_stamps": customer["total_stamps"] + 1,
+                    "current_stamps": customer["current_stamps"] + multiplier,
+                    "total_stamps": customer["total_stamps"] + multiplier,
                     "total_visits": customer["total_visits"] + 1,
-                    "last_visit_at": datetime.now(UTC).isoformat(),
+                    "last_visit_at": now.isoformat(),
                 },
             )
             customer = updated
@@ -111,12 +132,16 @@ def process_tap(ctx: TapContext) -> TapResult:
                     description=tenant["reward_description"] or "Free reward",
                     validation_code=generate_validation_code(),
                     expires_at=reward_expiry(
-                        datetime.now(UTC), tenant["reward_expires_days"]
+                        now, tenant["reward_expires_days"]
                     ).isoformat(),
                 )
+                # Reset to the *remainder* so a double_stamp tap that pushes
+                # past the threshold doesn't waste extra stamps. Example:
+                # current=9, multiplier=2, threshold=10 → reward + 1 left.
+                remainder = customer["current_stamps"] - tenant["stamps_for_reward"]
                 customer = customers.update(
                     customer["id"],
-                    {"current_stamps": 0},
+                    {"current_stamps": max(0, remainder)},
                 )
                 reward_available = new_reward
 
@@ -129,7 +154,9 @@ def process_tap(ctx: TapContext) -> TapResult:
         tag_id=tag["id"],
         customer_identified=customer is not None,
         stamp_awarded=stamp_awarded,
+        stamps_awarded_count=awarded_count,
         reward_available=reward_available is not None,
+        campaign_id=active_campaign["id"] if active_campaign else None,
     )
 
     return TapResult(
@@ -139,4 +166,6 @@ def process_tap(ctx: TapContext) -> TapResult:
         reward_available=reward_available,
         tap_id=tap["id"],
         stamp_awarded=stamp_awarded,
+        active_campaign=active_campaign,
+        stamps_awarded_count=awarded_count,
     )

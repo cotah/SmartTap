@@ -5,6 +5,12 @@ import pytest
 
 from app.errors import NotFoundError
 from app.services import onboarding_service
+from app.services.onboarding_service import (
+    TRIAL_DAYS,
+    OnboardingPayload,
+    bootstrap_owner,
+    complete_onboarding,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -15,12 +21,6 @@ def _silence_welcome_email(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         onboarding_service.email_service, "send_welcome", lambda **_kw: None
     )
-from app.services.onboarding_service import (
-    TRIAL_DAYS,
-    OnboardingPayload,
-    bootstrap_owner,
-    complete_onboarding,
-)
 
 
 def _payload(**over: Any) -> OnboardingPayload:

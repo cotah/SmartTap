@@ -59,6 +59,13 @@ export interface RewardAvailable {
   expires_at: string;
 }
 
+export interface ActiveCampaign {
+  id: string;
+  name: string;
+  multiplier: number;
+  ends_at: string;
+}
+
 export interface TapResponse {
   tenant: TenantPublic;
   customer: CustomerSnapshot | null;
@@ -67,6 +74,8 @@ export interface TapResponse {
   stamps_current: number;
   reward_state: RewardStateSnapshot;
   reward_available: RewardAvailable | null;
+  active_campaign: ActiveCampaign | null;
+  stamps_awarded_count: number;
 }
 
 export interface IdentifyResponse {
@@ -151,6 +160,38 @@ export interface OnboardingComplete {
 
 export type BillingPlanId = "review" | "loyalty" | "pro" | "network";
 
+export type CampaignType = "double_stamp" | "reactivation" | "birthday" | "custom";
+export type CampaignStatus = "draft" | "active" | "paused" | "ended";
+
+export interface Campaign {
+  id: string;
+  tenant_id: string;
+  name: string;
+  type: CampaignType;
+  status: CampaignStatus;
+  multiplier: number;
+  starts_at: string | null;
+  ends_at: string | null;
+  created_at: string;
+}
+
+export interface CampaignCreateInput {
+  name: string;
+  // S4-W1 only supports double_stamp; widen the union as new types ship.
+  type?: "double_stamp";
+  multiplier: number;
+  starts_at: string;
+  ends_at: string;
+  status?: "draft" | "active";
+}
+
+export interface CampaignUpdateInput {
+  name?: string;
+  multiplier?: number;
+  starts_at?: string;
+  ends_at?: string;
+}
+
 export interface CheckoutSessionInput {
   plan: BillingPlanId;
   success_url: string;
@@ -233,6 +274,10 @@ export interface ApiClient {
   createCheckoutSession: (body: CheckoutSessionInput) => Promise<{ url: string }>;
   createPortalSession: (body: PortalSessionInput) => Promise<{ url: string }>;
   getSubscription: () => Promise<SubscriptionInfo>;
+  listCampaigns: () => Promise<{ items: Campaign[] }>;
+  createCampaign: (body: CampaignCreateInput) => Promise<Campaign>;
+  updateCampaign: (id: string, body: CampaignUpdateInput) => Promise<Campaign>;
+  changeCampaignStatus: (id: string, status: CampaignStatus) => Promise<Campaign>;
 }
 
 export function createApiClient(opts: ApiClientOptions): ApiClient {
@@ -352,5 +397,21 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
         body: JSON.stringify(body),
       }),
     getSubscription: () => request<SubscriptionInfo>(`/v1/billing/subscription`),
+    listCampaigns: () => request<{ items: Campaign[] }>(`/v1/campaigns`),
+    createCampaign: (body) =>
+      request<Campaign>(`/v1/campaigns`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    updateCampaign: (id, body) =>
+      request<Campaign>(`/v1/campaigns/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
+    changeCampaignStatus: (id, status) =>
+      request<Campaign>(`/v1/campaigns/${id}/status`, {
+        method: "POST",
+        body: JSON.stringify({ status }),
+      }),
   };
 }

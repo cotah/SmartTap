@@ -8,14 +8,24 @@ interface Props {
 }
 
 export function TapView({ data }: Props) {
-  const { tenant, customer, reward_state, reward_available } = data;
+  const { tenant, customer, reward_state, reward_available, active_campaign } = data;
   const bg = tenant.primary_color;
   const accent = tenant.accent_color;
   const greeting = customer?.name ? `Welcome back, ${customer.name.split(" ")[0]}` : "Hi there 👋";
+  const stampDelta = data.stamps_awarded_count;
 
   return (
     <main className="min-h-dvh text-brand-off-white" style={{ backgroundColor: bg }}>
       <div className="container flex min-h-dvh flex-col gap-8 py-10">
+        {active_campaign ? (
+          <div
+            className="rounded-full px-4 py-1.5 text-center text-sm font-semibold uppercase tracking-wide"
+            style={{ backgroundColor: accent, color: bg }}
+          >
+            {active_campaign.multiplier}× stamps today · {active_campaign.name}
+          </div>
+        ) : null}
+
         <header className="flex flex-col items-center gap-2 text-center">
           {tenant.logo_url ? (
             // eslint-disable-next-line @next/next/no-img-element -- next/image with remotePatterns lands in S1-W6
@@ -48,7 +58,8 @@ export function TapView({ data }: Props) {
 
           {data.stamp_awarded ? (
             <p className="text-sm" style={{ color: accent }}>
-              ✓ Stamp added · {reward_state.current_stamps} / {reward_state.stamps_for_reward}
+              ✓ {stampDelta > 1 ? `+${stampDelta} stamps` : "Stamp added"} ·{" "}
+              {reward_state.current_stamps} / {reward_state.stamps_for_reward}
             </p>
           ) : null}
 

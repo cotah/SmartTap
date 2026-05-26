@@ -41,6 +41,17 @@ class RewardAvailable(BaseModel):
     expires_at: str
 
 
+class ActiveCampaign(BaseModel):
+    """The double_stamp campaign live at the moment of the tap, if any.
+    Fed to the customer-facing page so it can render a "{multiplier}x today"
+    badge — purely UI signal, not authoritative state."""
+
+    id: str
+    name: str
+    multiplier: int = Field(ge=2, le=5)
+    ends_at: str
+
+
 class TapResponse(BaseModel):
     tenant: TenantPublic
     customer: CustomerSnapshot | None = None
@@ -49,3 +60,7 @@ class TapResponse(BaseModel):
     stamps_current: int = Field(ge=0)
     reward_state: RewardStateSnapshot
     reward_available: RewardAvailable | None = None
+    active_campaign: ActiveCampaign | None = None
+    # Number of stamps awarded by this specific tap (0 when rate-limited,
+    # 1 normally, 2..5 during a double_stamp window).
+    stamps_awarded_count: int = Field(default=0, ge=0)

@@ -103,8 +103,16 @@ def _stub_emails(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, dict[str, A
             calls.append((name, kwargs))
         return _inner
 
-    monkeypatch.setattr(webhook_service.email_service, "send_payment_succeeded", fake("payment_succeeded"))
-    monkeypatch.setattr(webhook_service.email_service, "send_payment_failed", fake("payment_failed"))
+    monkeypatch.setattr(
+        webhook_service.email_service,
+        "send_payment_succeeded",
+        fake("payment_succeeded"),
+    )
+    monkeypatch.setattr(
+        webhook_service.email_service,
+        "send_payment_failed",
+        fake("payment_failed"),
+    )
     monkeypatch.setattr(
         webhook_service.email_service,
         "send_subscription_canceled",

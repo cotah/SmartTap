@@ -1,6 +1,14 @@
 import secrets
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import Any
+
+# Bounds for the configurable double_stamp multiplier. Lower bound is 2
+# (1x would defeat the purpose); upper bound caps abuse and keeps reward
+# pacing sane — a 10x campaign would burn through a 10-stamp card in one
+# visit, which usually isn't what the owner intends.
+MIN_MULTIPLIER = 2
+MAX_MULTIPLIER = 5
 
 
 @dataclass(frozen=True)
@@ -46,3 +54,31 @@ def generate_validation_code() -> str:
 
 def reward_expiry(now: datetime, days: int) -> datetime:
     return now + timedelta(days=days)
+
+
+def multiplier_for_campaign(campaign: dict[str, Any] | None) -> int:
+    """How many stamps to award per tap given the (possibly None) active campaign.
+
+    None / non-double_stamp / malformed config → 1 (default behaviour).
+    Valid double_stamp → clamp config.multiplier to [MIN_MULTIPLIER, MAX_MULTIPLIER].
+
+    Clamping (rather than raising) keeps the tap path resilient: a corrupted
+    config in one campaign must never prevent customers from earning stamps.
+    """
+    if campaign is None:
+        return 1
+    if campaign.get("type") != "double_stamp":
+        return 1
+    config = campaign.get("config") or {}
+    raw = config.get("multiplier") if isinstance(config, dict) else None
+    if raw is None:
+        return MIN_MULTIPLIER
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        return MIN_MULTIPLIER  # safest fallback for a double_stamp without a number
+    if value < MIN_MULTIPLIER:
+        return MIN_MULTIPLIER
+    if value > MAX_MULTIPLIER:
+        return MAX_MULTIPLIER
+    return value

@@ -47,9 +47,10 @@ export default async function DashboardPage() {
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-brand-black/70">
           Manage
         </h2>
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
           <DashLink href="/dashboard/customers" title="Customers" sub="View, filter, export" />
           <DashLink href="/dashboard/reward" title="Reward" sub="Set stamps and prize" />
+          <DashLink href="/dashboard/campaigns" title="Campaigns" sub="Double-stamp windows" />
           <DashLink href="/dashboard/settings" title="Settings" sub="Brand and Google" />
           <DashLink href="/dashboard/billing" title="Billing" sub="Plan and payment" />
         </div>

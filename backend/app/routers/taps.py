@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request
 
 from app.schemas.tap import (
+    ActiveCampaign,
     CustomerSnapshot,
     RewardAvailable,
     RewardStateSnapshot,
@@ -8,7 +9,7 @@ from app.schemas.tap import (
     TapResponse,
     TenantPublic,
 )
-from app.services.stamp_engine import compute_reward_state
+from app.services.stamp_engine import compute_reward_state, multiplier_for_campaign
 from app.services.tap_service import TapContext, process_tap
 
 router = APIRouter(tags=["taps"])
@@ -78,4 +79,15 @@ def register_tap(tag_uuid: str, body: TapEventIn, request: Request) -> TapRespon
             if result.reward_available is not None
             else None
         ),
+        active_campaign=(
+            ActiveCampaign(
+                id=result.active_campaign["id"],
+                name=result.active_campaign["name"],
+                multiplier=multiplier_for_campaign(result.active_campaign),
+                ends_at=result.active_campaign["ends_at"],
+            )
+            if result.active_campaign is not None
+            else None
+        ),
+        stamps_awarded_count=result.stamps_awarded_count,
     )

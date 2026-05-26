@@ -27,4 +27,10 @@ export type {
   PortalSessionInput,
   SubscriptionInfo,
   TrialStatus,
+  ActiveCampaign,
+  Campaign,
+  CampaignType,
+  CampaignStatus,
+  CampaignCreateInput,
+  CampaignUpdateInput,
 } from "./client";
