@@ -42,7 +42,7 @@ type BookCallButtonProps = Omit<
   label?: string;
 };
 
-const DEFAULT_LABEL = "15 minutes with the founder";
+const DEFAULT_LABEL = "Book 15-min call with Henrique";
 
 export function BookCallButton({
   label = DEFAULT_LABEL,
