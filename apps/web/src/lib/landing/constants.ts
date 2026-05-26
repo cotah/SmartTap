@@ -15,8 +15,10 @@ export const FOUNDING_TOTAL = 5;
  * compose). Set this once the Cal.com account is created.
  *
  * Format expected by @calcom/embed-react: "username/event-type"
- * (e.g. "henrique/15min"). NOT a full URL. */
-export const BOOK_CALL_URL = "";
+ * (e.g. "henrique/15min"). NOT a full URL.
+ *
+ * Live booking page: https://cal.com/henrique-pasquetto-tt5xm5/15min */
+export const BOOK_CALL_URL = "henrique-pasquetto-tt5xm5/15min";
 
 /** Mailto destination when BOOK_CALL_URL is empty. */
 export const BOOK_CALL_MAILTO = "henrique@smarttap.ie";
