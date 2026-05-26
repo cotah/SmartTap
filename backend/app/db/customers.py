@@ -185,6 +185,76 @@ def update(customer_id: str, fields: dict[str, Any]) -> Row:
     return rows[0]
 
 
+def find_by_criteria(
+    *,
+    tenant_id: str,
+    visits_min: int | None = None,
+    visits_max: int | None = None,
+    stamps_min: int | None = None,
+    stamps_max: int | None = None,
+    last_visit_after: datetime | None = None,
+    last_visit_before: datetime | None = None,
+    created_after: datetime | None = None,
+    has_email: bool | None = None,
+    has_phone: bool | None = None,
+    gdpr_consent_only: bool | None = None,
+    limit: int = 20,
+) -> tuple[list[Row], int]:
+    """Evaluate a segment criteria block against customers for this tenant.
+
+    Returns (rows_for_preview, total_count). The count is the unpaginated
+    match count after all filters — so the dashboard can say "123 customers
+    match (showing first 20)" without a second roundtrip.
+
+    The function takes *resolved* datetime cutoffs rather than day counts so
+    the service layer owns the "now" reference and tests can pin it. Each
+    None argument is a no-op filter. AND semantics throughout.
+    """
+    client = get_supabase_admin()
+    query = (
+        client.table("customers")
+        .select(
+            "id,name,phone,email,current_stamps,total_visits,last_visit_at,created_at",
+            count=CountMethod.exact,
+        )
+        .eq("tenant_id", tenant_id)
+    )
+
+    if visits_min is not None:
+        query = query.gte("total_visits", visits_min)
+    if visits_max is not None:
+        query = query.lte("total_visits", visits_max)
+    if stamps_min is not None:
+        query = query.gte("current_stamps", stamps_min)
+    if stamps_max is not None:
+        query = query.lte("current_stamps", stamps_max)
+    if last_visit_after is not None:
+        # "Visited within last N days" — recent activity. NULL last_visit_at
+        # rows are correctly excluded by the >= operator.
+        query = query.gte("last_visit_at", last_visit_after.isoformat())
+    if last_visit_before is not None:
+        # "No visit in N+ days" — dormant. Same NULL-exclusion semantics.
+        query = query.lt("last_visit_at", last_visit_before.isoformat())
+    if created_after is not None:
+        query = query.gte("created_at", created_after.isoformat())
+    if has_email is True:
+        query = query.not_.is_("email", "null")
+    elif has_email is False:
+        query = query.is_("email", "null")
+    if has_phone is True:
+        query = query.not_.is_("phone", "null")
+    elif has_phone is False:
+        query = query.is_("phone", "null")
+    if gdpr_consent_only is True:
+        query = query.eq("gdpr_consent", True)
+
+    query = query.order("last_visit_at", desc=True)
+    res = query.range(0, max(0, limit - 1)).execute()
+    rows = cast(list[Row], res.data or [])
+    total = res.count or 0
+    return rows, total
+
+
 def list_for_tenant(
     *,
     tenant_id: str,

@@ -19,6 +19,7 @@ from app.routers import (
     onboarding,
     reports,
     rewards,
+    segments,
     taps,
     tenants,
     webhooks,
@@ -88,6 +89,7 @@ def create_app() -> FastAPI:
     app.include_router(campaigns.router, prefix="/v1")
     app.include_router(cron.router, prefix="/v1")
     app.include_router(reports.router, prefix="/v1")
+    app.include_router(segments.router, prefix="/v1")
 
     return app
 

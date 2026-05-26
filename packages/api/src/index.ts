@@ -33,4 +33,10 @@ export type {
   CampaignStatus,
   CampaignCreateInput,
   CampaignUpdateInput,
+  Segment,
+  SegmentCriteria,
+  SegmentCreateInput,
+  SegmentUpdateInput,
+  SegmentCustomerPreview,
+  SegmentPreview,
 } from "./client";

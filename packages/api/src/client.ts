@@ -192,6 +192,67 @@ export interface CampaignUpdateInput {
   ends_at?: string;
 }
 
+// ---------------------------------------------------------------------------
+// Segments (S4-W4)
+// ---------------------------------------------------------------------------
+
+/**
+ * All fields optional — null/undefined = criterion not applied. The engine
+ * combines every set field with AND semantics. `..._after_days` means
+ * "event is within the last N days" (recent); `..._before_days` means
+ * "event is older than N days" (dormant).
+ */
+export interface SegmentCriteria {
+  visits_min?: number | null;
+  visits_max?: number | null;
+  stamps_min?: number | null;
+  stamps_max?: number | null;
+  last_visit_after_days?: number | null;
+  last_visit_before_days?: number | null;
+  created_after_days?: number | null;
+  has_email?: boolean | null;
+  has_phone?: boolean | null;
+  /** Only meaningful as `true`. The backend rejects `false` to avoid
+   * mass-targeting customers who haven't consented. */
+  gdpr_consent_only?: boolean | null;
+}
+
+export interface Segment {
+  id: string;
+  tenant_id: string;
+  name: string;
+  criteria: SegmentCriteria;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SegmentCreateInput {
+  name: string;
+  criteria: SegmentCriteria;
+}
+
+export interface SegmentUpdateInput {
+  name?: string;
+  criteria?: SegmentCriteria;
+}
+
+export interface SegmentCustomerPreview {
+  id: string;
+  name: string | null;
+  phone: string | null;
+  email: string | null;
+  current_stamps: number;
+  total_visits: number;
+  last_visit_at: string | null;
+  created_at: string;
+}
+
+export interface SegmentPreview {
+  total: number;
+  items: SegmentCustomerPreview[];
+  evaluated_at: string;
+}
+
 export interface CheckoutSessionInput {
   plan: BillingPlanId;
   success_url: string;
@@ -283,6 +344,15 @@ export interface ApiClient {
   createCampaign: (body: CampaignCreateInput) => Promise<Campaign>;
   updateCampaign: (id: string, body: CampaignUpdateInput) => Promise<Campaign>;
   changeCampaignStatus: (id: string, status: CampaignStatus) => Promise<Campaign>;
+  listSegments: () => Promise<{ items: Segment[] }>;
+  createSegment: (body: SegmentCreateInput) => Promise<Segment>;
+  updateSegment: (id: string, body: SegmentUpdateInput) => Promise<Segment>;
+  deleteSegment: (id: string) => Promise<void>;
+  previewSegment: (id: string, limit?: number) => Promise<SegmentPreview>;
+  previewUnsavedSegment: (
+    body: SegmentCreateInput,
+    limit?: number,
+  ) => Promise<SegmentPreview>;
 }
 
 export function createApiClient(opts: ApiClientOptions): ApiClient {
@@ -467,5 +537,32 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
         method: "POST",
         body: JSON.stringify({ status }),
       }),
+    listSegments: () => request<{ items: Segment[] }>(`/v1/segments`),
+    createSegment: (body) =>
+      request<Segment>(`/v1/segments`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    updateSegment: (id, body) =>
+      request<Segment>(`/v1/segments/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
+    deleteSegment: async (id) => {
+      // 204 No Content — request<T> assumes JSON, so use requestText and
+      // discard. Hard delete on the server (see segment_service).
+      await requestText(`/v1/segments/${id}`, { method: "DELETE" });
+    },
+    previewSegment: (id, limit) => {
+      const qs = limit ? `?limit=${limit}` : "";
+      return request<SegmentPreview>(`/v1/segments/${id}/preview${qs}`);
+    },
+    previewUnsavedSegment: (body, limit) => {
+      const qs = limit ? `?limit=${limit}` : "";
+      return request<SegmentPreview>(`/v1/segments/preview${qs}`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+    },
   };
 }

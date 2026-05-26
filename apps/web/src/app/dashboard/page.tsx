@@ -53,6 +53,7 @@ export default async function DashboardPage() {
         </h2>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
           <DashLink href="/dashboard/customers" title="Customers" sub="View, filter, export" />
+          <DashLink href="/dashboard/segments" title="Segments" sub="Group customers by criteria" />
           <DashLink href="/dashboard/reward" title="Reward" sub="Set stamps and prize" />
           <DashLink href="/dashboard/campaigns" title="Campaigns" sub="Double-stamp windows" />
           <DashLink href="/dashboard/settings" title="Settings" sub="Brand and Google" />
