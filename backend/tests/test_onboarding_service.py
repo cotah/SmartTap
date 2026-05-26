@@ -5,6 +5,16 @@ import pytest
 
 from app.errors import NotFoundError
 from app.services import onboarding_service
+
+
+@pytest.fixture(autouse=True)
+def _silence_welcome_email(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Bootstrap fires a best-effort welcome email after creating the tenant.
+    These tests focus on tenant creation; the email path is covered in
+    test_email_service.py."""
+    monkeypatch.setattr(
+        onboarding_service.email_service, "send_welcome", lambda **_kw: None
+    )
 from app.services.onboarding_service import (
     TRIAL_DAYS,
     OnboardingPayload,

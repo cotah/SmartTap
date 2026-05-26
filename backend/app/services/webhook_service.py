@@ -21,6 +21,7 @@ import structlog
 
 from app.config import get_settings
 from app.db import stripe_events, tenants
+from app.services import email_service
 
 log = structlog.get_logger(__name__)
 
@@ -151,6 +152,17 @@ def _on_checkout_completed(session: dict[str, Any]) -> None:
         subscription_id=subscription_id,
     )
 
+    # Confirmation email. Re-fetch the tenant so the email uses the freshly
+    # written values (esp. is_active) — webhook idempotency means this fires
+    # exactly once per checkout. Best-effort: email failures don't 5xx.
+    updated_tenant = tenants.get_by_id(resolved_tenant)
+    if updated_tenant is not None:
+        email_service.send_payment_succeeded(
+            tenant_id=resolved_tenant,
+            tenant=updated_tenant,
+            session=session,
+        )
+
 
 def _on_subscription_updated(subscription: dict[str, Any]) -> None:
     """Authoritative source of plan + status. Runs on every change: trial→active,
@@ -259,6 +271,13 @@ def _on_subscription_deleted(subscription: dict[str, Any]) -> None:
         subscription_id=subscription_id,
     )
 
+    updated_tenant = tenants.get_by_id(resolved_tenant)
+    if updated_tenant is not None:
+        email_service.send_subscription_canceled(
+            tenant_id=resolved_tenant,
+            tenant=updated_tenant,
+        )
+
 
 def _on_invoice_payment_succeeded(invoice: dict[str, Any]) -> None:
     """Observability only. Subscription.updated drives state; logging here lets
@@ -273,8 +292,10 @@ def _on_invoice_payment_succeeded(invoice: dict[str, Any]) -> None:
 
 
 def _on_invoice_payment_failed(invoice: dict[str, Any]) -> None:
-    """Observability only. Stripe retries the invoice and sends
-    subscription.updated(status=past_due); we react there, not here."""
+    """Nudge the owner to update their payment method. The actual state
+    change (is_active flip) comes from subscription.updated(status=past_due),
+    which is where the dashboard banner is driven from — this email is just
+    a heads-up while Stripe still has retries left."""
     log.warning(
         "stripe_invoice_failed",
         invoice_id=invoice.get("id"),
@@ -282,6 +303,24 @@ def _on_invoice_payment_failed(invoice: dict[str, Any]) -> None:
         amount_due=invoice.get("amount_due"),
         subscription_id=invoice.get("subscription"),
         attempt_count=invoice.get("attempt_count"),
+    )
+
+    customer_id = invoice.get("customer")
+    subscription_id = invoice.get("subscription")
+    resolved_tenant = _resolve_tenant_id(
+        metadata_tenant_id=None,  # invoices don't carry our metadata
+        stripe_subscription_id=subscription_id,
+        stripe_customer_id=customer_id,
+    )
+    if not resolved_tenant:
+        return
+    tenant = tenants.get_by_id(resolved_tenant)
+    if tenant is None:
+        return
+    email_service.send_payment_failed(
+        tenant_id=resolved_tenant,
+        tenant=tenant,
+        invoice=invoice,
     )
 
 

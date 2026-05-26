@@ -7,7 +7,7 @@ from typing import Any
 import structlog
 
 from app.db import tenant_members, tenants
-from app.services import stripe_client
+from app.services import email_service, stripe_client
 
 log = structlog.get_logger(__name__)
 
@@ -74,6 +74,12 @@ def bootstrap_owner(
     # stays usable; we'll backfill via webhook/retry. Idempotency on the
     # Stripe side prevents duplicates if bootstrap retries.
     tenant = _attach_stripe_customer(tenant, email)
+
+    # Welcome email is best-effort and only fires on first creation. The
+    # `existing_members` branch above returns early without reaching here,
+    # so retries of bootstrap (e.g. transient client errors) never duplicate
+    # the welcome email — the second call sees a member and returns is_new=False.
+    email_service.send_welcome(tenant=tenant, email=email)
 
     return BootstrapResult(tenant=tenant, is_new=True)
 

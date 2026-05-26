@@ -4,6 +4,14 @@ import pytest
 
 from app.services import webhook_service
 
+
+@pytest.fixture(autouse=True)
+def _silence_emails(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Webhook tests assert on DB state; email triggers are a separate concern
+    (covered in test_email_service.py). Stub them here so tests don't have
+    to remember to do it individually."""
+    _stub_emails(monkeypatch)
+
 # ---------------------------------------------------------------------------
 # Test helpers
 # ---------------------------------------------------------------------------
@@ -45,11 +53,17 @@ def _stub_tenants(
     *,
     by_subscription: dict[str, dict[str, Any]] | None = None,
     by_customer: dict[str, dict[str, Any]] | None = None,
+    by_id: dict[str, dict[str, Any]] | None = None,
 ) -> list[tuple[str, dict[str, Any]]]:
-    """Replace tenants.{update,get_by_stripe_subscription,get_by_stripe_customer}.
-    Returns the list of (tenant_id, fields) that update() was called with."""
+    """Replace tenants lookups + update. Returns the list of (tenant_id, fields)
+    that update() was called with.
+
+    `by_id` covers `tenants.get_by_id`, which post-S3-W7 handlers call to
+    re-fetch the row before triggering an email. Tests that don't care about
+    the email branch can leave it empty — the handler tolerates None."""
     by_subscription = by_subscription or {}
     by_customer = by_customer or {}
+    by_id = by_id or {}
 
     updates: list[tuple[str, dict[str, Any]]] = []
 
@@ -68,7 +82,35 @@ def _stub_tenants(
         "get_by_stripe_customer",
         lambda cid: by_customer.get(cid),
     )
+    monkeypatch.setattr(
+        webhook_service.tenants,
+        "get_by_id",
+        lambda tid: by_id.get(tid),
+    )
     return updates
+
+
+def _stub_emails(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, dict[str, Any]]]:
+    """Replace every email_service.send_* with a no-op recorder.
+
+    Webhooks must succeed regardless of email; tests assert the side-effect
+    on the DB. The email-specific assertions live in test_email_service.py.
+    Returned list contains (event_name, kwargs) for tests that want to peek."""
+    calls: list[tuple[str, dict[str, Any]]] = []
+
+    def fake(name: str) -> Any:
+        def _inner(**kwargs: Any) -> None:
+            calls.append((name, kwargs))
+        return _inner
+
+    monkeypatch.setattr(webhook_service.email_service, "send_payment_succeeded", fake("payment_succeeded"))
+    monkeypatch.setattr(webhook_service.email_service, "send_payment_failed", fake("payment_failed"))
+    monkeypatch.setattr(
+        webhook_service.email_service,
+        "send_subscription_canceled",
+        fake("subscription_canceled"),
+    )
+    return calls
 
 
 def _event(event_type: str, obj: dict[str, Any], event_id: str = "evt_test_1") -> dict[str, Any]:
