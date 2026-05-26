@@ -297,7 +297,40 @@ Análise automatizada de reviews com IA — extrai padrões, segmenta clientes p
 ### FASE 3 — Escala (Meses 4-12)
 **Objetivo:** 200 clientes, expansão geográfica
 
-**Sprint 7+ — Integração com sistemas de reservas**
+**Sprint 7+ — SmartTap Awards Dublin (premiação anual)**
+
+Evento anual de reconhecimento dos melhores negócios que usam SmartTap em Dublin. Combina alavanca de marketing orgânico (press local + redes sociais) com mecânica de fidelização dos clientes existentes (badge + widget no site deles). Funciona como motor de WoM no ICP barbearia/café Dublin antes do produto ter cases públicos.
+
+**Features no produto:**
+
+- [ ] **Ranking público por categoria** — leaderboard renderizado em `/awards/<ano>` ou `/dashboard/awards/leaderboard`, com opt-in do tenant pra aparecer publicamente; reviews / retenção / stamps como métricas
+- [ ] **Badge "SmartTap Award Winner 2026"** — visível no dashboard do vencedor + em campanhas/relatórios geradas pelo tenant (vira sinal de proof no email mensal do dono pros clientes)
+- [ ] **Widget embeddable** — `<script src="https://smarttap.ie/widgets/award/<tenant_slug>.js">` ou um snippet `<iframe>`, plotando o badge + categoria + ano no site do vencedor com 1 linha de código
+- [ ] **Email automático de notificação** — finalistas (top-5 por categoria) e vencedor recebem template Resend assinado; integra com o pipeline transacional do Sprint 3-W7
+
+**Categorias:**
+- Most Google Reviews — por business_type: barbershop / café / salon / pet grooming
+- Best Customer Retention — % de clientes que voltam ≥3× no ano
+- Best Double Stamp Campaign — uplift medido sobre baseline pré-campanha
+- Most Loyal Customer Base — média de visitas/cliente
+- Best New Business — tenants criados no ano em curso, top performer
+
+**Execução anual:**
+- **Janeiro:** anúncio público das categorias + ranking visível no dashboard de cada tenant ("estás em 3º na categoria X — continua a tapar")
+- **Dezembro:** cerimónia em Dublin + troféu físico impresso 3D com logo SmartTap (custo marginal — reaproveita a Creality Hi CFS que já imprime stands)
+- **PR:** outreach pra Dublin Live, Dublin Gazette, redes sociais do SmartTap + dos vencedores
+
+**Considerações:**
+- Ranking público requer opt-in explícito por tenant (default off pra evitar leak inadvertido de métricas competitivas)
+- Métricas precisam ser comparáveis entre tenants — normalizar por idade da conta, business_type, plano (não cruzar barbearia com pet grooming na mesma categoria)
+- Widget embeddable é vetor de tráfego: cada vencedor que cola no site = backlink + brand exposure pra SmartTap
+- Cerimónia inaugural pode ser leve (pub privado Dublin, 15-20 pessoas) — não precisa ser glamour Awards no primeiro ano
+
+**Objetivo:** marketing orgânico, press local, fidelização dos clientes SmartTap existentes. Não é receita direta — é cobertura editorial + brand authority no nicho Dublin.
+
+---
+
+**Sprint 8+ — Integração com sistemas de reservas**
 
 Crítico pro ICP barbearia/salão em Dublin — esses negócios já usam apps de booking. Plugar o SmartTap nesses sistemas tira fricção do staff e dispara o loop fidelidade automaticamente.
 
