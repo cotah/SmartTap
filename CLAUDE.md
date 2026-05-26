@@ -291,25 +291,36 @@ campaigns (id, tenant_id, name, type, status, config jsonb,
 ## ESTADO ATUAL DO PROJETO
 
 **Data:** Maio 2026
-**Fase atual:** Pré-desenvolvimento — Prompt Master em execução (Fases 1-3 ✅ concluídas, Fase 4 Marketing em andamento)
-**Próximo passo:** Executar Fase 0 com novo escopo (semanas 1-3) — começa pela landing + demo digital, termina nas 32 visitas de campo
+**Fase atual:** 🟢 **PRODUÇÃO LIVE** — Sprint 4 completo, deploy em prod concluído. Aguardando primeiro pilot real.
+**Próximo passo:** S5-W0 (NFC tag CRUD UI) — bloqueador identificado: sem UI de tags, fechar o primeiro cliente exige SQL manual.
 
-**O que já existe:**
-- Documento master completo (este CLAUDE.md, atualizado pós-Fase 3)
-- Identidade visual definida (logo, cores, tipografia)
-- Stack técnico decidido
-- Pricing v2 aprovado
-- ICP refinado (Hostels/Clínicas removidos; Pet Grooming/Tattoo adicionados)
-- Roadmap revisado com metas defensáveis
-- Modelo financeiro 24 meses (BASE: €62k ARR mês 24)
-- Roteiro de entrevistas e framework de qualificação (Fase 2)
+**O que está LIVE em produção:**
+- **Frontend:** https://smarttap.ie (Vercel, apex + www redirect)
+- **Backend:** https://api.smarttap.ie (Railway, Dockerfile + uv + uvicorn)
+- **DB:** Supabase prod `qmemsvkeiygdwxyzadrc` (eu-west-1) — 6 migrations aplicadas, RLS ativo em 10 tabelas
+- **Stripe:** live mode com 8 price IDs (4 recurring + 4 setup) + webhook validado
+- **Resend:** smarttap.ie verificado, emails entregando
+- **Cron:** cron-job.org agendado (daily reactivation + monthly report dia 1)
+- **Observabilidade:** Sentry (backend + web), Vercel Analytics
+- **Runbook completo:** `DEPLOY.md` na raiz do repo
 
-**O que não existe ainda:**
-- Código (incluindo demo digital obrigatória da Fase 0)
-- Domínio registrado
-- Landing page
-- Lista nominal dos 32 prospects
-- Nenhum cliente
+**Sprints completos:**
+- Sprint 0 ✅ Setup monorepo + CI/CD
+- Sprint 1 ✅ NFC tap loop + customer view + GDPR opt-in
+- Sprint 2 ✅ Auth + dashboard + customers + reward config + settings + redeem + CSV export
+- Sprint 3 ✅ Stripe (checkout + webhook + billing UI + trial enforcement + transactional emails)
+- Sprint 4 ✅ Campaigns (double-stamp + reactivation + monthly PDF report + customer segmentation)
+
+**O que NÃO foi exercitado em prod ainda (smoke tests deferidos):**
+- Signup → onboarding → dashboard com pagamento real
+- NFC tap → stamp → reward em hardware físico
+- Stripe checkout completando + ativando plano via webhook
+- Deferidos intencionalmente para o primeiro pilot real (não desperdiçar €78 num teste sintético)
+
+**Operacional:**
+- Nenhum cliente pagante ainda
+- Pendente: primeira NFC tag impressa + primeiro stand entregue
+- Founding member offer pronta (stand grátis + 60d grátis + €29/mês vitalício pros 5 primeiros)
 
 ---
 
@@ -317,17 +328,23 @@ campaigns (id, tenant_id, name, type, status, config jsonb,
 
 Quando retomar uma sessão, comece sempre com:
 ```
-Lê o CLAUDE.md e me diz em qual fase estamos e qual é o próximo passo.
+Lê o CLAUDE.md e me diz em qual sprint estamos e qual é o próximo passo.
 ```
 
-Para executar o roadmap completo com todos os agentes:
-```
-Executa o SmartTap_Prompt_Master_V2.md começando pela fase onde paramos.
-```
+**Cadência atual** (sprints incrementais, pequenos, com aprovação por escopo):
+1. Propor escopo da sprint/feature antes de codar (lista de entregáveis + decisões abertas)
+2. Henrique aprova ou ajusta
+3. Implementar com commits atômicos por sub-fase
+4. Lint/typecheck/tests verdes antes de cada commit
+5. Push direto pra `main` (sem PR — single dev) — deploy automático: Vercel + Railway auto-redeployam
 
-Para tarefas específicas:
-- `/office-hours` — revisão executiva antes de qualquer decisão grande
-- `/review` — code review antes de qualquer commit
-- `/qa` — QA completo antes de qualquer deploy
-- `/cso` — auditoria de segurança antes de ir para produção
-- `/ship` — preparar PR e deploy
+**Para reverter um deploy ruim:**
+- Railway: Deployments → previous green → "Redeploy"
+- Vercel: Deployments → "Promote to Production" na última green
+- Rollback completo no `DEPLOY.md` §"Rollback playbook"
+
+**Para tarefas específicas (skills gstack):**
+- `/office-hours` — revisão executiva antes de decisão estratégica
+- `/review` — code review antes de commit grande
+- `/qa` — QA completo antes de mudança em produção
+- `/cso` — auditoria de segurança
