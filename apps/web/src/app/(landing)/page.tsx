@@ -2,6 +2,8 @@ import * as React from "react";
 
 import { AnimatedDemo } from "./_components/animated-demo/animated-demo";
 import { Hero } from "./_components/hero/hero";
+import { HowItWorks } from "./_components/how-it-works/how-it-works";
+import { ProblemSolution } from "./_components/problem-solution/problem-solution";
 import { Section, SectionEyebrow } from "./_components/section";
 
 /**
@@ -25,14 +27,8 @@ export default function LandingPage() {
       {/* 2. Animated demo */}
       <AnimatedDemo />
 
-      {/* 3. How it works — Phase 3 */}
-      <Section as="section" id="how-it-works">
-        <Placeholder
-          eyebrow="Section 3 · How it works"
-          title="They tap. They review. They come back."
-          subtitle="Three step cards with icons + 5-minute setup promise."
-        />
-      </Section>
+      {/* 3. How it works */}
+      <HowItWorks />
 
       {/* 4. Pricing — Phase 4 */}
       <Section as="section" id="pricing">
@@ -43,14 +39,8 @@ export default function LandingPage() {
         />
       </Section>
 
-      {/* 5. Problem → Solution — Phase 3 */}
-      <Section as="section" id="problem">
-        <Placeholder
-          eyebrow="Section 5 · Problem"
-          title="Sound familiar?"
-          subtitle="Three punch-list problems in owner's voice → transition into the SmartTap close."
-        />
-      </Section>
+      {/* 5. Problem → Solution */}
+      <ProblemSolution />
 
       {/* 6. Comparison — Phase 4 */}
       <Section as="section" id="comparison">
