@@ -213,6 +213,79 @@ def _customer(**over: Any) -> dict[str, Any]:
     return base
 
 
+# ---------------------------------------------------------------------------
+# send_monthly_report — attaches PDF and targets the OWNER (not end customers)
+# ---------------------------------------------------------------------------
+
+
+def test_send_monthly_report_attaches_pdf_and_targets_owner(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    sent = _stub_resend(monkeypatch)
+    _stub_owner_lookup(monkeypatch, user_id="user-1", email="owner@acme.test")
+
+    email_service.send_monthly_report(
+        tenant_id="t-1",
+        tenant=_tenant(),
+        year=2026,
+        month=4,
+        pdf_bytes=b"%PDF-1.4\n%fake\n",
+        pdf_filename="smarttap-acme-2026-04.pdf",
+    )
+
+    assert len(sent) == 1
+    payload = sent[0]
+    assert payload["to"] == "owner@acme.test"
+    assert "April 2026" in payload["subject"]
+    # Attachment is present, base64-encoded, with correct filename and mime.
+    attachments = payload["attachments"]
+    assert isinstance(attachments, list) and len(attachments) == 1
+    att = attachments[0]
+    assert att["filename"] == "smarttap-acme-2026-04.pdf"
+    assert att["content_type"] == "application/pdf"
+    assert isinstance(att["content"], str) and len(att["content"]) > 0
+
+
+def test_send_monthly_report_skips_when_owner_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    sent = _stub_resend(monkeypatch)
+    _stub_owner_lookup(monkeypatch, user_id=None, email=None)
+
+    email_service.send_monthly_report(
+        tenant_id="t-1",
+        tenant=_tenant(),
+        year=2026,
+        month=4,
+        pdf_bytes=b"%PDF-fake",
+        pdf_filename="x.pdf",
+    )
+    assert sent == []
+
+
+def test_send_monthly_report_resend_failure_does_not_propagate(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Cron contract — Resend down must not crash the monthly run."""
+    monkeypatch.setattr(email_service.resend_client, "is_configured", lambda: True)
+    monkeypatch.setattr(
+        email_service.resend_client,
+        "send",
+        lambda **_kw: (_ for _ in ()).throw(RuntimeError("resend down")),
+    )
+    _stub_owner_lookup(monkeypatch, user_id="user-1", email="owner@acme.test")
+
+    # Must not raise.
+    email_service.send_monthly_report(
+        tenant_id="t-1",
+        tenant=_tenant(),
+        year=2026,
+        month=4,
+        pdf_bytes=b"%PDF-fake",
+        pdf_filename="x.pdf",
+    )
+
+
 def test_send_reactivation_targets_customer_email_not_owner(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

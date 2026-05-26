@@ -70,16 +70,32 @@ class FakeTenantsDB:
 @pytest.fixture
 def fake_customers(monkeypatch: pytest.MonkeyPatch) -> FakeCustomersDB:
     fake = FakeCustomersDB()
-    monkeypatch.setattr(reactivation_service.customers, "find_inactive_for_reactivation", fake.find_inactive_for_reactivation)
-    monkeypatch.setattr(reactivation_service.customers, "mark_reactivation_sent", fake.mark_reactivation_sent)
-    monkeypatch.setattr(reactivation_service.customers, "revoke_consent_via_magic_token", fake.revoke_consent_via_magic_token)
+    monkeypatch.setattr(
+        reactivation_service.customers,
+        "find_inactive_for_reactivation",
+        fake.find_inactive_for_reactivation,
+    )
+    monkeypatch.setattr(
+        reactivation_service.customers,
+        "mark_reactivation_sent",
+        fake.mark_reactivation_sent,
+    )
+    monkeypatch.setattr(
+        reactivation_service.customers,
+        "revoke_consent_via_magic_token",
+        fake.revoke_consent_via_magic_token,
+    )
     return fake
 
 
 @pytest.fixture
 def fake_tenants(monkeypatch: pytest.MonkeyPatch) -> FakeTenantsDB:
     fake = FakeTenantsDB(rows=[])
-    monkeypatch.setattr(reactivation_service.tenants, "list_active_for_cron", fake.list_active_for_cron)
+    monkeypatch.setattr(
+        reactivation_service.tenants,
+        "list_active_for_cron",
+        fake.list_active_for_cron,
+    )
     return fake
 
 
@@ -99,13 +115,20 @@ def sent_emails(monkeypatch: pytest.MonkeyPatch) -> list[dict[str, Any]]:
 
 @pytest.fixture(autouse=True)
 def fixed_site_url(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Pin SITE_URL so URL assertions are stable across dev/CI."""
+    """Pin SITE_URL so URL assertions are stable across dev/CI.
+
+    Patches BOTH `app.config.get_settings` and the alias re-imported into
+    `reactivation_service` (which did `from app.config import get_settings`).
+    A `setattr(config, ...)` alone doesn't reach modules that already bound
+    the name at import time.
+    """
     from app import config
 
     class FakeSettings:
         site_url = "https://smarttap.test"
 
     monkeypatch.setattr(config, "get_settings", lambda: FakeSettings())
+    monkeypatch.setattr(reactivation_service, "get_settings", lambda: FakeSettings())
 
 
 # ---------------------------------------------------------------------------
@@ -119,11 +142,28 @@ def test_run_daily_sends_emails_and_marks_cooldown(
     sent_emails: list[dict[str, Any]],
 ) -> None:
     fake_tenants.rows = [
-        {"id": "t-1", "name": "ACME Barber", "stamps_for_reward": 10, "reward_description": "free cut"},
+        {
+            "id": "t-1",
+            "name": "ACME Barber",
+            "stamps_for_reward": 10,
+            "reward_description": "free cut",
+        },
     ]
     fake_customers.eligible_by_tenant["t-1"] = [
-        {"id": "c-1", "name": "Alex", "email": "a@x.test", "current_stamps": 3, "magic_link_token": "tokA"},
-        {"id": "c-2", "name": "Sam", "email": "s@x.test", "current_stamps": 7, "magic_link_token": "tokB"},
+        {
+            "id": "c-1",
+            "name": "Alex",
+            "email": "a@x.test",
+            "current_stamps": 3,
+            "magic_link_token": "tokA",
+        },
+        {
+            "id": "c-2",
+            "name": "Sam",
+            "email": "s@x.test",
+            "current_stamps": 7,
+            "magic_link_token": "tokB",
+        },
     ]
     now = datetime(2026, 5, 26, 10, 0, tzinfo=UTC)
 
@@ -142,9 +182,17 @@ def test_run_daily_builds_correct_magic_and_opt_out_urls(
     fake_customers: FakeCustomersDB,
     sent_emails: list[dict[str, Any]],
 ) -> None:
-    fake_tenants.rows = [{"id": "t-1", "name": "ACME", "stamps_for_reward": 10, "reward_description": "x"}]
+    fake_tenants.rows = [
+        {"id": "t-1", "name": "ACME", "stamps_for_reward": 10, "reward_description": "x"},
+    ]
     fake_customers.eligible_by_tenant["t-1"] = [
-        {"id": "c-1", "name": "Alex", "email": "a@x.test", "current_stamps": 3, "magic_link_token": "tokA"},
+        {
+            "id": "c-1",
+            "name": "Alex",
+            "email": "a@x.test",
+            "current_stamps": 3,
+            "magic_link_token": "tokA",
+        },
     ]
 
     reactivation_service.run_daily(now=datetime(2026, 5, 26, tzinfo=UTC))
@@ -195,7 +243,9 @@ def test_run_daily_skips_customer_without_magic_token(
 ) -> None:
     """A customer row missing magic_link_token would render a broken link.
     Skip with an error, don't crash the run."""
-    fake_tenants.rows = [{"id": "t-1", "name": "A", "stamps_for_reward": 10, "reward_description": "x"}]
+    fake_tenants.rows = [
+        {"id": "t-1", "name": "A", "stamps_for_reward": 10, "reward_description": "x"},
+    ]
     fake_customers.eligible_by_tenant["t-1"] = [
         {"id": "c-1", "email": "a@x", "name": "x", "current_stamps": 1, "magic_link_token": None},
         {"id": "c-2", "email": "b@x", "name": "y", "current_stamps": 2, "magic_link_token": "tokB"},
@@ -220,7 +270,9 @@ def test_run_daily_per_customer_send_exception_is_isolated(
 ) -> None:
     """If send_reactivation throws for one customer, the loop continues for
     the rest. The cooldown marker stays (mark-before-send semantics)."""
-    fake_tenants.rows = [{"id": "t-1", "name": "A", "stamps_for_reward": 10, "reward_description": "x"}]
+    fake_tenants.rows = [
+        {"id": "t-1", "name": "A", "stamps_for_reward": 10, "reward_description": "x"},
+    ]
     fake_customers.eligible_by_tenant["t-1"] = [
         {"id": "c-1", "email": "a@x", "name": "x", "current_stamps": 1, "magic_link_token": "tokA"},
         {"id": "c-2", "email": "b@x", "name": "y", "current_stamps": 2, "magic_link_token": "tokB"},

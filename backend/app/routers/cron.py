@@ -22,7 +22,7 @@ import structlog
 from fastapi import APIRouter, Header, HTTPException
 
 from app.config import get_settings
-from app.services import reactivation_service
+from app.services import monthly_email_service, reactivation_service
 
 router = APIRouter(tags=["cron"])
 log = structlog.get_logger(__name__)
@@ -59,6 +59,34 @@ def trigger_reactivation(
 
     result = reactivation_service.run_daily()
     return {
+        "tenants_scanned": result.tenants_scanned,
+        "total_sent": result.total_sent,
+    }
+
+
+@router.post("/cron/monthly-report")
+def trigger_monthly_report(
+    x_cron_token: str | None = Header(default=None, alias="X-Cron-Token"),
+    year: int | None = None,
+    month: int | None = None,
+) -> dict[str, int]:
+    """Monthly report pass — meant to run on the 1st of each Dublin month.
+
+    With no query params, the run targets the previous complete Dublin month
+    (so a run at 06:30 IST on May 1 reports April). The optional `year`/`month`
+    pair lets ops trigger a back-fill or a re-send for a specific month
+    without redeploying — pass them together or omit both.
+
+    Not idempotent on its own: a second call same-day will re-send. Keep the
+    scheduler set to fire exactly once per month; ops can manually re-fire
+    when they're sure the previous run failed.
+    """
+    _verify_cron_token(x_cron_token)
+
+    result = monthly_email_service.run_monthly(year=year, month=month)
+    return {
+        "year": result.year,
+        "month": result.month,
         "tenants_scanned": result.tenants_scanned,
         "total_sent": result.total_sent,
     }

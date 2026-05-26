@@ -1,8 +1,62 @@
+from datetime import datetime
 from typing import Any, cast
+
+from postgrest import CountMethod
 
 from app.services.supabase_client import get_supabase_admin
 
 Row = dict[str, Any]
+
+
+def count_in_range(
+    tenant_id: str,
+    *,
+    start: datetime,
+    end: datetime,
+    action_taken: str | None = None,
+) -> int:
+    """Count taps for a tenant in [start, end). `action_taken` lets the
+    monthly report tally specific outcomes (e.g. 'review_clicked') with the
+    same query path."""
+    client = get_supabase_admin()
+    q = (
+        client.table("taps")
+        .select("id", count=CountMethod.exact)
+        .eq("tenant_id", tenant_id)
+        .gte("created_at", start.isoformat())
+        .lt("created_at", end.isoformat())
+    )
+    if action_taken is not None:
+        q = q.eq("action_taken", action_taken)
+    res = q.limit(1).execute()
+    return res.count or 0
+
+
+def list_in_range(
+    tenant_id: str,
+    *,
+    start: datetime,
+    end: datetime,
+    limit: int = 10_000,
+) -> list[Row]:
+    """Fetch tap rows for grouping in Python (top hour, top day, top tag).
+
+    A monthly cron run is the only caller; even a very busy tenant ships well
+    under 10k taps/month (target NSM: >50 customers each tapping 5x/month →
+    ~250 rows). The cap exists as a runaway-prevention rail.
+    """
+    client = get_supabase_admin()
+    res = (
+        client.table("taps")
+        .select("tag_id,created_at,action_taken")
+        .eq("tenant_id", tenant_id)
+        .gte("created_at", start.isoformat())
+        .lt("created_at", end.isoformat())
+        .order("created_at", desc=False)
+        .limit(limit)
+        .execute()
+    )
+    return cast(list[Row], res.data or [])
 
 
 def create(

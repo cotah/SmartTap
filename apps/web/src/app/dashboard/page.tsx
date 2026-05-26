@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getAuthApiClient } from "@/lib/api";
 import { getDashboardContext } from "@/lib/dashboard-data";
 
+import { MonthlyReportButton } from "./monthly-report-button";
 import { OverviewCards } from "./overview-cards";
 
 export default async function DashboardPage() {
@@ -20,9 +21,12 @@ export default async function DashboardPage() {
       </section>
 
       <section>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-brand-black/70">
-          Overview
-        </h2>
+        <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-black/70">
+            Overview
+          </h2>
+          <MonthlyReportButton />
+        </div>
         <OverviewCards overview={overview} />
       </section>
 

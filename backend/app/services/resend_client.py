@@ -25,6 +25,7 @@ def send(
     html: str,
     text: str,
     tags: list[dict[str, str]] | None = None,
+    attachments: list[dict[str, Any]] | None = None,
 ) -> str | None:
     """Send a transactional email via Resend.
 
@@ -35,6 +36,12 @@ def send(
 
     `tags` are attached for Resend dashboard filtering (e.g. `welcome`,
     `payment_succeeded`) — handy when triaging deliverability issues.
+
+    `attachments` is forwarded straight to the Resend API. Each entry is a
+    dict with `filename` and `content` (already-encoded per Resend's contract
+    — see `build_pdf_attachment`). We don't transform the list here so
+    callers can keep one schema and add new attachment types without
+    changing this layer.
     """
     if not is_configured():
         log.info("resend_skip_send", to_domain=_email_domain(to), reason="no_key")
@@ -52,6 +59,8 @@ def send(
     }
     if tags:
         payload["tags"] = tags
+    if attachments:
+        payload["attachments"] = attachments
 
     # The SDK types `send` with a TypedDict (SendParams) but accepts plain
     # dicts at runtime. Building a dict here keeps the function tolerant of
@@ -82,3 +91,23 @@ def _email_domain(email: str) -> str:
     if "@" not in email:
         return "unknown"
     return email.split("@", 1)[1].lower()
+
+
+def build_pdf_attachment(*, filename: str, pdf_bytes: bytes) -> dict[str, Any]:
+    """Resend attachment payload for a PDF.
+
+    Resend's HTTP API accepts `content` as a base64 string OR as an array of
+    integers. The Python SDK JSON-encodes whatever we pass; a list of ints is
+    huge over the wire and many proxies choke on it, so base64 wins on both
+    size and compatibility. The MIME type is fixed because every caller of
+    this helper today is the monthly PDF — when we add CSV/HTML attachments
+    we should make it explicit (and probably split this into a generic
+    `build_attachment(content_type=...)`).
+    """
+    import base64
+
+    return {
+        "filename": filename,
+        "content": base64.b64encode(pdf_bytes).decode("ascii"),
+        "content_type": "application/pdf",
+    }

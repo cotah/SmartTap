@@ -297,6 +297,48 @@ def reactivation_email(
     )
 
 
+def monthly_report_email(
+    *, tenant: dict[str, Any], year: int, month: int
+) -> RenderedEmail:
+    """Sent on the 1st of each Dublin month with the previous month's PDF.
+
+    Subject reads "Your SmartTap report — May 2026"; body keeps it short
+    because the value is in the attachment, not the copy. The CTA points
+    back to the dashboard where the merchant can re-download or look at
+    today's live numbers.
+    """
+    import calendar
+
+    business = (tenant.get("name") or "your business").strip()
+    month_name = calendar.month_name[month] if 1 <= month <= 12 else str(month)
+    period_label = f"{month_name} {year}"
+
+    body_html = f"""
+        <h1 style="margin:0 0 12px 0;font-size:22px;color:{BLACK};">Your {_escape(period_label)} report</h1>
+        <p style="margin:0 0 12px 0;">{_greeting(tenant)}</p>
+        <p style="margin:0 0 12px 0;">Your monthly SmartTap report for <strong>{_escape(business)}</strong> is attached as a PDF. Inside you'll find new customers, taps, stamps and rewards for {_escape(period_label)}, with comparisons to the previous month.</p>
+        <p style="margin:0 0 12px 0;">Open the dashboard for today's live numbers and to schedule campaigns for the coming month.</p>
+    """
+
+    text = (
+        f"Your {period_label} SmartTap report\n\n"
+        f"Hi there,\n\n"
+        f"Your monthly report for {business} is attached as a PDF — new customers, taps, stamps and rewards for {period_label}.\n\n"
+        f"Open the dashboard: {SITE_URL}/dashboard"
+    )
+
+    return RenderedEmail(
+        subject=f"Your SmartTap report — {period_label}",
+        html=_layout(
+            preheader=f"PDF attached — {business} for {period_label}.",
+            body_html=body_html,
+            cta_label="Open dashboard",
+            cta_url=f"{SITE_URL}/dashboard",
+        ),
+        text=text,
+    )
+
+
 def subscription_canceled_email(*, tenant: dict[str, Any]) -> RenderedEmail:
     body_html = f"""
         <h1 style="margin:0 0 12px 0;font-size:22px;color:{BLACK};">Your subscription was canceled</h1>
@@ -345,6 +387,7 @@ def _plan_display_name(plan: Any) -> str:
 __all__ = [
     "SITE_URL",
     "RenderedEmail",
+    "monthly_report_email",
     "payment_failed_email",
     "payment_succeeded_email",
     "subscription_canceled_email",

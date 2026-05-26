@@ -271,6 +271,10 @@ export interface ApiClient {
   validateReward: (rewardId: string, code: string) => Promise<ValidateRewardResponse>;
   validateRewardByCode: (code: string) => Promise<ValidateRewardResponse>;
   exportCustomersCsv: (params?: Omit<CustomerListParams, "page" | "limit">) => Promise<string>;
+  downloadMonthlyReport: (params?: {
+    year?: number;
+    month?: number;
+  }) => Promise<{ blob: Blob; filename: string }>;
   completeOnboarding: (body: OnboardingComplete) => Promise<TenantSummary>;
   createCheckoutSession: (body: CheckoutSessionInput) => Promise<{ url: string }>;
   createPortalSession: (body: PortalSessionInput) => Promise<{ url: string }>;
@@ -323,6 +327,35 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
       throw new ApiError(res.status, res.statusText, text);
     }
     return text;
+  }
+
+  async function requestBlob(
+    path: string,
+    init: RequestInit = {},
+  ): Promise<{ blob: Blob; filename: string | null }> {
+    // Binary download path — used for PDF/CSV streamed responses. Mirrors
+    // requestText for auth/headers but reads as Blob and pulls the suggested
+    // filename out of Content-Disposition so callers can save with the
+    // backend-chosen name (avoids drift between two filename conventions).
+    const headers: Record<string, string> = {
+      ...(init.headers as Record<string, string> | undefined),
+    };
+    if (opts.getToken) {
+      const token = await opts.getToken();
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+    }
+    const res = await fetchImpl(`${baseUrl}${path}`, { ...init, headers });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new ApiError(res.status, res.statusText, text);
+    }
+    const blob = await res.blob();
+    const disposition = res.headers.get("content-disposition") ?? "";
+    const match = /filename="?([^"]+)"?/i.exec(disposition);
+    // `match[1]` is typed as `string | undefined` because of TS's strict
+    // noUncheckedIndexedAccess. Normalise undefined -> null so callers only
+    // have to handle one missing-value shape.
+    return { blob, filename: match?.[1] ?? null };
   }
 
   return {
@@ -388,6 +421,19 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
       if (params?.sort) qs.set("sort", params.sort);
       const suffix = qs.toString() ? `?${qs.toString()}` : "";
       return requestText(`/v1/customers/export.csv${suffix}`);
+    },
+    downloadMonthlyReport: async (params) => {
+      const qs = new URLSearchParams();
+      if (params?.year !== undefined) qs.set("year", String(params.year));
+      if (params?.month !== undefined) qs.set("month", String(params.month));
+      const suffix = qs.toString() ? `?${qs.toString()}` : "";
+      const { blob, filename } = await requestBlob(
+        `/v1/reports/monthly.pdf${suffix}`,
+      );
+      // The backend always sets Content-Disposition with a filename. Falling
+      // back to a generic name here is defensive — if the header ever goes
+      // missing the download still works rather than throwing.
+      return { blob, filename: filename ?? "smarttap-monthly-report.pdf" };
     },
     completeOnboarding: (body) =>
       request<TenantSummary>(`/v1/onboarding/complete`, {

@@ -1,9 +1,31 @@
 from datetime import UTC, datetime
 from typing import Any, cast
 
+from postgrest import CountMethod
+
 from app.services.supabase_client import get_supabase_admin
 
 Row = dict[str, Any]
+
+
+def count_redeemed_in_range(
+    tenant_id: str, *, start: datetime, end: datetime
+) -> int:
+    """Rewards REDEEMED in [start, end). Filters on `redeemed_at`, not
+    `created_at` — a reward minted in April and redeemed in May counts in
+    May. That matches what merchants actually care about (money/value handed
+    over in the period)."""
+    client = get_supabase_admin()
+    res = (
+        client.table("rewards")
+        .select("id", count=CountMethod.exact)
+        .eq("tenant_id", tenant_id)
+        .gte("redeemed_at", start.isoformat())
+        .lt("redeemed_at", end.isoformat())
+        .limit(1)
+        .execute()
+    )
+    return res.count or 0
 
 
 def get_by_id(reward_id: str) -> Row | None:

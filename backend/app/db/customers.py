@@ -48,6 +48,24 @@ def get_by_magic_token(magic_link_token: str) -> Row | None:
     return rows[0] if rows else None
 
 
+def count_created_in_range(
+    tenant_id: str, *, start: datetime, end: datetime
+) -> int:
+    """New signups for a tenant in [start, end). Used by the monthly report
+    to derive 'new customers this month'."""
+    client = get_supabase_admin()
+    res = (
+        client.table("customers")
+        .select("id", count=CountMethod.exact)
+        .eq("tenant_id", tenant_id)
+        .gte("created_at", start.isoformat())
+        .lt("created_at", end.isoformat())
+        .limit(1)
+        .execute()
+    )
+    return res.count or 0
+
+
 def find_inactive_for_reactivation(
     *,
     tenant_id: str,

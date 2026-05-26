@@ -89,6 +89,29 @@ def find_active_double_stamp(tenant_id: str, at: datetime) -> Row | None:
     return rows[0] if rows else None
 
 
+def list_overlapping_range(
+    tenant_id: str, *, start: datetime, end: datetime
+) -> list[Row]:
+    """Campaigns whose [starts_at, ends_at] overlaps the reporting period.
+
+    Overlap test: campaign starts before period ends AND campaign ends after
+    period starts. Includes draft/paused/ended — the monthly report shows
+    EVERYTHING that ran or was scheduled, so the merchant can see what they
+    intended even if they paused mid-month.
+    """
+    client = get_supabase_admin()
+    res = (
+        client.table("campaigns")
+        .select("*")
+        .eq("tenant_id", tenant_id)
+        .lt("starts_at", end.isoformat())
+        .gt("ends_at", start.isoformat())
+        .order("starts_at", desc=False)
+        .execute()
+    )
+    return cast(list[Row], res.data or [])
+
+
 def has_other_active_double_stamp(
     tenant_id: str, excluding_id: str | None = None
 ) -> bool:

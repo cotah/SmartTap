@@ -280,6 +280,52 @@ def test_reactivation_includes_both_cta_and_opt_out_links() -> None:
     assert "https://smarttap.ie/u/tok_abc12345" in rendered.text
 
 
+# ---------------------------------------------------------------------------
+# monthly_report — sent on the 1st of each Dublin month with the PDF attached
+# ---------------------------------------------------------------------------
+
+
+def test_monthly_report_subject_includes_period() -> None:
+    rendered = templates.monthly_report_email(
+        tenant=_tenant(name="ACME Barber"), year=2026, month=4
+    )
+    assert rendered.subject == "Your SmartTap report — April 2026"
+
+
+def test_monthly_report_body_references_business_and_period() -> None:
+    rendered = templates.monthly_report_email(
+        tenant=_tenant(name="ACME Barber"), year=2026, month=5
+    )
+    assert "ACME Barber" in rendered.html
+    assert "May 2026" in rendered.html
+    assert "May 2026" in rendered.text
+
+
+def test_monthly_report_mentions_attachment_in_body() -> None:
+    """The PDF is the value; the email should say so explicitly."""
+    rendered = templates.monthly_report_email(
+        tenant=_tenant(), year=2026, month=5
+    )
+    assert "attached" in rendered.html.lower()
+    assert "pdf" in rendered.html.lower() or "PDF" in rendered.html
+
+
+def test_monthly_report_has_dashboard_cta() -> None:
+    rendered = templates.monthly_report_email(
+        tenant=_tenant(), year=2026, month=5
+    )
+    assert "/dashboard" in rendered.html
+    assert "/dashboard" in rendered.text
+
+
+def test_monthly_report_escapes_business_name() -> None:
+    rendered = templates.monthly_report_email(
+        tenant=_tenant(name="<script>x()</script>"), year=2026, month=5
+    )
+    assert "<script>" not in rendered.html
+    assert "&lt;script&gt;" in rendered.html
+
+
 def test_reactivation_footer_is_customer_facing_not_merchant() -> None:
     """The shared layout footer addresses tenant owners ("you signed up as
     the owner"). Reactivation hand-rolls its own shell so the footer makes

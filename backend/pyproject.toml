@@ -17,6 +17,15 @@ dependencies = [
     "sentry-sdk[fastapi]>=2.19.2",
     "httpx>=0.28.1",
     "python-multipart>=0.0.20",
+    # Pure-Python PDF generation for the monthly report (S4-W3). Pure Python
+    # so it installs without cairo/pango system libs — keeps the Railway
+    # build trivial. Pin upper bound loosely; reportlab is very API-stable.
+    "reportlab>=4.2.0,<5.0.0",
+    # Bundled IANA timezone database. Python's `zoneinfo` falls back to the
+    # OS-provided tzdata on Linux/macOS; Windows ships nothing, so we declare
+    # the package explicitly. Required by monthly_report_service which
+    # anchors period bounds in Europe/Dublin.
+    "tzdata>=2024.2",
 ]
 
 [dependency-groups]
@@ -48,3 +57,10 @@ python_version = "3.12"
 strict = true
 warn_return_any = true
 warn_unused_configs = true
+
+# reportlab ships no type stubs and no third-party package provides full
+# coverage. Accept untyped imports across the module tree rather than
+# scattering `# type: ignore` comments through pdf_renderer.
+[[tool.mypy.overrides]]
+module = ["reportlab.*"]
+ignore_missing_imports = true

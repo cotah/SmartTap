@@ -35,6 +35,7 @@ def _safe_send(
     tenant_id: str | None,
     event_name: str,
     tags: list[dict[str, str]] | None = None,
+    attachments: list[dict[str, Any]] | None = None,
 ) -> None:
     """Common send path with full error containment.
 
@@ -67,6 +68,7 @@ def _safe_send(
             html=rendered.html,
             text=rendered.text,
             tags=full_tags,
+            attachments=attachments,
         )
     except Exception as exc:
         # Sentry will pick this up via structlog → its integration; we don't
@@ -160,6 +162,38 @@ def send_subscription_canceled(*, tenant_id: str, tenant: dict[str, Any]) -> Non
         rendered=rendered,
         tenant_id=tenant_id,
         event_name="subscription_canceled",
+    )
+
+
+def send_monthly_report(
+    *,
+    tenant_id: str,
+    tenant: dict[str, Any],
+    year: int,
+    month: int,
+    pdf_bytes: bytes,
+    pdf_filename: str,
+) -> None:
+    """Sent on the 1st of each Dublin month with the previous month's PDF.
+
+    The recipient is the tenant OWNER (not end customers). Attaches the PDF
+    rather than linking to a download — merchants tend to forward these to
+    their accountant or save them locally, and a link would 404 once the
+    month rolled forward (the PDF is generated on-demand, never persisted).
+    """
+    rendered = templates.monthly_report_email(
+        tenant=tenant, year=year, month=month
+    )
+    attachment = resend_client.build_pdf_attachment(
+        filename=pdf_filename, pdf_bytes=pdf_bytes
+    )
+    _safe_send(
+        to=_owner_email(tenant_id),
+        rendered=rendered,
+        tenant_id=tenant_id,
+        event_name="monthly_report",
+        tags=[{"name": "period", "value": f"{year:04d}-{month:02d}"}],
+        attachments=[attachment],
     )
 
 

@@ -17,6 +17,7 @@ from app.routers import (
     health,
     me,
     onboarding,
+    reports,
     rewards,
     taps,
     tenants,
@@ -86,6 +87,7 @@ def create_app() -> FastAPI:
     app.include_router(billing.router, prefix="/v1")
     app.include_router(campaigns.router, prefix="/v1")
     app.include_router(cron.router, prefix="/v1")
+    app.include_router(reports.router, prefix="/v1")
 
     return app
 

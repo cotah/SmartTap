@@ -1,8 +1,32 @@
+from datetime import datetime
 from typing import Any, cast
+
+from postgrest import CountMethod
 
 from app.services.supabase_client import get_supabase_admin
 
 Row = dict[str, Any]
+
+
+def count_in_range(tenant_id: str, *, start: datetime, end: datetime) -> int:
+    """Count stamps issued for a tenant in [start, end).
+
+    Note: counts ROW count, not the sum of `multiplier`. A double-stamp
+    campaign tap still inserts one stamp row; the multiplier field describes
+    how it should be displayed but the issuance is one event. This matches
+    how the dashboard's "stamps awarded" metric is interpreted.
+    """
+    client = get_supabase_admin()
+    res = (
+        client.table("stamps")
+        .select("id", count=CountMethod.exact)
+        .eq("tenant_id", tenant_id)
+        .gte("created_at", start.isoformat())
+        .lt("created_at", end.isoformat())
+        .limit(1)
+        .execute()
+    )
+    return res.count or 0
 
 
 def last_for_customer(customer_id: str) -> Row | None:
