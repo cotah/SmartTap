@@ -205,19 +205,49 @@ campaigns (id, tenant_id, name, type, status, config jsonb,
 ### FASE 2 — Produto Completo (Meses 2-4)
 **Objetivo:** 50 clientes, produto completo, primeiros cases
 
-**Sprint 4 — Campanhas (Semanas 4-6)**
-- [ ] Double Stamp (janela de tempo)
-- [ ] Reactivation (inativos há N dias)
-- [ ] Relatório mensal PDF automático
-- [ ] Segmentação de clientes
+**Sprint 4 — Campanhas (Semanas 4-6)** ✅ COMPLETO
+- [x] Double Stamp (janela de tempo)
+- [x] Reactivation (inativos há N dias)
+- [x] Relatório mensal PDF automático
+- [x] Segmentação de clientes
 
-**Sprint 5 — WhatsApp + Reviews (Semanas 6-8)**
-- [ ] WhatsApp Business API (Twilio)
-- [ ] Google Business API (monitorar rating)
-- [ ] Alerta nova review negativa
-- [ ] Sugestão de resposta por IA
+**Sprint 4.5 — NFC tag CRUD UI (S5-W0, micro-sprint pré-Sprint 5)** ✅ COMPLETO
+- [x] Backend CRUD (`/v1/tags`) + Literal[4] formatos + Literal[10] cores PLA
+- [x] `/dashboard/tags` com swatch grid + Copy URL + soft-delete toggle
+- [x] Remove bloqueador "preciso de SQL manual pra cada signup"
 
-**Apps Mobile — Estrutura**
+**Sprint 5 — WhatsApp AI Assistant (Semanas 6-10)**
+
+3 features integradas, todas baseadas em Twilio WhatsApp + Claude API.
+
+**Stack:** Twilio WhatsApp Business API + Claude API (`claude-opus-4-7` ou `claude-sonnet-4-6` para economia) + Google Business API (OAuth p/ posting de respostas)
+
+- [ ] **Feature 1: Bot para dono consultar dados via WhatsApp**
+  - Dono envia "Quantos clientes esta semana?" / "Qual minha melhor tag?" / "Quem não vem há mais de 30 dias?"
+  - Bot autentica via número de telefone vinculado ao `tenant_id`
+  - Claude lê a pergunta, traduz pra query nas APIs internas (`/v1/dashboard/overview`, `/v1/customers`, `/v1/segments/preview`), responde em linguagem natural
+  - Suporta requests de relatório: "Manda o PDF de maio" → bot anexa o PDF via Twilio media
+  - Mesma `CRON_TOKEN`-style auth: lookup de tenant por phone hash, rate-limited
+
+- [ ] **Feature 2: Remarketing automático "tapou mas não deu review"**
+  - Cron diário (ou hook pós-tap) detecta clientes com `action_taken=stamp_earned` mas sem `action_taken=review_clicked` num período (ex: 24h após o tap)
+  - Envia WhatsApp pro cliente (se `gdpr_consent=true` e tem telefone): "Obrigado pela visita à <business>! Se gostou, deixa uma review aqui: <google_review_url>"
+  - Cooldown por cliente (ex: 1 send por mês) pra não virar spam
+  - Métrica: % de conversão tap → review depois do nudge
+
+- [ ] **Feature 3: Resposta automática de Google Reviews via Claude**
+  - Cron busca novas reviews via Google Business API
+  - Claude lê a review + contexto do negócio (tenant name, business_type, tom da marca) e gera resposta
+  - 2 modos: **draft** (envia pro dono via WhatsApp da Feature 1 pra aprovar antes de postar) ou **autopost** (posta direto se 4-5 estrelas; envia draft pro dono se ≤3)
+  - Alerta especial pra reviews 1-2 estrelas (Feature original do Sprint 5 antigo)
+
+**Pré-requisitos infra:**
+- Twilio account com WhatsApp Business approval (~1-2 semanas Meta approval)
+- Google Cloud project + OAuth consent screen + Google Business API enabled
+- `ANTHROPIC_API_KEY` env var (backend)
+- Phone → tenant mapping table (nova migration)
+
+**Apps Mobile — Estrutura** (deslocado pra Sprint 5.5 ou Fase 3)
 - [ ] React Native + Expo configurado
 - [ ] Compartilhando packages/core e packages/ui
 - [ ] Funcionalidade básica (tap, stamps, dashboard)
@@ -229,9 +259,28 @@ campaigns (id, tenant_id, name, type, status, config jsonb,
 ### FASE 3 — Escala (Meses 4-12)
 **Objetivo:** 200 clientes, expansão geográfica
 
-- [ ] AI Helper (sugestões de campanha automáticas)
+**Sprint 6+ — Integração com sistemas de reservas**
+
+Crítico pro ICP barbearia/salão em Dublin — esses negócios já usam apps de booking. Plugar o SmartTap nesses sistemas tira fricção do staff e dispara o loop fidelidade automaticamente.
+
+- [ ] **Fresha** (principal em Dublin — maior penetração entre barbearias/salões)
+- [ ] **Booksy** (forte em salões pequenos)
+- [ ] **Square Appointments** (cafés + alguns barber shops)
+
+**Features comuns (uma por integração):**
+- [ ] **Stamp automático pós-visita** — webhook do sistema de reserva quando appointment é `completed` → cria tap event + awarda stamp sem precisar do cliente tocar fisicamente o NFC
+- [ ] **Review request automático** — N horas após appointment completo, manda WhatsApp/SMS (reutiliza pipeline da Feature 2 do Sprint 5) com link de review
+- [ ] **Sincronização de dados de cliente** — pull customer list inicial do sistema de reserva pra migrar cliente existente do barber pro SmartTap sem perder histórico
+
+**Considerações:**
+- Cada integração = OAuth/API key flow próprio + webhook receiver + mapper de cliente (phone como chave natural)
+- Fresha e Booksy têm API public mas algumas features são partner-program-only (avaliar antes de prometer feature parity entre as 3)
+- Ordem sugerida: Fresha primeiro (mais clientes Dublin) → Booksy → Square Appointments
+
+**Outros itens Fase 3:**
+- [ ] AI Helper (sugestões de campanha automáticas) — reutilizar Claude da Sprint 5
 - [ ] Staff app (PWA para validação de stamps)
-- [ ] Integração POS (Square, SumUp, Lightspeed)
+- [ ] Integração POS (Square, SumUp, Lightspeed) — distinto de Square Appointments; POS é checkout
 - [ ] Partner program (agências revendem SmartTap)
 - [ ] Expansão: Dublin → Cork → Galway
 - [ ] White-label enterprise
