@@ -1,4 +1,6 @@
 import type { Config } from "tailwindcss";
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const animate = require("tailwindcss-animate");
 
 const config: Config = {
   darkMode: ["class"],
@@ -75,9 +77,26 @@ const config: Config = {
         // Named `smooth-out`; used by every framer-motion fade-in.
         "smooth-out": "cubic-bezier(0.16, 1, 0.3, 1)",
       },
+      // Height keyframes for the Radix Accordion content panel — required
+      // because `height: auto` can't be transitioned. Radix exposes the
+      // pre-measured content height via the CSS var below.
+      keyframes: {
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+      },
+      animation: {
+        "accordion-down": "accordion-down 0.24s cubic-bezier(0.16, 1, 0.3, 1)",
+        "accordion-up": "accordion-up 0.24s cubic-bezier(0.16, 1, 0.3, 1)",
+      },
     },
   },
-  plugins: [],
+  plugins: [animate],
 };
 
 export default config;

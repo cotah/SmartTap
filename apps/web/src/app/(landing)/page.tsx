@@ -1,8 +1,10 @@
 import * as React from "react";
 
 import { AnimatedDemo } from "./_components/animated-demo/animated-demo";
+import { Comparison } from "./_components/comparison/comparison";
 import { Hero } from "./_components/hero/hero";
 import { HowItWorks } from "./_components/how-it-works/how-it-works";
+import { Pricing } from "./_components/pricing/pricing";
 import { ProblemSolution } from "./_components/problem-solution/problem-solution";
 import { Section, SectionEyebrow } from "./_components/section";
 
@@ -30,26 +32,14 @@ export default function LandingPage() {
       {/* 3. How it works */}
       <HowItWorks />
 
-      {/* 4. Pricing — Phase 4 */}
-      <Section as="section" id="pricing">
-        <Placeholder
-          eyebrow="Section 4 · Pricing"
-          title="Simple pricing. No contracts."
-          subtitle="Four-plan grid with SmartLoyalty highlighted. Founding-member callout under grid."
-        />
-      </Section>
+      {/* 4. Pricing */}
+      <Pricing />
 
       {/* 5. Problem → Solution */}
       <ProblemSolution />
 
-      {/* 6. Comparison — Phase 4 */}
-      <Section as="section" id="comparison">
-        <Placeholder
-          eyebrow="Section 6 · Comparison"
-          title="Why shops switch to SmartTap"
-          subtitle="Five-axis table vs typical alternatives. Mobile renders as accordion."
-        />
-      </Section>
+      {/* 6. Comparison */}
+      <Comparison />
 
       {/* 7. FAQ — Phase 5 */}
       <Section as="section" id="faq" containerSize="narrow">
