@@ -45,12 +45,12 @@ export function MonthlyReportButton() {
   }
 
   return (
-    <div className="flex flex-col items-start gap-1 md:items-end">
+    <div className="flex flex-col items-start gap-1 sm:items-end">
       <button
         type="button"
         onClick={onClick}
         disabled={pending}
-        className="rounded-full border border-brand-black/20 px-4 py-2 text-sm font-semibold hover:border-brand-green disabled:opacity-60"
+        className="rounded-lg border border-neutral-300/50 bg-white px-4 py-2.5 text-sm font-medium text-brand-black transition-colors hover:border-brand-green hover:text-brand-green disabled:opacity-60"
       >
         {pending ? "Preparing…" : "Download monthly PDF"}
       </button>
