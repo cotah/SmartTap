@@ -1,9 +1,22 @@
+import { Star } from "lucide-react";
+
 interface Props {
   url: string;
   tenantSlug: string;
   accentColor: string;
 }
 
+/**
+ * The dominant CTA on the customer-facing /t/[uuid] page.
+ *
+ * Visual weight is intentional — review volume is the highest-leverage
+ * metric per LANDING-SPEC §1, so this button anchors the above-the-fold
+ * region. Full-width on mobile, bold display copy, filled star icon, and
+ * a soft drop shadow that lifts it off the tenant-coloured background.
+ *
+ * UTMs are appended client-side so the merchant's Google Business
+ * Insights can attribute review traffic to SmartTap specifically.
+ */
 export function GoogleReviewButton({ url, tenantSlug, accentColor }: Props) {
   let href = url;
   try {
@@ -22,10 +35,16 @@ export function GoogleReviewButton({ url, tenantSlug, accentColor }: Props) {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-block rounded-full px-6 py-3 font-semibold"
+      className="group flex w-full flex-col items-center justify-center gap-1 rounded-2xl px-6 py-5 text-center font-semibold shadow-[0_10px_30px_-12px_rgba(0,0,0,0.45)] transition-transform active:scale-[0.98] sm:py-6"
       style={{ backgroundColor: accentColor, color: "#1A1A1A" }}
     >
-      ⭐ Leave a Google Review
+      <span className="flex items-center gap-2 text-xl leading-tight tracking-tight sm:text-2xl">
+        <Star className="h-6 w-6 fill-current" aria-hidden="true" />
+        Leave a Google Review
+      </span>
+      <span className="text-xs font-medium opacity-75 sm:text-sm">
+        Takes 5 seconds · helps the shop
+      </span>
     </a>
   );
 }
