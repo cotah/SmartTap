@@ -35,7 +35,7 @@ export function GoogleReviewButton({ url, tenantSlug, accentColor }: Props) {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex w-full flex-col items-center justify-center gap-1 rounded-2xl px-6 py-5 text-center font-semibold shadow-[0_10px_30px_-12px_rgba(0,0,0,0.45)] transition-transform active:scale-[0.98] sm:py-6"
+      className="group flex w-full flex-col items-center justify-center gap-1 rounded-xl px-6 py-5 text-center font-semibold shadow-[0_8px_16px_rgba(232,160,32,0.2)] transition-transform active:scale-[0.98] sm:py-6"
       style={{ backgroundColor: accentColor, color: "#1A1A1A" }}
     >
       <span className="flex items-center gap-2 text-xl leading-tight tracking-tight sm:text-2xl">

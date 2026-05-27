@@ -42,8 +42,8 @@ export default async function CustomerTapPage({ params }: PageProps) {
       if (err.status === 404) notFound();
       if (err.status === 410) {
         return (
-          <main className="container flex min-h-dvh items-center justify-center text-center">
-            <p className="text-muted-foreground">This tag is no longer active.</p>
+          <main className="flex min-h-dvh items-center justify-center bg-brand-off-white px-4 text-center">
+            <p className="text-neutral-600">This tag is no longer active.</p>
           </main>
         );
       }

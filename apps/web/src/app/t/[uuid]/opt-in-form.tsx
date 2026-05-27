@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Check, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
@@ -16,18 +17,17 @@ const CONSENT_TEXT =
 interface Props {
   tenantId: string;
   tenantName: string;
-  accentColor: string;
 }
 
 /**
  * Secondary CTA on /t/[uuid] — opt-in for the loyalty card.
  *
  * Visual treatment is intentionally subordinate to the Review button
- * above: white card, smaller heading, no shadow, sits below the fold.
- * Returning (opted-in) customers don't see this at all — TapView only
- * renders the form when `customer === null`.
+ * above: white card, smaller heading, soft ambient shadow, sits below
+ * the fold. Returning (opted-in) customers don't see this at all —
+ * TapView only renders the form when `customer === null`.
  */
-export function OptInForm({ tenantId, tenantName, accentColor }: Props) {
+export function OptInForm({ tenantId, tenantName }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -61,74 +61,98 @@ export function OptInForm({ tenantId, tenantName, accentColor }: Props) {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="flex w-full flex-col gap-3 rounded-2xl bg-white/95 p-4 text-left text-brand-black"
+      className="flex w-full flex-col rounded-xl border border-brand-green/5 bg-white p-6 text-left text-brand-black shadow-[0_4px_24px_rgba(27,77,62,0.04)]"
     >
-      <header className="flex flex-col gap-0.5">
-        <p className="font-display text-base leading-tight">
+      <div className="mb-2 flex items-center gap-3">
+        <Mail className="h-5 w-5 text-brand-green" aria-hidden="true" />
+        <h3 className="font-display text-xl leading-tight text-brand-green">
           Keep your stamps in your pocket
-        </p>
-        <p className="text-xs text-muted-foreground">
-          Join {tenantName}&apos;s loyalty card — 1 tap, no app.
-        </p>
-      </header>
+        </h3>
+      </div>
+      <p className="mb-6 text-sm text-neutral-600">
+        Join {tenantName}&apos;s loyalty card. One tap, no app, no spam.
+      </p>
 
       <input type="hidden" {...register("tenant_id")} />
       <input type="hidden" {...register("gdpr_consent_text")} />
 
-      <label className="flex flex-col gap-1 text-sm">
-        <span className="sr-only">Phone (Irish)</span>
-        <input
-          type="tel"
-          inputMode="tel"
-          autoComplete="tel"
-          placeholder="+353 86 123 4567"
-          {...register("phone")}
-          className="rounded-lg border border-brand-black/20 px-3 py-2 outline-none focus:border-brand-green"
-        />
-        {errors.phone ? (
-          <span className="text-xs text-red-600">{errors.phone.message}</span>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="opt-in-name"
+            className="ml-1 text-xs font-medium text-neutral-600"
+          >
+            Name (optional)
+          </label>
+          <input
+            id="opt-in-name"
+            type="text"
+            autoComplete="given-name"
+            placeholder="Sean"
+            {...register("name")}
+            className="rounded-lg border border-neutral-300/40 bg-brand-off-white px-4 py-3.5 text-base text-brand-black outline-none transition-all placeholder:text-neutral-600/40 focus:border-transparent focus:ring-2 focus:ring-brand-amber"
+          />
+          {errors.name ? (
+            <span className="text-xs text-red-600">{errors.name.message}</span>
+          ) : null}
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="opt-in-phone"
+            className="ml-1 text-xs font-medium text-neutral-600"
+          >
+            Phone number
+          </label>
+          <input
+            id="opt-in-phone"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            placeholder="+353 86 123 4567"
+            {...register("phone")}
+            className="rounded-lg border border-neutral-300/40 bg-brand-off-white px-4 py-3.5 text-base text-brand-black outline-none transition-all placeholder:text-neutral-600/40 focus:border-transparent focus:ring-2 focus:ring-brand-amber"
+          />
+          {errors.phone ? (
+            <span className="text-xs text-red-600">{errors.phone.message}</span>
+          ) : null}
+        </div>
+
+        <label className="-ml-2 mt-1 flex cursor-pointer items-start gap-3 rounded-lg p-2 transition-colors hover:bg-brand-off-white">
+          <span className="relative mt-0.5 flex shrink-0 items-center justify-center">
+            <input
+              type="checkbox"
+              {...register("gdpr_consent")}
+              className="peer h-5 w-5 cursor-pointer appearance-none rounded border-2 border-neutral-300 bg-white transition-colors checked:border-brand-green checked:bg-brand-green focus:outline-none focus:ring-2 focus:ring-brand-amber"
+            />
+            <Check
+              aria-hidden="true"
+              className="pointer-events-none absolute h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100"
+            />
+          </span>
+          <span className="flex-1 text-xs leading-relaxed text-neutral-600">
+            I agree to receive offers from <strong>{tenantName}</strong> via SMS
+            or WhatsApp. I can ask to be removed at any time.
+          </span>
+        </label>
+        {errors.gdpr_consent ? (
+          <span className="text-xs text-red-600">
+            {errors.gdpr_consent.message}
+          </span>
         ) : null}
-      </label>
 
-      <label className="flex flex-col gap-1 text-sm">
-        <span className="sr-only">Name (optional)</span>
-        <input
-          type="text"
-          autoComplete="given-name"
-          placeholder="Name (optional)"
-          {...register("name")}
-          className="rounded-lg border border-brand-black/20 px-3 py-2 outline-none focus:border-brand-green"
-        />
-        {errors.name ? (
-          <span className="text-xs text-red-600">{errors.name.message}</span>
+        {serverError ? (
+          <p className="text-sm text-red-600">{serverError}</p>
         ) : null}
-      </label>
 
-      <label className="flex items-start gap-2 text-[11px] leading-snug">
-        <input
-          type="checkbox"
-          {...register("gdpr_consent")}
-          className="mt-0.5"
-        />
-        <span>
-          I agree to receive offers from <strong>{tenantName}</strong> via SMS
-          or WhatsApp. I can ask to be removed at any time.
-        </span>
-      </label>
-      {errors.gdpr_consent ? (
-        <span className="text-xs text-red-600">{errors.gdpr_consent.message}</span>
-      ) : null}
-
-      {serverError ? <p className="text-sm text-red-600">{serverError}</p> : null}
-
-      <button
-        type="submit"
-        disabled={isPending}
-        className="mt-1 rounded-full px-4 py-2.5 text-sm font-semibold disabled:opacity-60"
-        style={{ backgroundColor: accentColor, color: "#1A1A1A" }}
-      >
-        {isPending ? "Saving…" : "Join loyalty"}
-      </button>
+        <button
+          type="submit"
+          disabled={isPending}
+          className="mt-2 w-full rounded-lg bg-brand-green px-6 py-4 text-sm font-bold uppercase tracking-wider text-white shadow-sm transition-colors hover:bg-green-800 active:scale-[0.98] disabled:opacity-60"
+        >
+          {isPending ? "Saving…" : "Join loyalty card"}
+        </button>
+      </div>
     </form>
   );
 }
