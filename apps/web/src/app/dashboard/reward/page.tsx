@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { getAuthApiClient } from "@/lib/api";
 import { getDashboardContext } from "@/lib/dashboard-data";
 
@@ -11,16 +9,12 @@ export default async function RewardPage() {
   const { tenant } = await api.getTenant();
 
   return (
-    <main className="space-y-6">
+    <div className="mx-auto max-w-2xl space-y-8">
       <header>
-        <p className="text-sm text-brand-black/60">
-          <Link href="/dashboard" className="underline">
-            Dashboard
-          </Link>{" "}
-          / Reward
-        </p>
-        <h1 className="font-display text-3xl">Reward</h1>
-        <p className="mt-1 text-sm text-brand-black/60">
+        <h1 className="font-display text-3xl leading-tight text-brand-green sm:text-4xl">
+          Reward
+        </h1>
+        <p className="mt-2 text-sm text-neutral-600">
           Decide how many stamps customers need and what they get.
         </p>
       </header>
@@ -33,6 +27,6 @@ export default async function RewardPage() {
           stamp_rate_limit_minutes: tenant.stamp_rate_limit_minutes,
         }}
       />
-    </main>
+    </div>
   );
 }

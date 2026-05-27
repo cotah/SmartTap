@@ -1,5 +1,6 @@
 "use client";
 
+import { Calendar, Gift, Hash, Timer, type LucideIcon } from "lucide-react";
 import { type FormEvent, useState, useTransition } from "react";
 
 import { saveRewardConfigAction } from "./actions";
@@ -50,83 +51,101 @@ export function RewardForm({ initial }: Props) {
   return (
     <form
       onSubmit={onSubmit}
-      className="space-y-6 rounded-2xl border border-brand-black/10 bg-white p-6 shadow-sm"
+      className="space-y-8 rounded-xl border border-brand-green/5 bg-white p-6 shadow-[0_4px_24px_rgba(27,77,62,0.04)] md:p-8"
     >
-      <Field
-        name="stamps_for_reward"
-        label="Stamps needed for a reward"
-        hint="Most barbershops use 8 to 12."
-        error={fieldErrors.stamps_for_reward}
-      >
-        <input
-          type="number"
-          name="stamps_for_reward"
-          defaultValue={initial.stamps_for_reward || 10}
-          min={1}
-          max={50}
-          required
-          className="w-32 rounded-lg border border-brand-black/20 px-3 py-2 outline-none focus:border-brand-green"
-        />
-      </Field>
+      {/* Section: Basic details */}
+      <section className="space-y-5">
+        <h2 className="border-b border-neutral-300/30 pb-2 text-xs font-bold uppercase tracking-widest text-brand-green">
+          Basic details
+        </h2>
 
-      <Field
-        name="reward_description"
-        label="What do they get?"
-        hint="Shown to the customer on the stamp screen."
-        error={fieldErrors.reward_description}
-      >
-        <input
-          type="text"
-          name="reward_description"
-          defaultValue={initial.reward_description}
-          placeholder="Free haircut"
-          minLength={2}
-          maxLength={120}
-          required
-          className="w-full rounded-lg border border-brand-black/20 px-3 py-2 outline-none focus:border-brand-green"
-        />
-      </Field>
+        <Field
+          label="What do they get?"
+          hint="Shown to the customer on the stamp screen."
+          error={fieldErrors.reward_description}
+        >
+          <IconInput icon={Gift}>
+            <input
+              type="text"
+              name="reward_description"
+              defaultValue={initial.reward_description}
+              placeholder="Free haircut"
+              minLength={2}
+              maxLength={120}
+              required
+              className={INPUT_CLASS}
+            />
+          </IconInput>
+        </Field>
 
-      <Field
-        name="reward_expires_days"
-        label="Reward expires after"
-        hint="Days the customer has to redeem after earning the reward."
-        error={fieldErrors.reward_expires_days}
-        suffix="days"
-      >
-        <input
-          type="number"
-          name="reward_expires_days"
-          defaultValue={initial.reward_expires_days || 30}
-          min={1}
-          max={365}
-          required
-          className="w-32 rounded-lg border border-brand-black/20 px-3 py-2 outline-none focus:border-brand-green"
-        />
-      </Field>
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+          <Field
+            label="Stamps needed"
+            hint="Most barbershops use 8 to 12."
+            error={fieldErrors.stamps_for_reward}
+          >
+            <IconInput icon={Hash}>
+              <input
+                type="number"
+                name="stamps_for_reward"
+                defaultValue={initial.stamps_for_reward || 10}
+                min={1}
+                max={50}
+                required
+                className={INPUT_CLASS}
+              />
+            </IconInput>
+          </Field>
 
-      <Field
-        name="stamp_rate_limit_minutes"
-        label="Time between stamps for the same customer"
-        hint="Stops repeat taps from gaming the system. 0 means no limit."
-        error={fieldErrors.stamp_rate_limit_minutes}
-        suffix="minutes"
-      >
-        <input
-          type="number"
-          name="stamp_rate_limit_minutes"
-          defaultValue={initial.stamp_rate_limit_minutes}
-          min={0}
-          max={1440}
-          required
-          className="w-32 rounded-lg border border-brand-black/20 px-3 py-2 outline-none focus:border-brand-green"
-        />
-      </Field>
+          <Field
+            label="Expiry (days)"
+            hint="How long customers have to redeem."
+            error={fieldErrors.reward_expires_days}
+          >
+            <IconInput icon={Calendar}>
+              <input
+                type="number"
+                name="reward_expires_days"
+                defaultValue={initial.reward_expires_days || 30}
+                min={1}
+                max={365}
+                required
+                className={INPUT_CLASS}
+              />
+            </IconInput>
+          </Field>
+        </div>
+      </section>
+
+      {/* Section: Rules & limits */}
+      <section className="space-y-5">
+        <h2 className="border-b border-neutral-300/30 pb-2 text-xs font-bold uppercase tracking-widest text-brand-green">
+          Rules &amp; limits
+        </h2>
+
+        <Field
+          label="Tap cooldown (minutes)"
+          hint="Stops repeat taps from gaming the system. 0 means no limit."
+          error={fieldErrors.stamp_rate_limit_minutes}
+        >
+          <IconInput icon={Timer}>
+            <input
+              type="number"
+              name="stamp_rate_limit_minutes"
+              defaultValue={initial.stamp_rate_limit_minutes}
+              min={0}
+              max={1440}
+              required
+              className={INPUT_CLASS}
+            />
+          </IconInput>
+        </Field>
+      </section>
 
       {banner ? (
         <div
           role="status"
-          className={`rounded-lg px-3 py-2 text-sm ${
+          className={`rounded-lg px-4 py-3 text-sm ${
             banner.kind === "success"
               ? "bg-brand-green/10 text-brand-green"
               : "bg-red-50 text-red-700"
@@ -136,11 +155,11 @@ export function RewardForm({ initial }: Props) {
         </div>
       ) : null}
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center justify-end gap-3 border-t border-neutral-300/30 pt-6">
         <button
           type="submit"
           disabled={pending}
-          className="rounded-full bg-brand-green px-6 py-2.5 text-sm font-semibold text-brand-off-white disabled:opacity-60"
+          className="rounded-lg bg-brand-green px-6 py-3 text-sm font-bold uppercase tracking-wider text-white shadow-sm transition-colors hover:bg-green-800 disabled:opacity-60"
         >
           {pending ? "Saving…" : "Save changes"}
         </button>
@@ -149,31 +168,47 @@ export function RewardForm({ initial }: Props) {
   );
 }
 
+const INPUT_CLASS =
+  "block w-full rounded-lg border border-neutral-300/40 bg-brand-off-white py-3 pl-11 pr-4 text-base text-brand-black shadow-[inset_0_2px_4px_rgba(27,77,62,0.04)] outline-none transition-colors placeholder:text-neutral-600/40 focus:border-brand-amber focus:ring-2 focus:ring-brand-amber/30";
+
+function IconInput({
+  icon: Icon,
+  children,
+}: {
+  icon: LucideIcon;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="relative">
+      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-600">
+        <Icon className="h-5 w-5" aria-hidden="true" />
+      </span>
+      {children}
+    </div>
+  );
+}
+
 function Field({
   label,
   hint,
   error,
-  suffix,
   children,
 }: {
-  name: string;
   label: string;
   hint?: string;
   error?: string;
-  suffix?: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="space-y-1.5">
-      <label className="block text-sm font-semibold">{label}</label>
-      <div className="flex items-center gap-2">
-        {children}
-        {suffix ? <span className="text-sm text-brand-black/60">{suffix}</span> : null}
-      </div>
+    <div className="space-y-2">
+      <label className="block text-xs font-bold uppercase tracking-wider text-brand-black">
+        {label}
+      </label>
+      {children}
       {error ? (
         <p className="text-xs text-red-600">{error}</p>
       ) : hint ? (
-        <p className="text-xs text-brand-black/55">{hint}</p>
+        <p className="text-xs text-neutral-600">{hint}</p>
       ) : null}
     </div>
   );
