@@ -247,6 +247,40 @@ campaigns (id, tenant_id, name, type, status, config jsonb,
 - `ANTHROPIC_API_KEY` env var (backend)
 - Phone → tenant mapping table (nova migration)
 
+**Sprint 5.6 — Identificação por telefone via OTP (Semanas 10-11)**
+
+Fecha um buraco UX da Sprint 1: cliente que limpa o browser ou troca de telemóvel perde o cookie de identificação e re-aparece como cliente novo, perdendo o histórico de stamps. Solução: na página /t/[uuid] aparece um caminho paralelo "Already a member?" que recupera a conta via SMS OTP — sem precisar criar conta nova, sem precisar lembrar do magic link da última visita. Encaixa após a Sprint 5 porque reutiliza a conta Twilio já configurada (SMS é mesmo Account SID + Auth Token, só muda o canal).
+
+**Problema:** Hoje a identificação do cliente vive num cookie. Se o cliente limpa o browser, troca de telemóvel, ou usa modo anónimo, tapa a tag e re-aparece como cliente novo — stamps anteriores ficam órfãos no histórico do tenant. Único caminho actual é magic link da última visita, irrealista pro caso típico de barbearia ("já não tenho aquele email/SMS").
+
+**Solução:** Quando cliente toca na tag e não tem cookie:
+- Mostrar bloco discreto `[Already a member? Enter your phone number]` no formulário opt-in (subordinado ao botão Review, consistente com a hierarquia do redesign /t/[uuid])
+- Cliente digita o número → backend procura `customers WHERE phone = ?` no tenant
+- Se existe → envia código de 4 dígitos via Twilio SMS, valida, set cookie identificador, restaura stamps
+- Se não existe → resposta "code sent" igual (anti-enumeration) + flow normal de opt-in já implementado
+
+**Features:**
+
+- [ ] **Input "Already a member?"** — segundo bloco na `/t/[uuid]` opt-in form, abaixo do signup primário, visualmente mais discreto
+- [ ] **POST `/v1/customers/identify-request`** — recebe `{phone, tenant_id}`; envia OTP 4 dígitos via Twilio SMS; persiste em `customer_otp_codes(phone, tenant_id, code_hash, expires_at, attempts)` com TTL 10min; rate-limit (1 send/min, 3 sends/hora por phone+tenant); sempre devolve `{ok:true}` mesmo se phone não existe (anti-enumeration)
+- [ ] **POST `/v1/customers/identify-verify`** — recebe `{phone, code, tenant_id}`; valida via constant-time compare contra code_hash; em sucesso, set cookie identificador (mesmo formato do magic-link cookie do Sprint 4-W2) + devolve snapshot do customer + reward_state; em falha, incrementa attempts e bloqueia após 5 tentativas erradas
+- [ ] **Fusão de conta anónima com conta identificada** — se o tap actual já criou um stamp anónimo (customer_id null) antes da identificação, transferir esse stamp pra conta identificada (anti-perda; idempotente caso o cliente volte a identificar-se)
+- [ ] **Rate limiting + anti-abuse** — bloqueio temporário (1h) após 5 códigos errados consecutivos; máximo 3 OTP requests por phone+tenant por hora; CAPTCHA ou similar se detectar padrão de abuse
+
+**Stack:** Twilio SMS (mesmo account da Sprint 5, canal diferente — `messages.create({ from: TWILIO_SMS_FROM, ... })` em vez do WhatsApp Sender). Nova migration `customer_otp_codes` table. Reaproveita o cookie de identificação existente da Sprint 1 (formato `customer_session_<tenant_id>`).
+
+**Pré-requisitos infra:**
+- Conta Twilio + Account SID + Auth Token já configurados na Sprint 5 — reutilizar
+- Comprar número Twilio SMS Ireland (~€1/mês) OU usar Messaging Service já existente da WhatsApp Sprint 5 com SMS habilitado
+- `TWILIO_SMS_FROM` env var (backend Railway) — formato E.164 `+353...`
+
+**Considerações:**
+- OTP por SMS custa ~€0.04/msg em Irlanda — não é gratuito. Rate-limit + cooldown evitam abuso.
+- GDPR: o número só é processado para identificação. Texto claro no input: *"We'll text you a 4-digit code. We won't add you to any list."* — sem opt-in implícito para marketing.
+- Anti-enumeration: resposta de `identify-request` é sempre `{ok:true}` mesmo se phone não existe — não revelar quem é cliente do tenant.
+- A11y: input do OTP precisa de `inputMode="numeric"` + `autocomplete="one-time-code"` para iOS/Android sugerirem o código direto da notificação SMS.
+- O bloco "Already a member?" deve ficar abaixo do CTA Review e do signup primário — consistente com a hierarquia mobile-first do redesign de /t/[uuid] de hoje (Review dominante, loyalty secundário).
+
 **Sprint 6 — Review Intelligence Dashboard (Semanas 11-14)**
 
 Análise automatizada de reviews com IA — extrai padrões, segmenta clientes pelo histórico de reviews, gera insights acionáveis de marketing. Combina reviews do Google Business + TripAdvisor num único dashboard inteligente. Encaixa naturalmente após a Sprint 5 porque reutiliza a Google Business API + Claude API já configuradas pra Feature 3.
