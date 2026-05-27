@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { getAuthApiClient } from "@/lib/api";
 import type { CustomerListFilter, CustomerListSort } from "@/lib/api";
 import { getDashboardContext } from "@/lib/dashboard-data";
@@ -49,27 +47,31 @@ export default async function CustomersPage({ searchParams }: PageProps) {
   const page = parsePage(sp.p);
 
   const api = getAuthApiClient();
-  const result = await api.listCustomers({
-    search: search || undefined,
-    filter,
-    sort,
-    page,
-    limit: PAGE_SIZE,
-  });
+
+  // Parallelize: customer list + reward config (for stamps_for_reward).
+  const [result, tenantResult] = await Promise.all([
+    api.listCustomers({
+      search: search || undefined,
+      filter,
+      sort,
+      page,
+      limit: PAGE_SIZE,
+    }),
+    api.getTenant(),
+  ]);
+
+  const stampsForReward = tenantResult.tenant.stamps_for_reward;
 
   return (
-    <main className="space-y-6">
-      <header className="flex flex-col items-start justify-between gap-3 md:flex-row md:items-end">
+    <div className="space-y-8">
+      <header className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="text-sm text-brand-black/60">
-            <Link href="/dashboard" className="underline">
-              Dashboard
-            </Link>{" "}
-            / Customers
-          </p>
-          <h1 className="font-display text-3xl">Customers</h1>
-          <p className="mt-1 text-sm text-brand-black/60">
-            {result.total} total · showing {result.items.length}
+          <h1 className="font-display text-3xl leading-tight text-brand-green sm:text-4xl">
+            Customers
+          </h1>
+          <p className="mt-2 text-sm text-neutral-600">
+            {result.total.toLocaleString()} total · showing{" "}
+            {result.items.length}
           </p>
         </div>
         <ExportButton search={search} filter={filter} sort={sort} />
@@ -83,7 +85,8 @@ export default async function CustomersPage({ searchParams }: PageProps) {
         pageSize={PAGE_SIZE}
         total={result.total}
         items={result.items}
+        stampsForReward={stampsForReward}
       />
-    </main>
+    </div>
   );
 }

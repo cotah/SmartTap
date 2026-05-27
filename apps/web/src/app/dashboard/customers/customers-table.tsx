@@ -1,7 +1,14 @@
 "use client";
 
+import { Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { type ChangeEvent, useEffect, useRef, useState, useTransition } from "react";
+import {
+  type ChangeEvent,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 
 import type {
   CustomerListFilter,
@@ -17,6 +24,7 @@ interface Props {
   pageSize: number;
   total: number;
   items: CustomerListItem[];
+  stampsForReward: number;
 }
 
 const FILTER_LABELS: Record<CustomerListFilter, string> = {
@@ -32,6 +40,47 @@ const SORT_LABELS: Record<CustomerListSort, string> = {
   stamps: "Most stamps",
 };
 
+type Status = "reward_ready" | "at_risk" | "new" | "regular";
+
+interface StatusStyle {
+  label: string;
+  className: string;
+}
+
+const STATUS_STYLES: Record<Status, StatusStyle> = {
+  reward_ready: {
+    label: "Reward ready",
+    className: "bg-brand-amber/20 text-amber-600",
+  },
+  at_risk: {
+    label: "At risk",
+    className: "bg-red-100 text-red-700",
+  },
+  new: {
+    label: "New",
+    className: "bg-neutral-300/30 text-neutral-600",
+  },
+  regular: {
+    label: "Regular",
+    className: "bg-brand-green/10 text-brand-green",
+  },
+};
+
+function deriveStatus(item: CustomerListItem): Status {
+  if (item.has_reward_ready) return "reward_ready";
+  if (isAtRisk(item.last_visit_at)) return "at_risk";
+  if (item.total_visits <= 1) return "new";
+  return "regular";
+}
+
+function isAtRisk(lastVisitIso: string | null): boolean {
+  if (!lastVisitIso) return true;
+  const date = new Date(lastVisitIso);
+  if (Number.isNaN(date.getTime())) return false;
+  const diffDays = Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
+  return diffDays >= 30;
+}
+
 export function CustomersTable({
   initialSearch,
   filter,
@@ -40,6 +89,7 @@ export function CustomersTable({
   pageSize,
   total,
   items,
+  stampsForReward,
 }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -47,7 +97,6 @@ export function CustomersTable({
   const [searchInput, setSearchInput] = useState(initialSearch);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Keep input in sync if URL changes (e.g. browser back).
   useEffect(() => {
     setSearchInput(initialSearch);
   }, [initialSearch]);
@@ -97,23 +146,33 @@ export function CustomersTable({
   const hasNext = page < totalPages;
 
   return (
-    <section className="space-y-4">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <input
-          type="search"
-          value={searchInput}
-          onChange={onSearchChange}
-          placeholder="Search by name or phone"
-          className="w-full rounded-lg border border-brand-black/20 px-3 py-2 text-sm outline-none focus:border-brand-green md:max-w-xs"
-        />
+    <section className="space-y-6">
+      {/* Search + Sort row */}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="relative w-full max-w-md">
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-600">
+            <Search className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <input
+            type="search"
+            value={searchInput}
+            onChange={onSearchChange}
+            placeholder="Search by name or phone…"
+            className="w-full rounded-lg border border-neutral-300/40 bg-white py-3 pl-10 pr-4 text-sm text-brand-black shadow-[inset_0_2px_4px_rgba(27,77,62,0.04)] outline-none transition-colors placeholder:text-neutral-600/50 focus:border-brand-amber focus:ring-2 focus:ring-brand-amber/30"
+          />
+        </div>
         <div className="flex items-center gap-2">
-          <label className="text-xs uppercase tracking-wide text-brand-black/60">
+          <label
+            htmlFor="customers-sort"
+            className="text-xs font-bold uppercase tracking-wider text-neutral-600"
+          >
             Sort
           </label>
           <select
+            id="customers-sort"
             value={sort}
             onChange={onSortChange}
-            className="rounded-lg border border-brand-black/20 px-3 py-2 text-sm"
+            className="rounded-lg border border-neutral-300/40 bg-white px-3 py-2.5 text-sm text-brand-black focus:border-brand-amber focus:outline-none focus:ring-2 focus:ring-brand-amber/30"
           >
             {(Object.keys(SORT_LABELS) as CustomerListSort[]).map((key) => (
               <option key={key} value={key}>
@@ -124,7 +183,12 @@ export function CustomersTable({
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Filter customers">
+      {/* Filter pills */}
+      <div
+        className="flex flex-wrap gap-2"
+        role="tablist"
+        aria-label="Filter customers"
+      >
         {(Object.keys(FILTER_LABELS) as CustomerListFilter[]).map((key) => {
           const active = key === filter;
           return (
@@ -134,10 +198,10 @@ export function CustomersTable({
               role="tab"
               aria-selected={active}
               onClick={() => onFilterChange(key)}
-              className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+              className={`rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
                 active
-                  ? "border-brand-green bg-brand-green text-brand-off-white"
-                  : "border-brand-black/20 bg-white text-brand-black/70 hover:border-brand-green"
+                  ? "bg-brand-green text-white shadow-sm"
+                  : "bg-white text-neutral-600 hover:bg-brand-green/5 hover:text-brand-green"
               }`}
             >
               {FILTER_LABELS[key]}
@@ -149,10 +213,10 @@ export function CustomersTable({
       {items.length === 0 ? (
         <EmptyState filter={filter} hasSearch={Boolean(initialSearch)} />
       ) : (
-        <>
-          <DesktopTable items={items} />
-          <MobileCards items={items} />
-        </>
+        <div className="overflow-hidden rounded-xl border border-brand-green/5 bg-white shadow-[0_4px_12px_rgba(27,77,62,0.04)]">
+          <DesktopTable items={items} stampsForReward={stampsForReward} />
+          <MobileCards items={items} stampsForReward={stampsForReward} />
+        </div>
       )}
 
       <Pagination
@@ -168,32 +232,65 @@ export function CustomersTable({
   );
 }
 
-function DesktopTable({ items }: { items: CustomerListItem[] }) {
+function DesktopTable({
+  items,
+  stampsForReward,
+}: {
+  items: CustomerListItem[];
+  stampsForReward: number;
+}) {
   return (
-    <div className="hidden overflow-hidden rounded-2xl border border-brand-black/10 bg-white shadow-sm md:block">
-      <table className="w-full text-sm">
-        <thead className="bg-brand-off-white text-left text-xs uppercase tracking-wide text-brand-black/60">
+    <div className="hidden overflow-x-auto md:block">
+      <table className="w-full text-left">
+        <thead className="border-b border-neutral-300/30 bg-brand-off-white">
           <tr>
-            <th className="px-4 py-3">Name</th>
-            <th className="px-4 py-3">Phone</th>
-            <th className="px-4 py-3 text-right">Stamps</th>
-            <th className="px-4 py-3 text-right">Visits</th>
-            <th className="px-4 py-3">Last visit</th>
-            <th className="px-4 py-3"></th>
+            <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-neutral-600">
+              Name
+            </th>
+            <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-neutral-600">
+              Phone
+            </th>
+            <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-neutral-600">
+              Stamps
+            </th>
+            <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider text-neutral-600">
+              Visits
+            </th>
+            <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-neutral-600">
+              Last visit
+            </th>
+            <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-neutral-600">
+              Status
+            </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-brand-black/10">
+        <tbody className="divide-y divide-neutral-300/20">
           {items.map((item) => (
-            <tr key={item.id}>
-              <td className="px-4 py-3 font-medium">{item.name || "—"}</td>
-              <td className="px-4 py-3 text-brand-black/70">{item.phone || "—"}</td>
-              <td className="px-4 py-3 text-right">{item.current_stamps}</td>
-              <td className="px-4 py-3 text-right">{item.total_visits}</td>
-              <td className="px-4 py-3 text-brand-black/70">
+            <tr
+              key={item.id}
+              className="transition-colors hover:bg-brand-off-white/50"
+            >
+              <td className="px-6 py-4 text-sm font-medium text-brand-black">
+                {item.name || "—"}
+              </td>
+              <td className="px-6 py-4 text-sm text-neutral-600">
+                {item.phone || "—"}
+              </td>
+              <td className="px-6 py-4">
+                <StampProgress
+                  current={item.current_stamps}
+                  total={stampsForReward}
+                  ready={item.has_reward_ready}
+                />
+              </td>
+              <td className="px-6 py-4 text-right text-sm text-brand-black">
+                {item.total_visits}
+              </td>
+              <td className="px-6 py-4 text-sm text-neutral-600">
                 {formatRelative(item.last_visit_at)}
               </td>
-              <td className="px-4 py-3 text-right">
-                {item.has_reward_ready ? <RewardBadge /> : null}
+              <td className="px-6 py-4">
+                <StatusBadge status={deriveStatus(item)} />
               </td>
             </tr>
           ))}
@@ -203,27 +300,37 @@ function DesktopTable({ items }: { items: CustomerListItem[] }) {
   );
 }
 
-function MobileCards({ items }: { items: CustomerListItem[] }) {
+function MobileCards({
+  items,
+  stampsForReward,
+}: {
+  items: CustomerListItem[];
+  stampsForReward: number;
+}) {
   return (
-    <ul className="space-y-2 md:hidden">
+    <ul className="divide-y divide-neutral-300/20 md:hidden">
       {items.map((item) => (
-        <li
-          key={item.id}
-          className="rounded-2xl border border-brand-black/10 bg-white p-4 shadow-sm"
-        >
+        <li key={item.id} className="space-y-3 p-4">
           <div className="flex items-start justify-between gap-2">
-            <div>
-              <p className="font-medium">{item.name || "Unnamed"}</p>
-              <p className="text-xs text-brand-black/60">{item.phone || "no phone"}</p>
+            <div className="min-w-0">
+              <p className="truncate font-medium text-brand-black">
+                {item.name || "Unnamed"}
+              </p>
+              <p className="text-xs text-neutral-600">
+                {item.phone || "no phone"}
+              </p>
             </div>
-            {item.has_reward_ready ? <RewardBadge /> : null}
+            <StatusBadge status={deriveStatus(item)} />
           </div>
-          <div className="mt-3 flex items-center justify-between text-xs text-brand-black/70">
+          <StampProgress
+            current={item.current_stamps}
+            total={stampsForReward}
+            ready={item.has_reward_ready}
+          />
+          <div className="flex items-center justify-between text-xs text-neutral-600">
             <span>
-              <strong className="text-brand-black">{item.current_stamps}</strong> stamps
-            </span>
-            <span>
-              <strong className="text-brand-black">{item.total_visits}</strong> visits
+              <strong className="text-brand-black">{item.total_visits}</strong>{" "}
+              visits
             </span>
             <span>{formatRelative(item.last_visit_at)}</span>
           </div>
@@ -233,10 +340,42 @@ function MobileCards({ items }: { items: CustomerListItem[] }) {
   );
 }
 
-function RewardBadge() {
+function StampProgress({
+  current,
+  total,
+  ready,
+}: {
+  current: number;
+  total: number;
+  ready: boolean;
+}) {
+  const safeTotal = Math.max(total, 1);
+  const pct = Math.min(100, Math.max(0, (current / safeTotal) * 100));
+  const barColor = ready ? "bg-brand-amber" : "bg-brand-green";
+  const valueColor = ready ? "text-brand-amber" : "text-brand-black";
+
   return (
-    <span className="rounded-full bg-brand-amber/15 px-2 py-0.5 text-xs font-semibold text-brand-amber">
-      Reward ready
+    <div className="flex items-center gap-2">
+      <span className={`text-sm font-bold tabular-nums ${valueColor}`}>
+        {current}/{total}
+      </span>
+      <div className="h-1.5 w-16 overflow-hidden rounded-full bg-neutral-300/30">
+        <div
+          className={`h-full rounded-full transition-all duration-300 ${barColor}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function StatusBadge({ status }: { status: Status }) {
+  const style = STATUS_STYLES[status];
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider ${style.className}`}
+    >
+      {style.label}
     </span>
   );
 }
@@ -264,9 +403,9 @@ function EmptyState({
     body = "When customers hit your stamp threshold they show up here.";
   }
   return (
-    <div className="rounded-2xl border border-dashed border-brand-black/20 bg-white p-8 text-center">
-      <p className="font-display text-lg">{title}</p>
-      <p className="mt-1 text-sm text-brand-black/60">{body}</p>
+    <div className="rounded-xl border border-dashed border-neutral-300/60 bg-white p-10 text-center">
+      <p className="font-display text-xl text-brand-green">{title}</p>
+      <p className="mt-2 text-sm text-neutral-600">{body}</p>
     </div>
   );
 }
@@ -295,18 +434,18 @@ function Pagination({
         type="button"
         onClick={onPrev}
         disabled={!hasPrev || pending}
-        className="rounded-full border border-brand-black/20 px-4 py-1.5 disabled:opacity-40"
+        className="rounded-lg border border-neutral-300/50 bg-white px-4 py-2 font-medium text-brand-black transition-colors hover:border-brand-green hover:text-brand-green disabled:opacity-40"
       >
         ← Prev
       </button>
-      <span className="text-brand-black/60">
+      <span className="text-neutral-600">
         Page {page} of {totalPages}
       </span>
       <button
         type="button"
         onClick={onNext}
         disabled={!hasNext || pending}
-        className="rounded-full border border-brand-black/20 px-4 py-1.5 disabled:opacity-40"
+        className="rounded-lg border border-neutral-300/50 bg-white px-4 py-2 font-medium text-brand-black transition-colors hover:border-brand-green hover:text-brand-green disabled:opacity-40"
       >
         Next →
       </button>

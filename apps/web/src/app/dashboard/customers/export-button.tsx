@@ -1,5 +1,6 @@
 "use client";
 
+import { Download } from "lucide-react";
 import { useState, useTransition } from "react";
 
 import type { CustomerListFilter, CustomerListSort } from "@/lib/api";
@@ -41,13 +42,14 @@ export function ExportButton({ search, filter, sort }: Props) {
   }
 
   return (
-    <div className="flex flex-col items-end gap-1">
+    <div className="flex flex-col items-start gap-1 sm:items-end">
       <button
         type="button"
         onClick={onClick}
         disabled={pending}
-        className="rounded-full border border-brand-black/20 px-4 py-1.5 text-sm font-semibold hover:border-brand-green disabled:opacity-60"
+        className="inline-flex items-center gap-2 rounded-lg border border-brand-green px-5 py-2.5 text-sm font-bold uppercase tracking-wider text-brand-green transition-colors hover:bg-brand-green hover:text-white disabled:opacity-60"
       >
+        <Download className="h-4 w-4" aria-hidden="true" />
         {pending ? "Exporting…" : "Export CSV"}
       </button>
       {error ? <p className="text-xs text-red-600">{error}</p> : null}
