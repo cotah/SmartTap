@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { getAuthApiClient } from "@/lib/api";
 import { getDashboardContext } from "@/lib/dashboard-data";
 
@@ -11,17 +9,14 @@ export default async function SettingsPage() {
   const { tenant } = await api.getTenant();
 
   return (
-    <main className="space-y-6">
+    <div className="mx-auto max-w-3xl space-y-8">
       <header>
-        <p className="text-sm text-brand-black/60">
-          <Link href="/dashboard" className="underline">
-            Dashboard
-          </Link>{" "}
-          / Settings
-        </p>
-        <h1 className="font-display text-3xl">Settings</h1>
-        <p className="mt-1 text-sm text-brand-black/60">
-          Brand info shown to your customers, plus Google review links.
+        <h1 className="font-display text-3xl leading-tight text-brand-green sm:text-4xl">
+          Settings
+        </h1>
+        <p className="mt-2 text-sm text-neutral-600">
+          Brand info shown to your customers, plus the Google review link they
+          land on after a tap.
         </p>
       </header>
 
@@ -36,6 +31,6 @@ export default async function SettingsPage() {
           google_place_id: tenant.google_place_id ?? "",
         }}
       />
-    </main>
+    </div>
   );
 }

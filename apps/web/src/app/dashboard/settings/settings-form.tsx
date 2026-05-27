@@ -1,5 +1,6 @@
 "use client";
 
+import { Globe, Link as LinkIcon, type LucideIcon, MapPin, Store } from "lucide-react";
 import { type FormEvent, useState, useTransition } from "react";
 
 import { saveSettingsAction } from "./actions";
@@ -55,7 +56,11 @@ export function SettingsForm({ initial }: Props) {
 
   return (
     <form onSubmit={onSubmit} className="space-y-8">
-      <Section title="Brand" subtitle="Shown on the customer tap screen.">
+      <Section
+        title="Brand identity"
+        subtitle="This information appears on your customer-facing loyalty card."
+        icon={Store}
+      >
         <Field label="Business name" error={errors.name}>
           <input
             type="text"
@@ -64,22 +69,24 @@ export function SettingsForm({ initial }: Props) {
             minLength={2}
             maxLength={80}
             required
-            className="w-full rounded-lg border border-brand-black/20 px-3 py-2 outline-none focus:border-brand-green"
+            className={INPUT_CLASS}
           />
         </Field>
 
         <Field
           label="Logo URL"
-          hint="Public image URL. Leave empty to use the SmartTap default."
+          hint="Public image URL. Leave empty to show the SmartTap default."
           error={errors.logo_url}
         >
-          <input
-            type="url"
-            name="logo_url"
-            defaultValue={initial.logo_url}
-            placeholder="https://..."
-            className="w-full rounded-lg border border-brand-black/20 px-3 py-2 outline-none focus:border-brand-green"
-          />
+          <IconInput icon={LinkIcon}>
+            <input
+              type="url"
+              name="logo_url"
+              defaultValue={initial.logo_url}
+              placeholder="https://…"
+              className={INPUT_CLASS_WITH_ICON}
+            />
+          </IconInput>
         </Field>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -93,51 +100,58 @@ export function SettingsForm({ initial }: Props) {
       </Section>
 
       <Section
-        title="Google"
-        subtitle="Where the customer goes when they tap the review button."
+        title="Google integration"
+        subtitle="Where customers land when they tap the review button."
+        icon={Globe}
       >
         <Field
           label="Google review URL"
           hint="The direct write-a-review link from your Google Business profile."
           error={errors.google_review_url}
         >
-          <input
-            type="url"
-            name="google_review_url"
-            defaultValue={initial.google_review_url}
-            placeholder="https://g.page/r/..."
-            className="w-full rounded-lg border border-brand-black/20 px-3 py-2 outline-none focus:border-brand-green"
-          />
+          <IconInput icon={LinkIcon}>
+            <input
+              type="url"
+              name="google_review_url"
+              defaultValue={initial.google_review_url}
+              placeholder="https://g.page/r/…"
+              className={INPUT_CLASS_WITH_ICON}
+            />
+          </IconInput>
         </Field>
 
         <Field label="Google business URL" error={errors.google_business_url}>
-          <input
-            type="url"
-            name="google_business_url"
-            defaultValue={initial.google_business_url}
-            placeholder="https://maps.google.com/..."
-            className="w-full rounded-lg border border-brand-black/20 px-3 py-2 outline-none focus:border-brand-green"
-          />
+          <IconInput icon={LinkIcon}>
+            <input
+              type="url"
+              name="google_business_url"
+              defaultValue={initial.google_business_url}
+              placeholder="https://maps.google.com/…"
+              className={INPUT_CLASS_WITH_ICON}
+            />
+          </IconInput>
         </Field>
 
         <Field
           label="Google Place ID"
           hint="Optional. Used by future review monitoring features."
         >
-          <input
-            type="text"
-            name="google_place_id"
-            defaultValue={initial.google_place_id}
-            placeholder="ChIJ..."
-            className="w-full rounded-lg border border-brand-black/20 px-3 py-2 outline-none focus:border-brand-green"
-          />
+          <IconInput icon={MapPin}>
+            <input
+              type="text"
+              name="google_place_id"
+              defaultValue={initial.google_place_id}
+              placeholder="ChIJ…"
+              className={`${INPUT_CLASS_WITH_ICON} font-mono text-sm`}
+            />
+          </IconInput>
         </Field>
       </Section>
 
       {banner ? (
         <div
           role="status"
-          className={`rounded-lg px-3 py-2 text-sm ${
+          className={`rounded-lg px-4 py-3 text-sm ${
             banner.kind === "success"
               ? "bg-brand-green/10 text-brand-green"
               : "bg-red-50 text-red-700"
@@ -147,11 +161,11 @@ export function SettingsForm({ initial }: Props) {
         </div>
       ) : null}
 
-      <div>
+      <div className="flex items-center justify-end gap-3">
         <button
           type="submit"
           disabled={pending}
-          className="rounded-full bg-brand-green px-6 py-2.5 text-sm font-semibold text-brand-off-white disabled:opacity-60"
+          className="rounded-lg bg-brand-green px-6 py-3 text-sm font-bold uppercase tracking-wider text-white shadow-sm transition-colors hover:bg-green-800 disabled:opacity-60"
         >
           {pending ? "Saving…" : "Save changes"}
         </button>
@@ -160,22 +174,37 @@ export function SettingsForm({ initial }: Props) {
   );
 }
 
+const INPUT_CLASS =
+  "block w-full rounded-lg border border-neutral-300/40 bg-brand-off-white px-4 py-3 text-base text-brand-black shadow-[inset_0_2px_4px_rgba(27,77,62,0.04)] outline-none transition-colors placeholder:text-neutral-600/40 focus:border-brand-amber focus:ring-2 focus:ring-brand-amber/30";
+
+const INPUT_CLASS_WITH_ICON =
+  "block w-full rounded-lg border border-neutral-300/40 bg-brand-off-white py-3 pl-11 pr-4 text-base text-brand-black shadow-[inset_0_2px_4px_rgba(27,77,62,0.04)] outline-none transition-colors placeholder:text-neutral-600/40 focus:border-brand-amber focus:ring-2 focus:ring-brand-amber/30";
+
 function Section({
   title,
   subtitle,
+  icon: Icon,
   children,
 }: {
   title: string;
   subtitle?: string;
+  icon: LucideIcon;
   children: React.ReactNode;
 }) {
   return (
-    <section className="space-y-4 rounded-2xl border border-brand-black/10 bg-white p-6 shadow-sm">
-      <div>
-        <h2 className="font-display text-xl">{title}</h2>
-        {subtitle ? <p className="text-sm text-brand-black/60">{subtitle}</p> : null}
+    <section className="overflow-hidden rounded-xl border border-brand-green/5 bg-white shadow-[0_4px_24px_rgba(27,77,62,0.04)]">
+      <div className="flex items-center gap-4 border-b border-neutral-300/20 p-6 md:p-8">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-off-white text-brand-green">
+          <Icon className="h-5 w-5" aria-hidden="true" />
+        </div>
+        <div>
+          <h2 className="font-display text-xl text-brand-green">{title}</h2>
+          {subtitle ? (
+            <p className="mt-1 text-sm text-neutral-600">{subtitle}</p>
+          ) : null}
+        </div>
       </div>
-      <div className="space-y-4">{children}</div>
+      <div className="space-y-5 p-6 md:p-8">{children}</div>
     </section>
   );
 }
@@ -192,14 +221,33 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <div className="space-y-1.5">
-      <label className="block text-sm font-semibold">{label}</label>
+    <div className="space-y-2">
+      <label className="block text-xs font-bold uppercase tracking-wider text-brand-black">
+        {label}
+      </label>
       {children}
       {error ? (
         <p className="text-xs text-red-600">{error}</p>
       ) : hint ? (
-        <p className="text-xs text-brand-black/55">{hint}</p>
+        <p className="text-xs text-neutral-600">{hint}</p>
       ) : null}
+    </div>
+  );
+}
+
+function IconInput({
+  icon: Icon,
+  children,
+}: {
+  icon: LucideIcon;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="relative">
+      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-600">
+        <Icon className="h-5 w-5" aria-hidden="true" />
+      </span>
+      {children}
     </div>
   );
 }
@@ -207,12 +255,12 @@ function Field({
 function ColorInput({ name, initial }: { name: string; initial: string }) {
   const [value, setValue] = useState(initial);
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-3 rounded-lg border border-neutral-300/40 bg-white p-3">
       <input
         type="color"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        className="h-10 w-12 cursor-pointer rounded-lg border border-brand-black/20"
+        className="h-12 w-12 shrink-0 cursor-pointer rounded-full border-2 border-white shadow-md"
         aria-label={`${name} color picker`}
       />
       <input
@@ -223,7 +271,7 @@ function ColorInput({ name, initial }: { name: string; initial: string }) {
         pattern="^#[0-9A-Fa-f]{6}$"
         maxLength={7}
         required
-        className="w-32 rounded-lg border border-brand-black/20 px-3 py-2 font-mono text-sm uppercase outline-none focus:border-brand-green"
+        className="w-full rounded-lg border border-neutral-300/40 bg-brand-off-white px-3 py-2 font-mono text-sm uppercase text-brand-black shadow-[inset_0_2px_4px_rgba(27,77,62,0.04)] outline-none focus:border-brand-amber focus:ring-2 focus:ring-brand-amber/30"
       />
     </div>
   );
