@@ -118,6 +118,27 @@ export function OptInForm({ tenantId, tenantName }: Props) {
           ) : null}
         </div>
 
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="opt-in-email"
+            className="ml-1 text-xs font-medium text-neutral-600"
+          >
+            Email (optional)
+          </label>
+          <input
+            id="opt-in-email"
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            placeholder="sean@example.com"
+            {...register("email")}
+            className="rounded-lg border border-neutral-300/40 bg-brand-off-white px-4 py-3.5 text-base text-brand-black outline-none transition-all placeholder:text-neutral-600/40 focus:border-transparent focus:ring-2 focus:ring-brand-amber"
+          />
+          {errors.email ? (
+            <span className="text-xs text-red-600">{errors.email.message}</span>
+          ) : null}
+        </div>
+
         <label className="-ml-2 mt-1 flex cursor-pointer items-start gap-3 rounded-lg p-2 transition-colors hover:bg-brand-off-white">
           <span className="relative mt-0.5 flex shrink-0 items-center justify-center">
             <input

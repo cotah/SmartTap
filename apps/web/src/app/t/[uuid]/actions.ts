@@ -16,7 +16,13 @@ export async function optInAction(rawData: unknown): Promise<OptInResult> {
 
   try {
     const api = getApiClient();
-    const result = await api.identifyCustomer(parsed.data);
+    // Drop empty-string email before hitting the backend — Pydantic EmailStr
+    // rejects "" but the form sends it for an untouched optional input.
+    const payload = { ...parsed.data };
+    if (!payload.email) {
+      delete payload.email;
+    }
+    const result = await api.identifyCustomer(payload);
     await writeMagicToken(result.magic_link_token);
     return { ok: true };
   } catch (err) {
