@@ -18,6 +18,7 @@ class IdentifyContext:
     tenant_id: str
     phone: str
     name: str | None
+    email: str | None
     birthday: date | None
     gdpr_consent: bool
     gdpr_consent_text: str
@@ -52,6 +53,7 @@ def identify_customer(ctx: IdentifyContext) -> IdentifyResult:
         tenant_id=ctx.tenant_id,
         phone=ctx.phone,
         name=ctx.name,
+        email=ctx.email,
         birthday=ctx.birthday.isoformat() if ctx.birthday else None,
         gdpr_consent=ctx.gdpr_consent,
         gdpr_consent_text=ctx.gdpr_consent_text,

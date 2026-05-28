@@ -48,6 +48,7 @@ def identify_customer_endpoint(body: CustomerIdentifyIn) -> CustomerIdentifyOut:
         tenant_id=body.tenant_id,
         phone=body.phone,
         name=body.name,
+        email=body.email,
         birthday=body.birthday,
         gdpr_consent=body.gdpr_consent,
         gdpr_consent_text=body.gdpr_consent_text,

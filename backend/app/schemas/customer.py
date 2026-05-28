@@ -1,12 +1,13 @@
 from datetime import date, datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
 
 
 class CustomerIdentifyIn(BaseModel):
     tenant_id: str
     phone: str = Field(pattern=r"^\+353[1-9]\d{6,9}$")
     name: str | None = Field(default=None, min_length=1, max_length=80)
+    email: EmailStr | None = None
     birthday: date | None = None
     gdpr_consent: bool
     gdpr_consent_text: str = Field(min_length=10, max_length=2000)
