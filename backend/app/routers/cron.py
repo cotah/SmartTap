@@ -22,7 +22,11 @@ import structlog
 from fastapi import APIRouter, Header, HTTPException
 
 from app.config import get_settings
-from app.services import monthly_email_service, reactivation_service
+from app.services import (
+    monthly_email_service,
+    reactivation_service,
+    review_nudge_service,
+)
 
 router = APIRouter(tags=["cron"])
 log = structlog.get_logger(__name__)
@@ -58,6 +62,27 @@ def trigger_reactivation(
     _verify_cron_token(x_cron_token)
 
     result = reactivation_service.run_daily()
+    return {
+        "tenants_scanned": result.tenants_scanned,
+        "total_sent": result.total_sent,
+    }
+
+
+@router.post("/cron/review-nudge")
+def trigger_review_nudge(
+    x_cron_token: str | None = Header(default=None, alias="X-Cron-Token"),
+) -> dict[str, int]:
+    """Daily review-nudge pass (S5 Feature 2).
+
+    Idempotent: re-running the same day re-scans, but the per-customer cooldown
+    (30 days) prevents duplicate emails. Safe to retry after a partial run.
+
+    Returns aggregate counters only — per-tenant breakdown stays in logs so a
+    leaked cron URL can't surface tenant ids.
+    """
+    _verify_cron_token(x_cron_token)
+
+    result = review_nudge_service.run_daily()
     return {
         "tenants_scanned": result.tenants_scanned,
         "total_sent": result.total_sent,

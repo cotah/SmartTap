@@ -297,6 +297,79 @@ def reactivation_email(
     )
 
 
+def review_nudge_email(
+    *,
+    tenant: dict[str, Any],
+    customer: dict[str, Any],
+    review_url: str,
+    opt_out_url: str,
+) -> RenderedEmail:
+    """Sent on behalf of the merchant to a customer who tapped (earned a stamp)
+    but didn't click the review button within the nudge window (S5 Feature 2).
+
+    Tone is the merchant's, same as reactivation: the "From" is hello@smarttap.ie
+    but the copy speaks as the local business, and the footer attributes
+    SmartTap so it's not deceptive. One CTA — the Google review link. No AI,
+    no emojis, no exclamation marks in the subject (template design rules)."""
+    business = (tenant.get("name") or "us").strip()
+    customer_name = (customer.get("name") or "").strip()
+    greeting = (
+        f"Hey {_escape(customer_name.split(' ')[0])}," if customer_name else "Hey there,"
+    )
+
+    body_html = f"""
+        <h1 style="margin:0 0 12px 0;font-size:22px;color:{BLACK};">Thanks for visiting {_escape(business)}</h1>
+        <p style="margin:0 0 12px 0;">{greeting}</p>
+        <p style="margin:0 0 12px 0;">Thanks for stopping by <strong>{_escape(business)}</strong>. If you enjoyed your visit, a quick Google review means the world to a small local business — it takes under a minute.</p>
+        <p style="margin:0 0 12px 0;">Tap the button below to leave one.</p>
+    """
+
+    text = (
+        f"Thanks for visiting {business}\n\n"
+        f"If you enjoyed your visit, a quick Google review means the world to a "
+        f"small local business — it takes under a minute.\n\n"
+        f"Leave a review: {review_url}\n\n"
+        f"Don't email me again: {opt_out_url}\n"
+    )
+
+    html = f"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{_escape(business)}</title>
+</head>
+<body style="margin:0;padding:0;background-color:{OFF_WHITE};font-family:'DM Sans',Helvetica,Arial,sans-serif;color:{BLACK};">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">A quick Google review for {_escape(business)} takes under a minute.</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:{OFF_WHITE};">
+    <tr><td align="center" style="padding:24px 12px;">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:12px;overflow:hidden;border:1px solid rgba(0,0,0,0.06);">
+        <tr><td style="background-color:{GREEN};padding:20px 24px;">
+          <p style="margin:0;color:{OFF_WHITE};font-size:12px;letter-spacing:4px;text-transform:uppercase;">{_escape(business)}</p>
+        </td></tr>
+        <tr><td style="padding:32px 24px;font-size:15px;line-height:1.55;color:{BLACK};">
+          {body_html}
+          <p style="margin:28px 0 0 0;">
+            <a href="{_escape(review_url)}" style="display:inline-block;background-color:{AMBER};color:{BLACK};text-decoration:none;padding:12px 24px;border-radius:999px;font-weight:600;font-size:14px;">Leave a review</a>
+          </p>
+        </td></tr>
+        <tr><td style="padding:20px 24px;border-top:1px solid rgba(0,0,0,0.06);font-size:12px;color:{GREY};">
+          <p style="margin:0;">You're getting this because you opted in at {_escape(business)}.</p>
+          <p style="margin:6px 0 0 0;">Sent via SmartTap · <a href="{_escape(opt_out_url)}" style="color:{GREY};text-decoration:underline;">Don't email me again</a></p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"""
+
+    return RenderedEmail(
+        subject=f"Thanks for visiting {business}",
+        html=html,
+        text=text,
+    )
+
+
 def monthly_report_email(
     *, tenant: dict[str, Any], year: int, month: int
 ) -> RenderedEmail:

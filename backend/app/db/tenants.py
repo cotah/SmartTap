@@ -77,11 +77,14 @@ def list_active_for_cron(*, limit: int = 1000) -> list[Row]:
 
     Only the columns the cron actually needs are selected, which keeps the
     response light when we later add heavy columns (config blobs, etc.).
+    `google_review_url` is needed by the review-nudge cron (S5 Feature 2) to
+    both gate eligibility (no URL → nothing to nudge toward) and build the
+    email CTA; reactivation ignores it.
     """
     client = get_supabase_admin()
     res = (
         client.table("tenants")
-        .select("id,name,stamps_for_reward,reward_description")
+        .select("id,name,stamps_for_reward,reward_description,google_review_url")
         .eq("is_active", True)
         .order("created_at", desc=False)
         .limit(limit)

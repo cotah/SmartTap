@@ -59,6 +59,41 @@ def list_in_range(
     return cast(list[Row], res.data or [])
 
 
+def list_customer_review_signals(
+    tenant_id: str,
+    *,
+    since: datetime,
+    limit: int = 10_000,
+) -> list[Row]:
+    """Per-customer tap signals used by the review-nudge cron (S5 Feature 2).
+
+    Returns rows {customer_id, action_taken, created_at} for this tenant since
+    `since` (= now - LOOKBACK_DAYS), restricted to identified customers
+    (customer_id NOT NULL) and the two actions the nudge cares about. The
+    service groups these in Python to decide who earned a stamp but never
+    clicked review afterwards — the same "fetch a small window, group in
+    Python" shape the monthly report uses, kept because per-tenant tap
+    volumes are tiny (~250/month). The 10k cap is a runaway rail, not an
+    expected ceiling.
+
+    Anonymous taps (customer_id NULL) are excluded: with no customer we have
+    nobody to email and no email/consent to check.
+    """
+    client = get_supabase_admin()
+    res = (
+        client.table("taps")
+        .select("customer_id,action_taken,created_at")
+        .eq("tenant_id", tenant_id)
+        .gte("created_at", since.isoformat())
+        .not_.is_("customer_id", "null")
+        .in_("action_taken", ["stamp_earned", "review_clicked"])
+        .order("created_at", desc=False)
+        .limit(limit)
+        .execute()
+    )
+    return cast(list[Row], res.data or [])
+
+
 def create(
     *,
     tag_id: str,

@@ -170,6 +170,7 @@ def test_subscription_canceled_keeps_resubscribe_path() -> None:
         "We couldn't charge your card for SmartTap",
         "Your SmartTap subscription was canceled",
         "We miss you at ACME Barber",
+        "Thanks for visiting ACME Barber",
     ],
 )
 def test_subjects_have_no_emoji_or_exclamation(subject: str) -> None:
@@ -334,6 +335,91 @@ def test_reactivation_footer_is_customer_facing_not_merchant() -> None:
         tenant=_tenant(name="ACME Barber"),
         customer=_customer(),
         magic_link_url="https://smarttap.ie/m/t1",
+        opt_out_url="https://smarttap.ie/u/t1",
+    )
+    assert "signed up as the owner" not in rendered.html
+    assert "opted in at ACME Barber" in rendered.html
+
+
+# ---------------------------------------------------------------------------
+# review nudge (S5 Feature 2) — sent on behalf of the merchant to a customer
+# who tapped but didn't click the review button
+# ---------------------------------------------------------------------------
+
+
+def test_review_nudge_subject_uses_business_name() -> None:
+    rendered = templates.review_nudge_email(
+        tenant=_tenant(name="ACME Barber"),
+        customer=_customer(),
+        review_url="https://g.page/r/acme",
+        opt_out_url="https://smarttap.ie/u/tok_abc12345",
+    )
+    assert rendered.subject == "Thanks for visiting ACME Barber"
+
+
+def test_review_nudge_html_and_text_non_empty() -> None:
+    rendered = templates.review_nudge_email(
+        tenant=_tenant(name="ACME Barber"),
+        customer=_customer(),
+        review_url="https://g.page/r/acme",
+        opt_out_url="https://smarttap.ie/u/tok_abc12345",
+    )
+    assert rendered.html.strip().startswith("<!doctype html>")
+    assert rendered.text
+    assert "ACME Barber" in rendered.html
+    assert "ACME Barber" in rendered.text
+
+
+def test_review_nudge_includes_review_cta_and_opt_out() -> None:
+    rendered = templates.review_nudge_email(
+        tenant=_tenant(name="ACME Barber"),
+        customer=_customer(),
+        review_url="https://g.page/r/acme",
+        opt_out_url="https://smarttap.ie/u/tok_abc12345",
+    )
+    assert 'href="https://g.page/r/acme"' in rendered.html
+    assert 'href="https://smarttap.ie/u/tok_abc12345"' in rendered.html
+    # Plain-text fallback exposes both URLs.
+    assert "https://g.page/r/acme" in rendered.text
+    assert "https://smarttap.ie/u/tok_abc12345" in rendered.text
+
+
+def test_review_nudge_uses_first_name_in_greeting() -> None:
+    rendered = templates.review_nudge_email(
+        tenant=_tenant(),
+        customer=_customer(name="Alex Murphy"),
+        review_url="https://g.page/r/acme",
+        opt_out_url="https://smarttap.ie/u/t1",
+    )
+    assert "Hey Alex," in rendered.html
+
+
+def test_review_nudge_falls_back_when_customer_has_no_name() -> None:
+    rendered = templates.review_nudge_email(
+        tenant=_tenant(),
+        customer=_customer(name=None),
+        review_url="https://g.page/r/acme",
+        opt_out_url="https://smarttap.ie/u/t1",
+    )
+    assert "Hey there," in rendered.html
+
+
+def test_review_nudge_escapes_business_name() -> None:
+    rendered = templates.review_nudge_email(
+        tenant=_tenant(name="<script>evil()</script>"),
+        customer=_customer(),
+        review_url="https://g.page/r/acme",
+        opt_out_url="https://smarttap.ie/u/t1",
+    )
+    assert "<script>" not in rendered.html
+    assert "&lt;script&gt;" in rendered.html
+
+
+def test_review_nudge_footer_is_customer_facing() -> None:
+    rendered = templates.review_nudge_email(
+        tenant=_tenant(name="ACME Barber"),
+        customer=_customer(),
+        review_url="https://g.page/r/acme",
         opt_out_url="https://smarttap.ie/u/t1",
     )
     assert "signed up as the owner" not in rendered.html

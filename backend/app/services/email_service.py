@@ -240,3 +240,49 @@ def send_reactivation(
         tags=[{"name": "tenant_id", "value": str(tenant.get("id") or "unknown")}],
     )
     return True
+
+
+def send_review_nudge(
+    *,
+    tenant: dict[str, Any],
+    customer: dict[str, Any],
+    review_url: str,
+    opt_out_url: str,
+) -> bool:
+    """Sent by the daily review-nudge cron to a customer who tapped but didn't
+    click the review button (S5 Feature 2).
+
+    Like reactivation, the recipient is the END CUSTOMER and the caller
+    (review_nudge_service) is trusted to have filtered out customers without
+    an email or GDPR consent. Returns True when a send was attempted (or
+    no-op'd cleanly in dev), False when the customer had no email so the
+    caller can decide whether to record the cooldown.
+
+    This is the single send seam the umbrella spec isolates: when the WhatsApp
+    template is Meta-approved, a `channel` branch (or a sibling
+    `send_review_nudge_whatsapp`) slots in here without touching detection or
+    the cron orchestrator.
+    """
+    to = (customer.get("email") or "").strip() or None
+    if not to:
+        log.info(
+            "review_nudge_skip_no_email",
+            tenant_id=tenant.get("id"),
+            customer_id=customer.get("id"),
+        )
+        return False
+
+    rendered = templates.review_nudge_email(
+        tenant=tenant,
+        customer=customer,
+        review_url=review_url,
+        opt_out_url=opt_out_url,
+    )
+    _safe_send(
+        to=to,
+        rendered=rendered,
+        tenant_id=tenant.get("id"),
+        event_name="review_nudge",
+        tags=[{"name": "tenant_id", "value": str(tenant.get("id") or "unknown")}],
+    )
+    return True

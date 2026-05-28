@@ -125,6 +125,63 @@ def mark_reactivation_sent(customer_id: str, sent_at: datetime) -> None:
     ).eq("id", customer_id).execute()
 
 
+def find_review_nudge_eligible(
+    *,
+    tenant_id: str,
+    customer_ids: list[str],
+    cooldown_cutoff: datetime,
+    limit: int = 500,
+) -> list[Row]:
+    """Of the candidate customers (those who tapped but didn't click review),
+    the subset actually allowed to receive a review-nudge email right now.
+    Used by the review-nudge cron (S5 Feature 2).
+
+    `customer_ids` is the candidate set the service resolved from recent tap
+    signals. We re-check the outbound-email contract in SQL — gdpr_consent +
+    email-not-null — so calling `send_review_nudge` on the full result is safe
+    by construction even if the candidate logic upstream had a bug. The
+    cooldown filter (`last_review_nudge_sent_at` null or older than
+    `cooldown_cutoff = now - 30d`) is applied here too.
+
+    Returns [] for an empty candidate set without a DB round-trip — PostgREST's
+    `in_` with an empty list is a footgun (matches nothing in some versions,
+    everything in others), so we short-circuit.
+    """
+    if not customer_ids:
+        return []
+
+    client = get_supabase_admin()
+    iso_cooldown = cooldown_cutoff.isoformat()
+    res = (
+        client.table("customers")
+        .select("id,name,email,magic_link_token")
+        .eq("tenant_id", tenant_id)
+        .in_("id", customer_ids)
+        .eq("gdpr_consent", True)
+        .not_.is_("email", "null")
+        # Same PostgREST escape hatch as reactivation: "x IS NULL OR x < y".
+        .or_(
+            f"last_review_nudge_sent_at.is.null,"
+            f"last_review_nudge_sent_at.lt.{iso_cooldown}"
+        )
+        .limit(limit)
+        .execute()
+    )
+    return cast(list[Row], res.data or [])
+
+
+def mark_review_nudge_sent(customer_id: str, sent_at: datetime) -> None:
+    """Cooldown marker for the review-nudge flow. Same mark-before-send
+    contract as `mark_reactivation_sent`: written before the email is
+    acknowledged so a crash mid-loop costs a customer one cycle, never a
+    duplicate. Separate column from reactivation — the two flows are
+    independent and a customer can be mid-cooldown on one but not the other."""
+    client = get_supabase_admin()
+    client.table("customers").update(
+        {"last_review_nudge_sent_at": sent_at.isoformat()}
+    ).eq("id", customer_id).execute()
+
+
 def revoke_consent_via_magic_token(magic_link_token: str) -> Row | None:
     """One-click GDPR opt-out from an email link. Idempotent: hitting the URL
     twice after a successful opt-out still returns the row and stays at
