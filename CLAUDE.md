@@ -248,6 +248,10 @@ campaigns (id, tenant_id, name, type, status, config jsonb,
 - `ANTHROPIC_API_KEY` env var (backend)
 - Phone → tenant mapping table (nova migration)
 
+**Roadmap pós-aprovação Google Business Profile API (pendente):**
+- [ ] **Feature 3 Fase B** — autopost (4-5★) + push de draft/alertas de review negativa via WhatsApp (reusa o bot da Feature 1).
+- [ ] **Ligar a Feature 3 ao bot do WhatsApp** — novas tools no `bot_actions`/`bot_tools` para o dono **ver e redigir respostas a reviews diretamente no WhatsApp** (hoje o bot só encaminha para o dashboard, porque não tem ferramenta para ler reviews individuais). Só entra **depois** de a Google Business Profile API estar aprovada.
+
 **Sprint 5.6 — Identificação por telefone via OTP (Semanas 10-11)**
 
 Fecha um buraco UX da Sprint 1: cliente que limpa o browser ou troca de telemóvel perde o cookie de identificação e re-aparece como cliente novo, perdendo o histórico de stamps. Solução: na página /t/[uuid] aparece um caminho paralelo "Already a member?" que recupera a conta via SMS OTP — sem precisar criar conta nova, sem precisar lembrar do magic link da última visita. Encaixa após a Sprint 5 porque reutiliza a conta Twilio já configurada (SMS é mesmo Account SID + Auth Token, só muda o canal).
