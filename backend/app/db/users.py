@@ -33,3 +33,41 @@ def get_email_by_user_id(user_id: str) -> str | None:
         return None
     email = getattr(user, "email", None)
     return str(email) if email else None
+
+
+def get_user_id_by_email(email: str) -> str | None:
+    """Reverse lookup: email -> Supabase auth user id, or None.
+
+    Used by the WhatsApp bot's OTP flow to map the email the owner types to a
+    tenant. GoTrue's admin API has no direct get-by-email, so we page through
+    list_users and match case-insensitively. Fine for our scale (target ~200
+    tenants); revisit with a server-side filter if the user base grows large.
+
+    Never raises — a miss (or any error) collapses to None so the caller can
+    keep the response anti-enumeration (same reply whether or not it matched).
+    """
+    target = email.strip().lower()
+    if not target:
+        return None
+    try:
+        client = get_supabase_admin()
+        page = 1
+        # Hard cap so a huge user base can't turn this into a runaway scan:
+        # 50 pages x 50/page = 2500 users before we give up.
+        while page <= 50:
+            resp = client.auth.admin.list_users(page=page, per_page=50)
+            users = resp if isinstance(resp, list) else getattr(resp, "users", []) or []
+            if not users:
+                return None
+            for user in users:
+                user_email = getattr(user, "email", None)
+                if isinstance(user_email, str) and user_email.lower() == target:
+                    uid = getattr(user, "id", None)
+                    return str(uid) if uid else None
+            if len(users) < 50:
+                return None
+            page += 1
+    except Exception as exc:
+        log.warning("auth_user_email_lookup_failed", error=str(exc))
+        return None
+    return None

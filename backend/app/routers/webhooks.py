@@ -1,9 +1,9 @@
 import stripe
 import structlog
-from fastapi import APIRouter, Header, HTTPException, Request
+from fastapi import APIRouter, Header, HTTPException, Request, Response
 
 from app.config import get_settings
-from app.services import webhook_service
+from app.services import twilio_client, webhook_service, whatsapp_bot_service
 
 router = APIRouter(tags=["webhooks"])
 log = structlog.get_logger(__name__)
@@ -49,3 +49,50 @@ async def stripe_webhook(
         raise HTTPException(status_code=500, detail="Webhook handler error") from exc
 
     return {"received": True}
+
+
+@router.post("/webhooks/twilio/whatsapp")
+async def twilio_whatsapp_webhook(
+    request: Request,
+    x_twilio_signature: str | None = Header(default=None, alias="X-Twilio-Signature"),
+) -> Response:
+    """Inbound WhatsApp messages from Twilio (S5 Feature 1).
+
+    Twilio POSTs application/x-www-form-urlencoded with `From` (whatsapp:+...)
+    and `Body`. We validate the signature (same spirit as the Stripe webhook),
+    hand the message to the bot service, and send the reply via the Twilio REST
+    API — so we return an empty 200 (NOT TwiML) to avoid double-replying.
+
+    The signature is computed over the exact public URL Twilio called. Railway
+    terminates TLS at the edge, so we rebuild it from the Host header forced to
+    https rather than trusting the internal scheme.
+    """
+    form = await request.form()
+    params = {key: str(value) for key, value in form.items()}
+
+    host = request.headers.get("host", "")
+    url = f"https://{host}{request.url.path}"
+
+    if not twilio_client.validate_signature(
+        url=url, params=params, signature=x_twilio_signature
+    ):
+        log.warning("twilio_webhook_invalid_signature")
+        raise HTTPException(status_code=403, detail="Invalid Twilio signature")
+
+    from_number = params.get("From", "")
+    body = params.get("Body", "")
+    if not from_number:
+        raise HTTPException(status_code=400, detail="Missing From")
+
+    try:
+        reply = whatsapp_bot_service.handle_inbound(from_number, body)
+    except Exception as exc:
+        # Never 5xx back to Twilio for a bot error — it would retry and the
+        # owner would get duplicate replies. Log and acknowledge.
+        log.exception("whatsapp_bot_failed", error=str(exc))
+        return Response(status_code=200)
+
+    if reply:
+        twilio_client.send_whatsapp(to=from_number, body=reply)
+
+    return Response(status_code=200)

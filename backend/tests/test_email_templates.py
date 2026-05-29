@@ -171,6 +171,7 @@ def test_subscription_canceled_keeps_resubscribe_path() -> None:
         "Your SmartTap subscription was canceled",
         "We miss you at ACME Barber",
         "Thanks for visiting ACME Barber",
+        "Your SmartTap WhatsApp code",
     ],
 )
 def test_subjects_have_no_emoji_or_exclamation(subject: str) -> None:
@@ -339,6 +340,28 @@ def test_reactivation_footer_is_customer_facing_not_merchant() -> None:
     )
     assert "signed up as the owner" not in rendered.html
     assert "opted in at ACME Barber" in rendered.html
+
+
+# ---------------------------------------------------------------------------
+# whatsapp OTP (S5 Feature 1) — owner-facing verification code
+# ---------------------------------------------------------------------------
+
+
+def test_whatsapp_otp_subject_stable() -> None:
+    rendered = templates.whatsapp_otp_email(code="123456")
+    assert rendered.subject == "Your SmartTap WhatsApp code"
+
+
+def test_whatsapp_otp_contains_code_in_html_and_text() -> None:
+    rendered = templates.whatsapp_otp_email(code="246813")
+    assert "246813" in rendered.html
+    assert "246813" in rendered.text
+    assert rendered.html.strip().startswith("<!doctype html>")
+
+
+def test_whatsapp_otp_is_owner_facing() -> None:
+    rendered = templates.whatsapp_otp_email(code="123456")
+    assert "signed up as the owner" in rendered.html
 
 
 # ---------------------------------------------------------------------------

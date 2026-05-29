@@ -286,3 +286,17 @@ def send_review_nudge(
         tags=[{"name": "tenant_id", "value": str(tenant.get("id") or "unknown")}],
     )
     return True
+
+
+def send_whatsapp_otp(*, to: str, code: str) -> None:
+    """Email the owner a one-time code to link their WhatsApp number to the bot
+    (S5 Feature 1). Recipient is the tenant owner's account email, resolved by
+    the bot service before calling this. Best-effort like every email here — a
+    Resend outage logs and returns; it never raises into the bot flow."""
+    rendered = templates.whatsapp_otp_email(code=code)
+    _safe_send(
+        to=to,
+        rendered=rendered,
+        tenant_id=None,
+        event_name="whatsapp_otp",
+    )

@@ -122,14 +122,29 @@ negócio. Capacidades-alvo (a detalhar no spec próprio da Feature 1):
 
 > Toda a transformação de dados → linguagem natural usa **Claude Sonnet 4.6**.
 
+### 4.7 Decisões aprovadas (2026-05-29)
+- **Auth (OTP):** **WhatsApp-first + OTP por email.** O dono manda mensagem, o
+  bot pede o email da conta, envia um código 6 dígitos por **email (Resend, já
+  configurado)**, o dono responde o código no WhatsApp → liga `phone → tenant_id`.
+  Resposta anti-enumeration. (Migration nova de auth.)
+- **Faseamento:** **Fase A = read-only** (auth/OTP + webhook Twilio + Claude
+  tool-use + ferramentas de consulta); **Fase B = ações** (reactivação,
+  campanhas, resumo PDF) com **confirmação obrigatória** antes de executar.
+- **Limites de escopo da Fase A:**
+  1. "Evolução do rating Google" precisa da Google Business API → fica para
+     **depois da Feature 3**. Na Fase A, performance de reviews = conversão
+     tap→review + contagem, a partir dos nossos dados de tap.
+  2. Ações ficam na Fase B (com confirmação).
+
 ---
 
 ## 5. Ordem e specs
 
 | Ordem | Feature | Spec | Estado |
 |---|---|---|---|
-| 1 | Feature 2 — Review Nudge (email) | `2026-05-28-feature2-review-nudge-design.md` | Implementação |
-| 2 | Feature 1 — Bot do dono (assistente completo) | _a criar_ | Pendente |
+| 1 | Feature 2 — Review Nudge (email) | `2026-05-28-feature2-review-nudge-design.md` | ✅ Deployed (prod) |
+| 2 | Feature 1 — Bot do dono · **Fase A (read-only)** | `2026-05-29-feature1-bot-phase-a-design.md` | Implementação |
+| 2b | Feature 1 — Bot do dono · Fase B (ações) | _a criar_ | Pendente |
 | 3 | Feature 3 — Resposta a reviews | _a criar_ | Pendente |
 
 Sprints adjacentes que reutilizam esta infra (ver CLAUDE.md): **5.6**

@@ -32,6 +32,16 @@ class Settings(BaseSettings):
     resend_api_key: str = Field(default="")
     resend_from_email: str = Field(default="hello@smarttap.ie")
 
+    # S5 Feature 1 — WhatsApp bot. Empty values keep the integrations disabled
+    # (clients no-op, like resend) so dev/CI run without external credentials.
+    # Dev uses the Twilio Sandbox sender; switching to the Meta-approved prod
+    # sender in production is just changing TWILIO_WHATSAPP_FROM — no code.
+    twilio_account_sid: str = Field(default="")
+    twilio_auth_token: str = Field(default="")
+    twilio_whatsapp_from: str = Field(default="")  # e.g. "whatsapp:+14155238886"
+    anthropic_api_key: str = Field(default="")
+    anthropic_model: str = Field(default="claude-sonnet-4-6")
+
     sentry_dsn: str = Field(default="")
 
     # Shared secret for the daily cron HTTP trigger. Empty disables the cron
