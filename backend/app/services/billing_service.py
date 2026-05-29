@@ -54,7 +54,7 @@ def _prices_for_plan(plan: BillingPlan) -> PlanPrices:
     return prices
 
 
-def _ensure_stripe_customer(tenant: dict, email: str | None) -> str:
+def _ensure_stripe_customer(tenant: dict[str, Any], email: str | None) -> str:
     """Returns the tenant's stripe_customer_id, creating one on demand.
 
     Bootstrap-time creation is best-effort (W1); if it failed back then we

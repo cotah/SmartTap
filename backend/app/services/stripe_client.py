@@ -37,8 +37,11 @@ def create_customer(
         return None
 
     configure_stripe()
+    # email is Optional for us; the Stripe SDK types it as str but accepts None
+    # at runtime (the field is simply omitted). cast keeps behaviour identical
+    # while satisfying the type checker.
     customer = stripe.Customer.create(
-        email=email,
+        email=cast(str, email),
         name=name,
         metadata={"tenant_id": tenant_id},
         idempotency_key=f"tenant-{tenant_id}-create",

@@ -19,6 +19,7 @@ from app.services.customer_service import (
     identify_customer,
     list_customers,
 )
+from app.services.rate_limit import rate_limited
 
 router = APIRouter(tags=["customers"])
 
@@ -42,8 +43,16 @@ def opt_out_customer(
     return Response(status_code=204)
 
 
+_identify_rl = rate_limited("customer_identify", limit=20, window_seconds=60)
+
+
 @router.post("/customers/identify", response_model=CustomerIdentifyOut)
-def identify_customer_endpoint(body: CustomerIdentifyIn) -> CustomerIdentifyOut:
+def identify_customer_endpoint(
+    body: CustomerIdentifyIn,
+    _rl: Annotated[None, Depends(_identify_rl)] = None,
+) -> CustomerIdentifyOut:
+    # Public opt-in flow: tenant_id comes from the body (the tapped tag). Rate
+    # limited per IP (S1) to curb mass customer-record pollution.
     ctx = IdentifyContext(
         tenant_id=body.tenant_id,
         phone=body.phone,

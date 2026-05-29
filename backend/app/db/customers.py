@@ -314,6 +314,15 @@ def find_by_criteria(
     return rows, total
 
 
+_SEARCH_STRIP = str.maketrans({c: " " for c in ",().:*"})
+
+
+def _sanitize_search(search: str) -> str:
+    """Strip PostgREST-filter-significant characters from a user search term
+    before it's interpolated into an `or=` ilike filter (S5 audit S2)."""
+    return search.translate(_SEARCH_STRIP).strip()
+
+
 def list_for_tenant(
     *,
     tenant_id: str,
@@ -339,8 +348,13 @@ def list_for_tenant(
     )
 
     if search:
-        # ilike against name OR phone (postgrest 'or' syntax)
-        safe = search.replace(",", " ").replace("(", "").replace(")", "")
+        # ilike against name OR phone (postgrest 'or' syntax). The value is
+        # interpolated into the or= filter string, so strip every character
+        # with meaning in PostgREST filter grammar (S5 audit S2): ',' splits
+        # or-terms, '()' nests, '.' / ':' separate column.op.value, and '*' is
+        # our wildcard (don't let the user inject their own). Defence-in-depth
+        # over the parameterised client.
+        safe = _sanitize_search(search)
         pattern = f"*{safe}*"
         query = query.or_(f"name.ilike.{pattern},phone.ilike.{pattern}")
 

@@ -4,9 +4,14 @@ from fastapi import APIRouter, Depends
 
 from app.dependencies import CurrentUser, get_current_tenant_id, get_current_user
 from app.schemas.reward import ValidateRewardIn, ValidateRewardOut
+from app.services.rate_limit import rate_limited
 from app.services.reward_service import validate_and_redeem, validate_and_redeem_by_code
 
 router = APIRouter(tags=["rewards"])
+
+# Public, unauthenticated redeem-by-id proves possession via a 6-digit code.
+# Without a limit that code is brute-forceable (1M combos); cap attempts per IP.
+_reward_validate_rl = rate_limited("reward_validate", limit=8, window_seconds=60)
 
 
 @router.post("/rewards/validate", response_model=ValidateRewardOut)
@@ -30,9 +35,14 @@ def validate_reward_by_code(
 
 
 @router.post("/rewards/{reward_id}/validate", response_model=ValidateRewardOut)
-def validate_reward(reward_id: str, body: ValidateRewardIn) -> ValidateRewardOut:
+def validate_reward(
+    reward_id: str,
+    body: ValidateRewardIn,
+    _rl: Annotated[None, Depends(_reward_validate_rl)] = None,
+) -> ValidateRewardOut:
     # Legacy endpoint kept for the customer-facing /t/[uuid] redeem flow.
     # Not auth-gated: the customer proves possession by knowing the 6-digit code.
+    # Rate-limited per IP (S1) so the 6-digit code can't be brute-forced.
     result = validate_and_redeem(
         reward_id=reward_id,
         validation_code=body.validation_code,
