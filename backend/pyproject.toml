@@ -9,6 +9,12 @@ dependencies = [
     "uvicorn[standard]>=0.34.0",
     "pydantic>=2.10.4",
     "pydantic-settings>=2.7.0",
+    # Required by `EmailStr` in app/schemas/customer.py. Pydantic only pulls
+    # this in via the `pydantic[email]` extra, so without declaring it the
+    # app crashes at schema-build time the moment that schema is imported
+    # (e.g. the full FastAPI app, or any test that builds it). Declared
+    # explicitly so the dependency is visible and the lock is reproducible.
+    "email-validator>=2.2.0",
     "supabase>=2.10.0",
     "stripe>=11.4.1",
     "resend>=2.6.0",
