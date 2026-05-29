@@ -49,6 +49,9 @@ class Settings(BaseSettings):
     google_client_id: str = Field(default="")
     google_client_secret: str = Field(default="")
     google_oauth_redirect: str = Field(default="")  # e.g. https://api.smarttap.ie/v1/google/callback
+    # Symmetric key for pgcrypto encryption of tenant_google_connections.refresh_token
+    # at rest. Held only here (never in the DB). Required before connecting Google.
+    google_token_enc_key: str = Field(default="")
 
     sentry_dsn: str = Field(default="")
 
