@@ -58,7 +58,8 @@ Auth:        Supabase Auth
 Hosting:     Railway (backend) + Vercel (frontend)
 Payments:    Stripe
 Emails:      Resend
-WhatsApp:    Twilio
+WhatsApp:    Meta WhatsApp Business Cloud API (Graph API direto)
+SMS:         Twilio (apenas SMS — ex. OTP de cliente na Sprint 5.6)
 Analytics:   PostHog
 Errors:      Sentry
 ```
@@ -218,15 +219,15 @@ campaigns (id, tenant_id, name, type, status, config jsonb,
 
 **Sprint 5 — WhatsApp AI Assistant (Semanas 6-10)**
 
-3 features integradas, todas baseadas em Twilio WhatsApp + Claude API.
+3 features integradas, todas baseadas em WhatsApp (Meta Cloud API) + Claude API.
 
-**Stack:** Twilio WhatsApp Business API + Claude API (`claude-opus-4-7` ou `claude-sonnet-4-6` para economia) + Google Business API (OAuth p/ posting de respostas)
+**Stack:** Meta WhatsApp Business Cloud API (Graph API direto, sem Twilio) + Claude API (`claude-sonnet-4-6` em todas as features de AI) + Google Business API (OAuth p/ posting de respostas) — _decisão revista 2026-05-29: Meta direto em vez de Twilio._
 
 - [ ] **Feature 1: Bot para dono consultar dados via WhatsApp**
   - Dono envia "Quantos clientes esta semana?" / "Qual minha melhor tag?" / "Quem não vem há mais de 30 dias?"
   - Bot autentica via número de telefone vinculado ao `tenant_id`
   - Claude lê a pergunta, traduz pra query nas APIs internas (`/v1/dashboard/overview`, `/v1/customers`, `/v1/segments/preview`), responde em linguagem natural
-  - Suporta requests de relatório: "Manda o PDF de maio" → bot anexa o PDF via Twilio media
+  - Suporta requests de relatório: "Manda o PDF de maio" → bot anexa o PDF via WhatsApp media (Meta Cloud API)
   - Mesma `CRON_TOKEN`-style auth: lookup de tenant por phone hash, rate-limited
 
 - [ ] **Feature 2: Remarketing automático "tapou mas não deu review"**
@@ -242,7 +243,7 @@ campaigns (id, tenant_id, name, type, status, config jsonb,
   - Alerta especial pra reviews 1-2 estrelas (Feature original do Sprint 5 antigo)
 
 **Pré-requisitos infra:**
-- Twilio account com WhatsApp Business approval (~1-2 semanas Meta approval)
+- Conta Meta Business + número registado na WhatsApp Cloud API (já temos). Env: `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN`, `WHATSAPP_API_VERSION`
 - Google Cloud project + OAuth consent screen + Google Business API enabled
 - `ANTHROPIC_API_KEY` env var (backend)
 - Phone → tenant mapping table (nova migration)
@@ -267,11 +268,13 @@ Fecha um buraco UX da Sprint 1: cliente que limpa o browser ou troca de telemóv
 - [ ] **Fusão de conta anónima com conta identificada** — se o tap actual já criou um stamp anónimo (customer_id null) antes da identificação, transferir esse stamp pra conta identificada (anti-perda; idempotente caso o cliente volte a identificar-se)
 - [ ] **Rate limiting + anti-abuse** — bloqueio temporário (1h) após 5 códigos errados consecutivos; máximo 3 OTP requests por phone+tenant por hora; CAPTCHA ou similar se detectar padrão de abuse
 
-**Stack:** Twilio SMS (mesmo account da Sprint 5, canal diferente — `messages.create({ from: TWILIO_SMS_FROM, ... })` em vez do WhatsApp Sender). Nova migration `customer_otp_codes` table. Reaproveita o cookie de identificação existente da Sprint 1 (formato `customer_session_<tenant_id>`).
+**Stack:** Twilio SMS (canal SMS — `messages.create({ from: TWILIO_SMS_FROM, ... })`). Nova migration `customer_otp_codes` table. Reaproveita o cookie de identificação existente da Sprint 1 (formato `customer_session_<tenant_id>`).
+
+> ⚠️ **Nota (2026-05-29):** a Sprint 5 migrou de Twilio para **Meta WhatsApp Cloud API**. Como a Meta **não envia SMS**, a 5.6 (OTP por SMS) precisa da **sua própria conta Twilio SMS** — já não há conta Twilio partilhada da Sprint 5 para reutilizar.
 
 **Pré-requisitos infra:**
-- Conta Twilio + Account SID + Auth Token já configurados na Sprint 5 — reutilizar
-- Comprar número Twilio SMS Ireland (~€1/mês) OU usar Messaging Service já existente da WhatsApp Sprint 5 com SMS habilitado
+- Conta Twilio (SMS) própria + Account SID + Auth Token (a Sprint 5 já não usa Twilio)
+- Comprar número Twilio SMS Ireland (~€1/mês)
 - `TWILIO_SMS_FROM` env var (backend Railway) — formato E.164 `+353...`
 
 **Considerações:**
