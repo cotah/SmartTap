@@ -26,6 +26,7 @@ from app.services import (
     monthly_email_service,
     reactivation_service,
     review_nudge_service,
+    review_response_service,
 )
 
 router = APIRouter(tags=["cron"])
@@ -86,6 +87,25 @@ def trigger_review_nudge(
     return {
         "tenants_scanned": result.tenants_scanned,
         "total_sent": result.total_sent,
+    }
+
+
+@router.post("/cron/review-responses")
+def trigger_review_responses(
+    x_cron_token: str | None = Header(default=None, alias="X-Cron-Token"),
+) -> dict[str, int]:
+    """Daily pass that fetches new Google reviews and drafts replies (S5 F3).
+
+    Idempotent: the (tenant, google_review_id) dedupe means re-running won't
+    re-draft a review already stored. No-op when no tenant has connected Google
+    or the API isn't live yet.
+    """
+    _verify_cron_token(x_cron_token)
+
+    result = review_response_service.run_daily()
+    return {
+        "tenants_scanned": result.tenants_scanned,
+        "reviews_drafted": result.reviews_drafted,
     }
 
 

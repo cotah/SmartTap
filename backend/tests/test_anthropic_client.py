@@ -127,3 +127,20 @@ def test_unconfigured_raises(monkeypatch: pytest.MonkeyPatch) -> None:
         anthropic_client.run_conversation(
             system="s", user_text="u", tools=[], dispatch=lambda n, i: ""
         )
+
+
+# ---------------------------------------------------------------------------
+# generate_text (single-shot, used by Feature 3)
+# ---------------------------------------------------------------------------
+
+
+def test_generate_text_returns_reply() -> None:
+    FakeAnthropic.queued = [_resp("end_turn", [_text_block("Thanks for visiting!")])]
+    out = anthropic_client.generate_text(system="reply as owner", user_text="5-star review")
+    assert out == "Thanks for visiting!"
+
+
+def test_generate_text_unconfigured_raises(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(anthropic_client, "is_configured", lambda: False)
+    with pytest.raises(RuntimeError):
+        anthropic_client.generate_text(system="s", user_text="u")

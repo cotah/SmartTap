@@ -119,6 +119,27 @@ def run_conversation(
     return "Sorry, I couldn't put that together right now. Try asking a simpler question."
 
 
+def generate_text(*, system: str, user_text: str, max_tokens: int = MAX_TOKENS) -> str:
+    """One-shot generation (no tools) — used by Feature 3 to draft a review
+    reply. Returns the text answer. Raises RuntimeError if unconfigured; the
+    caller gates on `is_configured()` (a no-op draft is useless, so we don't
+    invent one)."""
+    if not is_configured():
+        raise RuntimeError("anthropic_client.generate_text called unconfigured")
+
+    from anthropic import Anthropic
+
+    settings = get_settings()
+    client = Anthropic(api_key=settings.anthropic_api_key)
+    resp = client.messages.create(
+        model=settings.anthropic_model,
+        max_tokens=max_tokens,
+        system=system,
+        messages=cast(Any, [{"role": "user", "content": user_text}]),
+    )
+    return _extract_text(resp)
+
+
 def _extract_text(resp: Any) -> str:
     """Concatenate text blocks from a final (non-tool) response."""
     parts: list[str] = []

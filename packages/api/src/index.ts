@@ -44,4 +44,6 @@ export type {
   NfcTagColor,
   NfcTagCreateInput,
   NfcTagUpdateInput,
+  Review,
+  ReviewStatus,
 } from "./client";

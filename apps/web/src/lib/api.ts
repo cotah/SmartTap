@@ -58,4 +58,6 @@ export type {
   NfcTagColor,
   NfcTagCreateInput,
   NfcTagUpdateInput,
+  Review,
+  ReviewStatus,
 } from "@smarttap/api";

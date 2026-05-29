@@ -43,6 +43,13 @@ class Settings(BaseSettings):
     anthropic_api_key: str = Field(default="")
     anthropic_model: str = Field(default="claude-sonnet-4-6")
 
+    # S5 Feature 3 — Google Business Profile (reviews). Empty values keep the
+    # integration disabled (client no-ops) so dev/CI run without a Google app.
+    # The Business Profile API is access-gated; build-to-activate.
+    google_client_id: str = Field(default="")
+    google_client_secret: str = Field(default="")
+    google_oauth_redirect: str = Field(default="")  # e.g. https://api.smarttap.ie/v1/google/callback
+
     sentry_dsn: str = Field(default="")
 
     # Shared secret for the daily cron HTTP trigger. Empty disables the cron

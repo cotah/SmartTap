@@ -373,6 +373,22 @@ export interface BootstrapResponse {
   is_new: boolean;
 }
 
+export type ReviewStatus = "pending" | "published" | "dismissed" | "failed";
+
+export interface Review {
+  id: string;
+  google_review_id: string;
+  author: string | null;
+  rating: number | null;
+  comment: string | null;
+  created_at_google: string | null;
+  ai_draft: string | null;
+  reply_text: string | null;
+  status: ReviewStatus;
+  published_at: string | null;
+  created_at: string;
+}
+
 export interface ApiClient {
   tap: (tagUuid: string, body: TapEvent) => Promise<TapResponse>;
   identifyCustomer: (body: CustomerIdentify) => Promise<IdentifyResponse>;
@@ -411,6 +427,11 @@ export interface ApiClient {
   listTags: () => Promise<{ items: NfcTag[] }>;
   createTag: (body: NfcTagCreateInput) => Promise<NfcTag>;
   updateTag: (id: string, body: NfcTagUpdateInput) => Promise<NfcTag>;
+  listReviews: (status?: ReviewStatus) => Promise<{ items: Review[] }>;
+  updateReviewReply: (id: string, replyText: string) => Promise<Review>;
+  publishReview: (id: string) => Promise<Review>;
+  dismissReview: (id: string) => Promise<Review>;
+  getGoogleConnectUrl: () => Promise<{ url: string }>;
 }
 
 export function createApiClient(opts: ApiClientOptions): ApiClient {
@@ -633,5 +654,19 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
         method: "PATCH",
         body: JSON.stringify(body),
       }),
+    listReviews: (status) => {
+      const qs = status ? `?status=${encodeURIComponent(status)}` : "";
+      return request<{ items: Review[] }>(`/v1/reviews${qs}`);
+    },
+    updateReviewReply: (id, replyText) =>
+      request<Review>(`/v1/reviews/${id}/reply`, {
+        method: "PUT",
+        body: JSON.stringify({ reply_text: replyText }),
+      }),
+    publishReview: (id) =>
+      request<Review>(`/v1/reviews/${id}/publish`, { method: "POST" }),
+    dismissReview: (id) =>
+      request<Review>(`/v1/reviews/${id}/dismiss`, { method: "POST" }),
+    getGoogleConnectUrl: () => request<{ url: string }>(`/v1/google/connect`),
   };
 }

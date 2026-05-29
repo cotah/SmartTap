@@ -8,6 +8,7 @@ import {
   Layers,
   Megaphone,
   Settings,
+  Star,
   Tag,
   Ticket,
   Users,
@@ -29,6 +30,7 @@ const NAV_LINKS: NavLink[] = [
   { href: "/dashboard/tags", label: "NFC tags", icon: Tag },
   { href: "/dashboard/reward", label: "Reward", icon: Gift },
   { href: "/dashboard/campaigns", label: "Campaigns", icon: Megaphone },
+  { href: "/dashboard/reviews", label: "Reviews", icon: Star },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
   { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
 ];
