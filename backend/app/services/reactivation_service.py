@@ -183,6 +183,28 @@ def run_daily(*, now: datetime | None = None) -> ReactivationRunResult:
     )
 
 
+def run_for_tenant(
+    tenant_id: str, *, now: datetime | None = None
+) -> TenantReactivationResult:
+    """Run the reactivation pass for a SINGLE tenant — triggered on demand by
+    the WhatsApp bot ("send reactivation to my inactive customers", S5 F1 B).
+
+    Same policy and safety contract as the daily cron (mark-before-send,
+    30-day inactivity, 90-day cooldown, GDPR filtered in SQL) — it just scopes
+    to one tenant instead of iterating all of them. Raises NotFoundError if the
+    tenant doesn't exist."""
+    current = now or datetime.now(UTC)
+    tenant = tenants.get_by_id(tenant_id)
+    if tenant is None:
+        raise NotFoundError("Tenant not found")
+    return _process_tenant(
+        tenant,
+        inactive_cutoff=current - timedelta(days=INACTIVE_AFTER_DAYS),
+        cooldown_cutoff=current - timedelta(days=COOLDOWN_DAYS),
+        now=current,
+    )
+
+
 def opt_out(magic_link_token: str) -> None:
     """Public, idempotent GDPR opt-out triggered from the email footer link.
 

@@ -44,6 +44,14 @@ def test_send_text_noop_when_unconfigured(monkeypatch: pytest.MonkeyPatch) -> No
     assert whatsapp_client.send_text(to="353871234567", body="hi") is None
 
 
+def test_send_document_noop_when_unconfigured(monkeypatch: pytest.MonkeyPatch) -> None:
+    _patch_settings(monkeypatch)
+    assert (
+        whatsapp_client.send_document(to="353871234567", content=b"PDF", filename="r.pdf")
+        is None
+    )
+
+
 def test_normalise_to_strips_prefixes() -> None:
     assert whatsapp_client._normalise_to("whatsapp:+353871234567") == "353871234567"
     assert whatsapp_client._normalise_to("+353871234567") == "353871234567"

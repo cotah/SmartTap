@@ -320,6 +320,38 @@ def test_run_daily_with_no_active_tenants_returns_zero(
 
 
 # ---------------------------------------------------------------------------
+# Per-tenant pass (S5 Feature 1 Phase B — bot-triggered)
+# ---------------------------------------------------------------------------
+
+
+def test_run_for_tenant_processes_single_tenant(
+    fake_customers: FakeCustomersDB,
+    sent_emails: list[dict[str, Any]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        reactivation_service.tenants, "get_by_id", lambda tid: {"id": tid, "name": "ACME"}
+    )
+    fake_customers.eligible_by_tenant["t-1"] = [
+        {"id": "c-1", "email": "a@x", "name": "x", "current_stamps": 1, "magic_link_token": "k1"},
+    ]
+
+    result = reactivation_service.run_for_tenant("t-1", now=datetime(2026, 5, 29, tzinfo=UTC))
+
+    assert result.sent == 1
+    assert len(sent_emails) == 1
+    assert fake_customers.marks[0][0] == "c-1"
+
+
+def test_run_for_tenant_unknown_tenant_raises(
+    fake_customers: FakeCustomersDB, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(reactivation_service.tenants, "get_by_id", lambda tid: None)
+    with pytest.raises(NotFoundError):
+        reactivation_service.run_for_tenant("missing")
+
+
+# ---------------------------------------------------------------------------
 # Opt-out
 # ---------------------------------------------------------------------------
 

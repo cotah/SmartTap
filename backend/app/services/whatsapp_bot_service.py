@@ -27,7 +27,7 @@ from typing import Any
 import structlog
 
 from app.db import tenant_members, users, whatsapp
-from app.services import anthropic_client, bot_tools, email_service
+from app.services import anthropic_client, bot_actions, bot_tools, email_service
 
 log = structlog.get_logger(__name__)
 
@@ -104,7 +104,7 @@ def handle_inbound(phone: str, body: str, *, now: datetime | None = None) -> str
 
     state = link.get("state")
     if state == "verified":
-        return _handle_verified(link, text)
+        return _handle_verified(link, text, current)
     if state == "awaiting_code":
         return _handle_code(phone, link, text, current)
     # Default / awaiting_email
@@ -197,11 +197,55 @@ def _handle_code(phone: str, link: dict[str, Any], text: str, now: datetime) -> 
     return f"That code isn't right. {remaining} attempt(s) left."
 
 
-def _handle_verified(link: dict[str, Any], text: str) -> str:
+_CONFIRM_YES = {"sim", "yes", "confirmo", "confirm", "ok", "okay", "pode", "publica"}
+_CONFIRM_NO = {"nao", "não", "no", "cancela", "cancel", "para", "stop"}
+
+
+def _active_pending(link: dict[str, Any], now: datetime) -> dict[str, Any] | None:
+    """Return the link's pending action if it exists and hasn't expired."""
+    action = link.get("pending_action")
+    expires = link.get("pending_action_expires_at")
+    if not isinstance(action, dict) or not isinstance(expires, str):
+        return None
+    try:
+        if datetime.fromisoformat(expires.replace("Z", "+00:00")) <= now:
+            return None
+    except ValueError:
+        return None
+    return action
+
+
+def _confirmation_verdict(text: str) -> str:
+    """yes | no | none — keyword-based so a confirmation gate never depends on
+    the model."""
+    word = text.strip().lower().rstrip(".!").strip()
+    if word in _CONFIRM_YES:
+        return "yes"
+    if word in _CONFIRM_NO:
+        return "no"
+    return "none"
+
+
+def _handle_verified(link: dict[str, Any], text: str, now: datetime) -> str:
     tenant_id = link.get("tenant_id")
-    if not isinstance(tenant_id, str):
+    phone = link.get("phone")
+    if not isinstance(tenant_id, str) or not isinstance(phone, str):
         # Shouldn't happen for a verified link, but never leak another tenant.
         return MSG_BOT_UNAVAILABLE
+
+    # Confirmation gate has priority: if there's a live pending action, a yes/no
+    # resolves it before anything else. Anything else clears it and falls
+    # through to a fresh request.
+    pending = _active_pending(link, now)
+    if pending is not None:
+        verdict = _confirmation_verdict(text)
+        if verdict == "yes":
+            whatsapp.clear_pending_action(phone)
+            return bot_actions.execute_action(tenant_id, pending, now=now)
+        if verdict == "no":
+            whatsapp.clear_pending_action(phone)
+            return "Okay, cancelled — nothing was sent."
+        whatsapp.clear_pending_action(phone)
 
     if not anthropic_client.is_configured():
         return MSG_BOT_UNAVAILABLE
@@ -209,28 +253,44 @@ def _handle_verified(link: dict[str, Any], text: str) -> str:
     from app.db import tenants
 
     tenant = tenants.get_by_id(tenant_id) or {}
-    system = _system_prompt(tenant)
+    system = _system_prompt(tenant, now)
 
     def dispatch(name: str, tool_input: dict[str, Any]) -> str:
+        if name in bot_actions.WRITE_TOOL_NAMES:
+            return bot_actions.handle_write_tool(
+                name=name,
+                tenant_id=tenant_id,
+                phone=phone,
+                tenant=tenant,
+                tool_input=tool_input,
+                now=now,
+            )
         return bot_tools.execute(name, tenant_id, tool_input)
 
     return anthropic_client.run_conversation(
         system=system,
         user_text=text,
-        tools=bot_tools.TOOLS,
+        tools=bot_tools.TOOLS + bot_actions.WRITE_TOOLS,
         dispatch=dispatch,
     )
 
 
-def _system_prompt(tenant: dict[str, Any]) -> str:
+def _system_prompt(tenant: dict[str, Any], now: datetime) -> str:
     name = (tenant.get("name") or "the business").strip()
     btype = (tenant.get("business_type") or "local business").strip()
+    today = now.date().isoformat()
     return (
         f"You are the SmartTap assistant for {name}, a {btype} in Ireland. You are "
         "talking to the owner over WhatsApp. Answer using ONLY the data returned by "
         "the tools — never invent numbers. Keep replies short and friendly, suitable "
         "for a phone screen. Reply in the same language the owner writes in "
         "(Portuguese or English). If the tools don't have what they asked for, say so "
-        "plainly. You can only read data right now; you cannot send messages, create "
-        "campaigns, or change anything yet."
+        "plainly.\n"
+        f"Today's date is {today} (Europe/Dublin). Use it to resolve relative dates "
+        "like 'this weekend'.\n"
+        "You can also take actions: send a reactivation email to inactive customers, "
+        "create a double-stamp campaign, and send the owner their monthly report PDF. "
+        "Reactivation and campaign creation REQUIRE confirmation — when you call those "
+        "tools you'll get a CONFIRMATION NEEDED instruction; relay it and wait for the "
+        "owner to reply SIM. Never claim an action is done unless a tool result says so."
     )

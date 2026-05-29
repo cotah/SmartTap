@@ -16,6 +16,7 @@ out-of-window messages would need an approved template (future work).
 
 import hashlib
 import hmac
+from typing import Any
 
 import httpx
 import structlog
@@ -73,6 +74,52 @@ def send_text(*, to: str, body: str) -> str | None:
     if isinstance(messages, list) and messages:
         msg_id = messages[0].get("id")
     log.info("whatsapp_text_sent", to_suffix=to[-4:], message_id=msg_id)
+    return str(msg_id) if msg_id else None
+
+
+def send_document(*, to: str, content: bytes, filename: str, caption: str = "") -> str | None:
+    """Send a PDF (or other doc) via the Cloud API (S5 F1 Phase B — monthly
+    report). Two steps: upload the bytes to get a media id, then send a
+    document message referencing it. Returns the message id, or None when not
+    configured (dev/CI no-op). Raises only on a real HTTP failure."""
+    if not is_configured():
+        log.info("whatsapp_skip_document", reason="not_configured")
+        return None
+
+    s = get_settings()
+    base = f"{_GRAPH_BASE}/{s.whatsapp_api_version}"
+    headers = {"Authorization": f"Bearer {s.whatsapp_access_token}"}
+
+    upload = httpx.post(
+        f"{base}/{s.whatsapp_phone_number_id}/media",
+        headers=headers,
+        data={"messaging_product": "whatsapp", "type": "application/pdf"},
+        files={"file": (filename, content, "application/pdf")},
+        timeout=_HTTP_TIMEOUT,
+    )
+    upload.raise_for_status()
+    media_id = upload.json().get("id")
+    if not media_id:
+        return None
+
+    document: dict[str, Any] = {"id": media_id, "filename": filename}
+    if caption:
+        document["caption"] = caption
+    resp = httpx.post(
+        f"{base}/{s.whatsapp_phone_number_id}/messages",
+        headers=headers,
+        json={
+            "messaging_product": "whatsapp",
+            "to": _normalise_to(to),
+            "type": "document",
+            "document": document,
+        },
+        timeout=_HTTP_TIMEOUT,
+    )
+    resp.raise_for_status()
+    messages = resp.json().get("messages") if isinstance(resp.json(), dict) else None
+    msg_id = messages[0].get("id") if isinstance(messages, list) and messages else None
+    log.info("whatsapp_document_sent", to_suffix=to[-4:], message_id=msg_id)
     return str(msg_id) if msg_id else None
 
 

@@ -56,6 +56,21 @@ def update_link(phone: str, fields: dict[str, Any]) -> Row | None:
     return rows[0] if rows else None
 
 
+def set_pending_action(phone: str, action: dict[str, Any], expires_at: datetime) -> None:
+    """Store a write action awaiting the owner's 'SIM' confirmation (S5 F1 B)."""
+    update_link(
+        phone,
+        {
+            "pending_action": action,
+            "pending_action_expires_at": expires_at.isoformat(),
+        },
+    )
+
+
+def clear_pending_action(phone: str) -> None:
+    update_link(phone, {"pending_action": None, "pending_action_expires_at": None})
+
+
 # ---------------------------------------------------------------------------
 # whatsapp_otp_codes
 # ---------------------------------------------------------------------------

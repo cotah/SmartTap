@@ -95,6 +95,15 @@ class FakeWhatsappDB:
             if o["phone"] == phone and datetime.fromisoformat(o["created_at"]) >= since
         )
 
+    def set_pending_action(self, phone: str, action: dict[str, Any], expires_at: datetime) -> None:
+        self.update_link(
+            phone,
+            {"pending_action": action, "pending_action_expires_at": expires_at.isoformat()},
+        )
+
+    def clear_pending_action(self, phone: str) -> None:
+        self.update_link(phone, {"pending_action": None, "pending_action_expires_at": None})
+
 
 @pytest.fixture
 def db(monkeypatch: pytest.MonkeyPatch) -> FakeWhatsappDB:
@@ -108,6 +117,8 @@ def db(monkeypatch: pytest.MonkeyPatch) -> FakeWhatsappDB:
         "increment_otp_attempts",
         "consume_otp",
         "count_otps_since",
+        "set_pending_action",
+        "clear_pending_action",
     ):
         monkeypatch.setattr(svc.whatsapp, name, getattr(fake, name))
     # Deterministic OTP code.
@@ -291,7 +302,10 @@ def test_verified_dispatches_to_claude(
 
     assert reply == "You have 42 customers this week."
     assert captured["user_text"] == "quantos clientes esta semana?"
-    assert captured["tools"] is svc.bot_tools.TOOLS
+    # Read tools + write tools are exposed to Claude in Phase B.
+    tool_names = {t["name"] for t in captured["tools"]}
+    assert "get_overview" in tool_names
+    assert "send_reactivation" in tool_names
     # A dispatch closure (scoped to the verified tenant) is handed to Claude.
     assert callable(captured["dispatch"])
 
@@ -304,3 +318,85 @@ def test_verified_but_bot_unconfigured(
     monkeypatch.setattr(svc.anthropic_client, "is_configured", lambda: False)
     reply = svc.handle_inbound(INBOUND, "hi", now=NOW)
     assert reply == svc.MSG_BOT_UNAVAILABLE
+
+
+# ---------------------------------------------------------------------------
+# Phase B — confirmation gate
+# ---------------------------------------------------------------------------
+
+
+def _verified_with_pending(
+    db: FakeWhatsappDB, action: dict[str, Any], *, expires_in_min: int = 5
+) -> None:
+    db.create_link(PHONE, state="verified")
+    db.update_link(
+        PHONE,
+        {
+            "tenant_id": "t-1",
+            "pending_action": action,
+            "pending_action_expires_at": (
+                NOW + timedelta(minutes=expires_in_min)
+            ).isoformat(),
+        },
+    )
+
+
+def test_confirm_yes_executes_pending(
+    db: FakeWhatsappDB, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _verified_with_pending(db, {"tool": "send_reactivation"})
+    seen: dict[str, Any] = {}
+
+    def fake_exec(tenant_id: str, action: dict[str, Any], *, now: Any) -> str:
+        seen["tenant_id"] = tenant_id
+        seen["action"] = action
+        return "Done — sent reactivation emails to 5 customer(s)."
+
+    monkeypatch.setattr(svc.bot_actions, "execute_action", fake_exec)
+
+    reply = svc.handle_inbound(INBOUND, "SIM", now=NOW)
+
+    assert reply == "Done — sent reactivation emails to 5 customer(s)."
+    assert seen["tenant_id"] == "t-1"
+    assert seen["action"] == {"tool": "send_reactivation"}
+    assert db.links[PHONE]["pending_action"] is None  # cleared
+
+
+def test_confirm_no_cancels(db: FakeWhatsappDB) -> None:
+    _verified_with_pending(db, {"tool": "send_reactivation"})
+    reply = svc.handle_inbound(INBOUND, "não", now=NOW)
+    assert "cancel" in reply.lower()
+    assert db.links[PHONE]["pending_action"] is None
+
+
+def test_random_text_clears_pending_and_falls_through(
+    db: FakeWhatsappDB, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _verified_with_pending(db, {"tool": "send_reactivation"})
+    monkeypatch.setattr(svc.anthropic_client, "is_configured", lambda: True)
+    monkeypatch.setattr(tenants_db, "get_by_id", lambda tid: {"name": "ACME"})
+    monkeypatch.setattr(svc.anthropic_client, "run_conversation", lambda **kw: "CHAT")
+
+    reply = svc.handle_inbound(INBOUND, "what about peak times?", now=NOW)
+
+    assert reply == "CHAT"
+    assert db.links[PHONE]["pending_action"] is None  # stale pending discarded
+
+
+def test_expired_pending_is_not_executed(
+    db: FakeWhatsappDB, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _verified_with_pending(db, {"tool": "send_reactivation"}, expires_in_min=-1)
+    executed: list[int] = []
+    monkeypatch.setattr(
+        svc.bot_actions, "execute_action", lambda *a, **k: executed.append(1) or "X"
+    )
+    monkeypatch.setattr(svc.anthropic_client, "is_configured", lambda: True)
+    monkeypatch.setattr(tenants_db, "get_by_id", lambda tid: {"name": "ACME"})
+    monkeypatch.setattr(svc.anthropic_client, "run_conversation", lambda **kw: "CHAT")
+
+    reply = svc.handle_inbound(INBOUND, "SIM", now=NOW)
+
+    # Expired pending → a stale "SIM" must NOT fire the action; treated as chat.
+    assert executed == []
+    assert reply == "CHAT"
