@@ -32,13 +32,14 @@ class Settings(BaseSettings):
     resend_api_key: str = Field(default="")
     resend_from_email: str = Field(default="hello@smarttap.ie")
 
-    # S5 Feature 1 — WhatsApp bot. Empty values keep the integrations disabled
-    # (clients no-op, like resend) so dev/CI run without external credentials.
-    # Dev uses the Twilio Sandbox sender; switching to the Meta-approved prod
-    # sender in production is just changing TWILIO_WHATSAPP_FROM — no code.
-    twilio_account_sid: str = Field(default="")
-    twilio_auth_token: str = Field(default="")
-    twilio_whatsapp_from: str = Field(default="")  # e.g. "whatsapp:+14155238886"
+    # S5 Feature 1 — WhatsApp bot via Meta WhatsApp Business Cloud API (direct,
+    # no Twilio). Empty values keep the integration disabled (client no-ops,
+    # like resend) so dev/CI run without credentials.
+    whatsapp_access_token: str = Field(default="")  # Bearer token (system user/app)
+    whatsapp_phone_number_id: str = Field(default="")  # number id on the Cloud API
+    whatsapp_app_secret: str = Field(default="")  # validates X-Hub-Signature-256
+    whatsapp_verify_token: str = Field(default="")  # our secret for the GET handshake
+    whatsapp_api_version: str = Field(default="v21.0")
     anthropic_api_key: str = Field(default="")
     anthropic_model: str = Field(default="claude-sonnet-4-6")
 

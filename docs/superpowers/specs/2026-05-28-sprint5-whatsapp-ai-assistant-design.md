@@ -34,44 +34,54 @@ dependências de infra (aprovação Meta, OAuth Google Business).
 | Decisão | Escolha | Porquê |
 |---|---|---|
 | Modelo de AI | **`claude-sonnet-4-6`** em todas as features de AI | Economia + qualidade suficiente para análise NL e respostas a reviews. |
-| Provider WhatsApp | **Twilio** | Já é a stack escolhida (CLAUDE.md). |
-| Ambiente de dev | **Twilio Sandbox** | Aprovação Meta ainda pendente. Trocar o número/sender em prod **sem mudar código** (só env vars). |
-| Canal da Feature 2 | **Email agora, WhatsApp após aprovação Meta** | WhatsApp business-initiated exige template pré-aprovado; o Sandbox não entrega a clientes reais. Email faz ship hoje, sem bloquear na Meta. O passo de envio fica isolado para o WhatsApp ser aditivo. |
-| Auth do bot (Feature 1) | **OTP na 1ª mensagem** + mapeamento phone→tenant | O dono prova posse do número antes de ver dados. |
+| Provider WhatsApp | **Meta WhatsApp Business Cloud API (direto)** | **Decisão revista 2026-05-29:** já temos conta Meta Business + número registado. Integração direta via Graph API (REST), sem intermediário Twilio — menos uma dependência/custo e controlo total. |
+| Ambiente de dev | **Número Meta registado** (test number do app ou o número real) | Sem Sandbox Twilio. O número já está registado na Cloud API; não há bloqueador de "aprovação Meta pendente" para a Feature 1 (ver nota abaixo). |
+| Canal da Feature 2 | **Email agora, WhatsApp (Meta template) depois** | WhatsApp business-initiated exige template pré-aprovado pela Meta; o nudge é business-initiated. Email faz ship hoje. Quando houver template aprovado, adiciona-se o envio via Meta Cloud API — passo de envio isolado. |
+| Auth do bot (Feature 1) | **OTP na 1ª mensagem (por email)** + mapeamento phone→tenant | O dono prova posse da conta antes de ver dados. Independente do transporte. |
 
 ### Restrição WhatsApp que moldou o Sprint (importante)
 
-Mensagens **iniciadas pelo negócio** no WhatsApp (ex.: o nudge da Feature 2,
-ou o bot a enviar um alerta proativo) **exigem um template pré-aprovado** pela
-Meta — não se pode enviar texto livre fora da janela de 24h iniciada pelo
-cliente. Consequências de design:
+A regra da janela de 24h é da **Meta** (não do Twilio) — vale na Cloud API
+direta na mesma. Mensagens **iniciadas pelo negócio** fora da janela de 24h
+iniciada pelo utilizador **exigem um template pré-aprovado** pela Meta.
+Consequências de design (inalteradas pelo pivot para Meta direto):
 
-- **Feature 2:** começa em **email** (texto livre, sem aprovação). Quando o
-  WhatsApp for aprovado, adiciona-se um template fixo (sem AI — texto AI
-  quebraria as regras do template).
+- **Feature 2:** começa em **email** (texto livre, sem aprovação). Quando
+  houver template Meta aprovado, adiciona-se o envio via Cloud API (sem AND —
+  texto AI quebraria as regras do template).
 - **Feature 1:** o dono **inicia** a conversa → abre janela de 24h → o bot
-  pode responder com texto livre (gerado por Claude) dentro dessa janela. Para
-  alertas proativos (review negativa) fora da janela é preciso template.
-- **Feature 3:** drafts vão para o dono via Feature 1 (dentro da janela) ou
-  por outro canal; publicação é via Google Business API, não WhatsApp.
+  responde com texto livre (gerado por Claude) via Cloud API dentro dessa
+  janela. Por isso a Feature 1 **não** precisa de template aprovado — funciona
+  já com o número registado. Alertas proativos fora da janela precisam de
+  template (futuro).
+- **Feature 3:** drafts vão para o dono via Feature 1 (dentro da janela);
+  publicação da resposta é via Google Business API, não WhatsApp.
 
 ---
 
 ## 3. Pré-requisitos de infra (partilhados)
 
-- [ ] Conta Twilio + Account SID + Auth Token (env: `TWILIO_ACCOUNT_SID`,
-      `TWILIO_AUTH_TOKEN`).
-- [ ] Twilio WhatsApp Sandbox configurado para dev; Sender de produção após
-      aprovação Meta (env: `TWILIO_WHATSAPP_FROM`).
+- [ ] Conta Meta Business + número registado na WhatsApp Cloud API (já temos).
+- [ ] App Meta com produto WhatsApp + permissões. Env (backend Railway):
+      `WHATSAPP_ACCESS_TOKEN` (token do system user / app), `WHATSAPP_PHONE_NUMBER_ID`,
+      `WHATSAPP_APP_SECRET` (valida assinatura `X-Hub-Signature-256`),
+      `WHATSAPP_VERIFY_TOKEN` (segredo nosso para o handshake GET do webhook),
+      `WHATSAPP_API_VERSION` (ex.: `v21.0`).
+- [ ] Webhook do app Meta subscrito ao campo `messages`, a apontar para
+      `https://api.smarttap.ie/v1/webhooks/whatsapp` (verificado via GET).
 - [ ] `ANTHROPIC_API_KEY` (backend Railway) — partilhado pelas Features 1 e 3.
 - [ ] Google Cloud project + OAuth consent + Google Business API (Feature 3).
 - [ ] Tabela de mapeamento `phone → tenant` (migration na Feature 1).
 - [ ] Scheduler já existe (`POST /cron/*` com `X-Cron-Token`) — reutilizado
       pela Feature 2 (novo endpoint `/cron/review-nudge`).
 
-> **Nota:** a Feature 2 **não** precisa de Twilio nem Anthropic — só email
+> **Nota:** a Feature 2 **não** precisa de Meta nem Anthropic — só email
 > (Resend, já configurado). Por isso pode fazer ship antes de toda a infra
 > de AI/WhatsApp estar pronta.
+>
+> **Stack (CLAUDE.md):** o CLAUDE.md lista "WhatsApp: Twilio". Esta decisão
+> revê isso para **Meta Cloud API direto** no Sprint 5. Vale a pena atualizar
+> o CLAUDE.md (fora do âmbito deste doc; sinalizado ao Henrique).
 
 ---
 
@@ -127,9 +137,11 @@ negócio. Capacidades-alvo (a detalhar no spec próprio da Feature 1):
   bot pede o email da conta, envia um código 6 dígitos por **email (Resend, já
   configurado)**, o dono responde o código no WhatsApp → liga `phone → tenant_id`.
   Resposta anti-enumeration. (Migration nova de auth.)
-- **Faseamento:** **Fase A = read-only** (auth/OTP + webhook Twilio + Claude
-  tool-use + ferramentas de consulta); **Fase B = ações** (reactivação,
+- **Faseamento:** **Fase A = read-only** (auth/OTP + webhook Meta Cloud API +
+  Claude tool-use + ferramentas de consulta); **Fase B = ações** (reactivação,
   campanhas, resumo PDF) com **confirmação obrigatória** antes de executar.
+- **Transporte (revisto 2026-05-29):** Meta WhatsApp Cloud API direto, sem
+  Twilio.
 - **Limites de escopo da Fase A:**
   1. "Evolução do rating Google" precisa da Google Business API → fica para
      **depois da Feature 3**. Na Fase A, performance de reviews = conversão

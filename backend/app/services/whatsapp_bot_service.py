@@ -64,8 +64,13 @@ def _now(now: datetime | None) -> datetime:
 
 
 def _normalise_phone(phone: str) -> str:
-    """Store/look up bare E.164. Inbound `From` is `whatsapp:+353...`."""
-    return phone.strip().removeprefix("whatsapp:").strip()
+    """Canonical phone key for links/OTP lookups.
+
+    Meta delivers the sender as a wa_id — digits only, no '+' and no
+    'whatsapp:' prefix (e.g. '353871234567'). We strip both defensively so the
+    same value is used whether the input is a wa_id or an E.164 string, keeping
+    inbound lookups and outbound sends consistent."""
+    return phone.strip().removeprefix("whatsapp:").lstrip("+").strip()
 
 
 def _hash_code(code: str) -> str:

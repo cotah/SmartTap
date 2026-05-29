@@ -22,6 +22,10 @@ resposta em linguagem natural, espelhando o idioma do dono (PT/EN).
 
 ## 2. Decisões (do guarda-chuva §4.7)
 
+- **Transporte (revisto 2026-05-29):** **Meta WhatsApp Business Cloud API
+  direto** (REST via Graph API), **sem Twilio** — já temos conta Meta Business
+  + número registado. A auth do dono (OTP por email) e o resto da arquitetura
+  não mudam; muda só o cliente de transporte e o webhook.
 - **Auth:** WhatsApp-first + OTP por **email** (Resend).
 - **Read-only**: ações (reactivação, campanhas, PDF) ficam para a Fase B com
   confirmação obrigatória.
@@ -110,22 +114,24 @@ migrations/008_whatsapp_bot.sql              [NOVO]
 config.py                                    [EDIT] env vars (Twilio, Anthropic)
 app/db/whatsapp.py                           [NOVO] links + otp codes
 app/db/users.py                              [EDIT] get_user_id_by_email
-app/services/twilio_client.py                [NOVO] molde resend_client: is_configured() + send_whatsapp()
+app/services/whatsapp_client.py             [NOVO] Meta Cloud API: is_configured() + send_text() + validate_signature()
 app/services/anthropic_client.py             [NOVO] cliente Sonnet 4.6 + loop tool-use
 app/services/whatsapp_bot_service.py         [NOVO] auth/OTP + dispatch de tools + orquestração
 app/services/bot_tools.py                    [NOVO] as 4 tools read-only (definição + execução por tenant)
 app/emails/templates.py                      [EDIT] whatsapp_otp_email
 app/services/email_service.py                [EDIT] send_whatsapp_otp
-app/routers/webhooks.py                      [EDIT] POST /webhooks/twilio/whatsapp (valida assinatura)
+app/routers/webhooks.py                      [EDIT] GET + POST /webhooks/whatsapp (verify + assinatura)
 ```
 
-### Cliente externo (molde `resend_client`)
-- `twilio_client.is_configured()` → False sem `TWILIO_ACCOUNT_SID`/`TWILIO_AUTH_TOKEN`/`TWILIO_WHATSAPP_FROM`; `send_whatsapp(to, body)` no-op limpo em dev.
-- `anthropic_client.is_configured()` → False sem `ANTHROPIC_API_KEY`; `run_conversation(system, messages, tools, dispatch)` corre o loop tool-use; no-op/explica em dev sem chave.
+### Cliente externo (molde `resend_client`) — Meta WhatsApp Cloud API
+- `whatsapp_client.is_configured()` → False sem `WHATSAPP_ACCESS_TOKEN`/`WHATSAPP_PHONE_NUMBER_ID`; no-op limpo em dev.
+- `whatsapp_client.send_text(to, body)` → `POST https://graph.facebook.com/{version}/{phone_number_id}/messages` com `Authorization: Bearer <token>` e body `{"messaging_product":"whatsapp","to":<wa_id>,"type":"text","text":{"body":...}}` (via `httpx`, já dependência). Texto livre é permitido dentro da janela de 24h (o dono iniciou).
+- `whatsapp_client.validate_signature(raw_body, signature)` → HMAC-SHA256 do corpo **cru** com `WHATSAPP_APP_SECRET`, comparado com `X-Hub-Signature-256: sha256=...`.
+- `anthropic_client.is_configured()` → False sem `ANTHROPIC_API_KEY`; `run_conversation(system, user_text, tools, dispatch)` corre o loop tool-use.
 
-### Resposta via Twilio REST
-Webhook valida assinatura, processa, devolve `200` rápido; a resposta ao dono é
-enviada via **Twilio REST** (`send_whatsapp`). Suporta o multi-passo do OTP.
+### Webhook Meta (2 métodos no mesmo path `/v1/webhooks/whatsapp`)
+- **GET** — handshake de verificação da Meta: recebe `hub.mode`, `hub.verify_token`, `hub.challenge`. Se `verify_token == WHATSAPP_VERIFY_TOKEN`, devolve o `challenge` em texto puro (200); senão 403.
+- **POST** — mensagens inbound (JSON aninhado `entry[].changes[].value.messages[]`). Valida `X-Hub-Signature-256` sobre o corpo cru; extrai `from` (wa_id) + `text.body`; ignora callbacks de status (`value.statuses`, sem `messages`) devolvendo 200; despacha ao bot service; resposta enviada via `whatsapp_client.send_text`; devolve 200.
 
 ---
 
@@ -172,21 +178,24 @@ loop (máx N=4 iterações):
 ## 8. Config — novas env vars
 
 ```
-TWILIO_ACCOUNT_SID   (default "")
-TWILIO_AUTH_TOKEN    (default "")
-TWILIO_WHATSAPP_FROM (default "")   # ex. "whatsapp:+14155238886" (sandbox) → sender prod
-ANTHROPIC_API_KEY    (default "")
-ANTHROPIC_MODEL      (default "claude-sonnet-4-6")
+WHATSAPP_ACCESS_TOKEN    (default "")   # token do system user / app (Bearer)
+WHATSAPP_PHONE_NUMBER_ID (default "")   # id do número na Cloud API
+WHATSAPP_APP_SECRET      (default "")   # valida X-Hub-Signature-256
+WHATSAPP_VERIFY_TOKEN    (default "")   # segredo nosso p/ handshake GET
+WHATSAPP_API_VERSION     (default "v21.0")
+ANTHROPIC_API_KEY        (default "")
+ANTHROPIC_MODEL          (default "claude-sonnet-4-6")
 ```
-Dev usa Twilio Sandbox. Trocar para prod = só env vars (sem código).
+Já temos número Meta registado — sem Sandbox. Empty values → cliente no-op
+(dev/CI seguros).
 
 ---
 
 ## 9. Segurança
 
-- **Assinatura Twilio:** valida `X-Twilio-Signature` com `RequestValidator`
-  (auth token) sobre a URL pública + params do form. 403 se inválida. Mesmo
-  espírito da validação da assinatura Stripe já existente.
+- **Assinatura Meta:** valida `X-Hub-Signature-256` (HMAC-SHA256 do corpo cru
+  com o App Secret). 403 se inválida. Mesmo espírito da validação da assinatura
+  Stripe já existente. O handshake GET valida `WHATSAPP_VERIFY_TOKEN`.
 - **Auth do dono:** OTP por email (§3). Só números VERIFIED chegam ao Claude.
 - **Isolamento multi-tenant:** `tenant_id` resolvido no backend a partir do
   `whatsapp_links` verificado; nunca vem do modelo nem da mensagem.
@@ -207,12 +216,16 @@ Dev usa Twilio Sandbox. Trocar para prod = só env vars (sem código).
   loop Claude (anthropic stubbed) e envia resposta via Twilio (stubbed).
 - **anthropic_client:** loop de tool-use com fake client (stop_reason tool_use
   → executa dispatch → final text); teto de iterações.
-- **webhook:** assinatura inválida → 403; válida → 200 e despacha para o service
-  (service stubbed). Form parsing (From/Body).
+- **whatsapp_client:** `validate_signature` aceita assinatura HMAC-SHA256 válida
+  e rejeita inválida/ausente; `send_text` no-op sem config; normalização do `to`.
+- **webhook:** GET com verify_token certo → devolve challenge; errado → 403.
+  POST com assinatura inválida → 403; válida → 200 e despacha (service stubbed);
+  parsing do JSON aninhado da Meta; callbacks de status (sem `messages`) → 200
+  sem despacho.
 - **template:** `whatsapp_otp_email` contém o código e sem emoji/exclamação no
   assunto.
 
-Tudo stubando Twilio/Anthropic/Supabase — sem chamadas externas reais.
+Tudo stubando Meta/Anthropic/Supabase — sem chamadas externas reais.
 
 ---
 

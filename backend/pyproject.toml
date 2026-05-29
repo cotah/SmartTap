@@ -18,9 +18,9 @@ dependencies = [
     "supabase>=2.10.0",
     "stripe>=11.4.1",
     "resend>=2.6.0",
-    # S5 Feature 1 — WhatsApp bot. Twilio for WhatsApp in/out (REST + inbound
-    # webhook signature validation); Anthropic for the Sonnet 4.6 tool-use loop.
-    "twilio>=9.0.0",
+    # S5 Feature 1 — WhatsApp owner bot. WhatsApp via the Meta Cloud API uses
+    # plain httpx (already a dep), so no SDK here. Anthropic powers the Sonnet
+    # 4.6 tool-use loop.
     "anthropic>=0.40.0",
     "python-jose[cryptography]>=3.3.0",
     "structlog>=24.4.0",
@@ -73,10 +73,4 @@ warn_unused_configs = true
 # scattering `# type: ignore` comments through pdf_renderer.
 [[tool.mypy.overrides]]
 module = ["reportlab.*"]
-ignore_missing_imports = true
-
-# Twilio ships no py.typed marker / stubs. Accept untyped imports for the SDK
-# rather than scattering ignores through twilio_client.
-[[tool.mypy.overrides]]
-module = ["twilio.*"]
 ignore_missing_imports = true

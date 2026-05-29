@@ -1,9 +1,12 @@
+from typing import Any
+
 import stripe
 import structlog
 from fastapi import APIRouter, Header, HTTPException, Request, Response
+from fastapi.responses import PlainTextResponse
 
 from app.config import get_settings
-from app.services import twilio_client, webhook_service, whatsapp_bot_service
+from app.services import webhook_service, whatsapp_bot_service, whatsapp_client
 
 router = APIRouter(tags=["webhooks"])
 log = structlog.get_logger(__name__)
@@ -51,48 +54,82 @@ async def stripe_webhook(
     return {"received": True}
 
 
-@router.post("/webhooks/twilio/whatsapp")
-async def twilio_whatsapp_webhook(
-    request: Request,
-    x_twilio_signature: str | None = Header(default=None, alias="X-Twilio-Signature"),
-) -> Response:
-    """Inbound WhatsApp messages from Twilio (S5 Feature 1).
+@router.get("/webhooks/whatsapp")
+async def whatsapp_webhook_verify(request: Request) -> Response:
+    """Meta webhook verification handshake (S5 Feature 1).
 
-    Twilio POSTs application/x-www-form-urlencoded with `From` (whatsapp:+...)
-    and `Body`. We validate the signature (same spirit as the Stripe webhook),
-    hand the message to the bot service, and send the reply via the Twilio REST
-    API — so we return an empty 200 (NOT TwiML) to avoid double-replying.
-
-    The signature is computed over the exact public URL Twilio called. Railway
-    terminates TLS at the edge, so we rebuild it from the Host header forced to
-    https rather than trusting the internal scheme.
+    When the webhook is configured in the Meta app, Meta sends a GET with
+    `hub.mode=subscribe`, `hub.verify_token=<our secret>`, `hub.challenge=<n>`.
+    We echo the challenge as plain text iff the verify token matches our
+    `WHATSAPP_VERIFY_TOKEN`; otherwise 403. The param names contain dots, so we
+    read them off the query string directly.
     """
-    form = await request.form()
-    params = {key: str(value) for key, value in form.items()}
+    params = request.query_params
+    mode = params.get("hub.mode")
+    token = params.get("hub.verify_token")
+    challenge = params.get("hub.challenge", "")
 
-    host = request.headers.get("host", "")
-    url = f"https://{host}{request.url.path}"
+    if mode == "subscribe" and whatsapp_client.verify_token_matches(token):
+        return PlainTextResponse(content=challenge, status_code=200)
+    log.warning("whatsapp_webhook_verify_failed")
+    raise HTTPException(status_code=403, detail="Verification failed")
 
-    if not twilio_client.validate_signature(
-        url=url, params=params, signature=x_twilio_signature
-    ):
-        log.warning("twilio_webhook_invalid_signature")
-        raise HTTPException(status_code=403, detail="Invalid Twilio signature")
 
-    from_number = params.get("From", "")
-    body = params.get("Body", "")
-    if not from_number:
-        raise HTTPException(status_code=400, detail="Missing From")
+@router.post("/webhooks/whatsapp")
+async def whatsapp_webhook(
+    request: Request,
+    x_hub_signature_256: str | None = Header(default=None, alias="X-Hub-Signature-256"),
+) -> Response:
+    """Inbound WhatsApp messages from the Meta Cloud API (S5 Feature 1).
+
+    Meta POSTs JSON. We validate `X-Hub-Signature-256` (HMAC-SHA256 of the RAW
+    body, app secret) — same spirit as the Stripe webhook — then dispatch each
+    text message to the bot service and reply via the Cloud API. Status
+    callbacks (delivered/read) carry no `messages` and are acknowledged with a
+    200 without dispatching. We never 5xx on a bot error — Meta would retry and
+    the owner would get duplicate replies.
+    """
+    raw = await request.body()
+    if not whatsapp_client.validate_signature(raw_body=raw, signature=x_hub_signature_256):
+        log.warning("whatsapp_webhook_invalid_signature")
+        raise HTTPException(status_code=403, detail="Invalid signature")
 
     try:
-        reply = whatsapp_bot_service.handle_inbound(from_number, body)
-    except Exception as exc:
-        # Never 5xx back to Twilio for a bot error — it would retry and the
-        # owner would get duplicate replies. Log and acknowledge.
-        log.exception("whatsapp_bot_failed", error=str(exc))
-        return Response(status_code=200)
+        payload = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON") from None
 
-    if reply:
-        twilio_client.send_whatsapp(to=from_number, body=reply)
+    for from_number, body in _extract_text_messages(payload):
+        try:
+            reply = whatsapp_bot_service.handle_inbound(from_number, body)
+        except Exception as exc:
+            log.exception("whatsapp_bot_failed", error=str(exc))
+            continue
+        if reply:
+            whatsapp_client.send_text(to=from_number, body=reply)
 
     return Response(status_code=200)
+
+
+def _extract_text_messages(payload: dict[str, Any]) -> list[tuple[str, str]]:
+    """Pull (from_wa_id, text_body) pairs out of a Meta webhook payload.
+
+    Shape: entry[].changes[].value.messages[]. We only handle text messages;
+    status callbacks (value.statuses) and non-text message types are skipped.
+    Defensive against missing keys — a malformed payload yields no messages
+    rather than raising.
+    """
+    out: list[tuple[str, str]] = []
+    if not isinstance(payload, dict):
+        return out
+    for entry in payload.get("entry", []) or []:
+        for change in entry.get("changes", []) or []:
+            value = change.get("value", {}) or {}
+            for message in value.get("messages", []) or []:
+                if message.get("type") != "text":
+                    continue
+                from_number = message.get("from")
+                body = (message.get("text") or {}).get("body")
+                if isinstance(from_number, str) and isinstance(body, str):
+                    out.append((from_number, body))
+    return out

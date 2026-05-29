@@ -15,8 +15,9 @@ import app.db.tenants as tenants_db
 from app.services import whatsapp_bot_service as svc
 
 NOW = datetime(2026, 5, 29, 12, 0, tzinfo=UTC)
-INBOUND = "whatsapp:+353871234567"
-PHONE = "+353871234567"
+# Meta delivers the sender as a wa_id: digits only, no '+' / 'whatsapp:'.
+INBOUND = "353871234567"
+PHONE = "353871234567"  # _normalise_phone leaves a bare wa_id unchanged
 CODE = "001234"  # secrets.randbelow patched to 1234 -> zero-padded to 6
 
 
