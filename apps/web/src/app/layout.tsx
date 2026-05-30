@@ -1,21 +1,16 @@
 import type { Metadata } from "next";
-import { DM_Serif_Display, DM_Sans, JetBrains_Mono } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
-const dmSerif = DM_Serif_Display({
+// Dark Electric typography (rebrand 2026-05-31): Geist Sans headings + Inter
+// body + Geist Mono code. GeistSans/GeistMono expose --font-geist-sans /
+// --font-geist-mono; Inter is mapped to --font-inter. tailwind.config.ts
+// fontFamily reads these var names. Replaces DM Serif / DM Sans / JetBrains.
+const inter = Inter({
   subsets: ["latin"],
-  weight: "400",
-  variable: "--font-display",
-});
-
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  variable: "--font-sans",
-});
-
-const jetbrains = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
+  variable: "--font-inter",
 });
 
 export const metadata: Metadata = {
@@ -82,7 +77,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${dmSerif.variable} ${dmSans.variable} ${jetbrains.variable}`}
+      className={`${GeistSans.variable} ${GeistMono.variable} ${inter.variable}`}
     >
       <body>{children}</body>
     </html>

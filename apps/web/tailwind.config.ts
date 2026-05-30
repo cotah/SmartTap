@@ -44,6 +44,23 @@ const config: Config = {
           600: "#5A5A5A",
           900: "#1A1A1A",
         },
+        // SmartTap Dark Electric (rebrand 2026-05-31) — landing first, rest
+        // of the product cascades later. See
+        // docs/superpowers/specs/2026-05-31-landing-dark-electric-redesign-design.md
+        // `surface`/`surface-2` are elevations of `bg` so cards don't vanish
+        // on the near-black page. Cyan fails contrast on the light surface —
+        // on `electric-light` it's fills/large-decorative only, never small text.
+        electric: {
+          bg: "#0A0A0F",
+          surface: "#121219",
+          "surface-2": "#1A1A24",
+          border: "#1A2A3A",
+          cyan: "#00D4FF",
+          "cyan-deep": "#00BFEA",
+          text: "#FFFFFF",
+          "text-muted": "#8899AA",
+          light: "#F0FAFE",
+        },
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
@@ -63,9 +80,12 @@ const config: Config = {
         ring: "hsl(var(--ring))",
       },
       fontFamily: {
-        display: ["var(--font-display)", "serif"],
-        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
-        mono: ["var(--font-mono)", "monospace"],
+        // Dark Electric typography (2026-05-31): Geist Sans headings, Inter
+        // body, Geist Mono for eyebrows/code. Var names come from the geist
+        // package (--font-geist-*) and next/font Inter (--font-inter).
+        display: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
+        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        mono: ["var(--font-geist-mono)", "monospace"],
       },
       borderRadius: {
         lg: "var(--radius)",
