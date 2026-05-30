@@ -168,6 +168,8 @@ Full Q/A in `apps/web/src/lib/landing/faq-data.ts`. Headers:
 
 ## 4. VISUAL SYSTEM (UI/UX-locked)
 
+> ⚠️ **SUPERSEDED 2026-05-31 by the Dark Electric redesign.** This entire §4 (palette, type scale, colour usage, animation defaults) is replaced by `docs/superpowers/specs/2026-05-31-landing-dark-electric-redesign-design.md`. The palette is now near-black `#0A0A0F` + cyan `#00D4FF`; headings are Geist Sans, body Inter. **Everything else in this file — copy (§3), section order (§2), structure (§5), SEO, data — remains locked and in force.** Only the visual layer changed. The original §4 below is kept for historical reference.
+
 ### Type scale
 | Token | Family | Desktop / Mobile | LH | Weight |
 |---|---|---|---|---|

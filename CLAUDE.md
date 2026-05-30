@@ -34,9 +34,20 @@ Sistema all-in-one de reputação, fidelidade e relacionamento direto com client
 
 ## IDENTIDADE VISUAL (NÃO ALTERE SEM APROVAÇÃO)
 
-- **Logo:** símbolo ST com ondas NFC — dourado/preto — fundo transparente
-- **Cores:** Verde #1B4D3E | Âmbar/Dourado #E8A020 | Off-white #F7F5F0 | Preto #1A1A1A
-- **Tipografia:** DM Serif Display (display) + DM Sans (body) + JetBrains Mono (code)
+> ⚠️ **Rebrand em curso (aprovado 2026-05-31): "SmartTap Dark Electric".** A identidade antiga (verde/âmbar/cream + DM Serif) foi substituída pela paleta dark + ciano elétrico, feel Linear/Vercel. Rollout sequencial: **landing → dashboard → NFC → emails → stand físico**. A landing é a primeira superfície (ver `docs/superpowers/specs/2026-05-31-landing-dark-electric-redesign-design.md`). Superfícies ainda não migradas continuam na paleta antiga até serem feitas.
+
+**Identidade ATUAL (Dark Electric):**
+- **Logo:** símbolo ST com ondas NFC — **ciano #00D4FF / branco** — fundo transparente
+- **Cores:**
+  - Fundo base `#0A0A0F` · Surface `#121219` · Surface-2 `#1A1A24` · Border `#1A2A3A`
+  - Accent ciano `#00D4FF` · Ciano profundo `#00BFEA` (hover/gradientes)
+  - Texto `#FFFFFF` · Texto secundário `#8899AA` · Superfície clara `#F0FAFE`
+  - CTA: ciano `#00D4FF` com texto preto
+  - ⚠️ Ciano em fundo claro falha contraste — em superfícies claras só em fills/elementos grandes, nunca texto pequeno.
+- **Tipografia:** Geist Sans (headings) + Inter (body) + Geist Mono (code/eyebrow)
+
+**Identidade ANTIGA (arquivada — só em superfícies ainda não migradas):**
+- Logo dourado/preto · Verde #1B4D3E · Âmbar #E8A020 · Off-white #F7F5F0 · Preto #1A1A1A · DM Serif Display + DM Sans + JetBrains Mono
 
 ---
 
