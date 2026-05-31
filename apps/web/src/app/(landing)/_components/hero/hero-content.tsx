@@ -69,7 +69,7 @@ export function HeroContent() {
       {/* Microtrust — the founder-replaces-logos line per CEO advisor.
        * Stars in cyan; separator dots in the near-invisible border tone. */}
       <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm leading-relaxed text-electric-text-muted">
-        <span aria-label="5 out of 5" className="flex items-center gap-0.5 text-electric-cyan">
+        <span role="img" aria-label="5 out of 5" className="flex items-center gap-0.5 text-electric-cyan">
           {Array.from({ length: 5 }).map((_, i) => (
             <Star key={i} className="h-4 w-4 fill-current" aria-hidden="true" />
           ))}

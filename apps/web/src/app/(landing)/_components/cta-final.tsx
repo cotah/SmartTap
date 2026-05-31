@@ -62,7 +62,7 @@ export function CtaFinal() {
         <div className="rounded-2xl border border-electric-cyan/40 bg-electric-surface/60 p-6 shadow-[0_0_40px_rgba(0,212,255,0.12)] backdrop-blur-sm md:p-8">
           {offerOpen ? (
             <>
-              <dl className="flex flex-col gap-5">
+              <div className="flex flex-col gap-5">
                 <OfferLine
                   label="You get"
                   body="Free custom stand, 60 days free, €29/mo locked for life."
@@ -75,7 +75,7 @@ export function CtaFinal() {
                   label="Closing"
                   body={`${FOUNDING_SPOTS_REMAINING} of ${FOUNDING_TOTAL} spots still open. First come, first served.`}
                 />
-              </dl>
+              </div>
               <div className="mt-7 flex flex-col gap-3">
                 <LandingButton
                   href="/signup?plan=founding"
@@ -124,12 +124,12 @@ function OfferLine({ label, body }: { label: string; body: string }) {
         <Check className="h-3 w-3" strokeWidth={3} aria-hidden="true" />
       </span>
       <div className="flex flex-col gap-0.5">
-        <dt className="font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-electric-cyan">
+        <p className="font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-electric-cyan">
           {label}
-        </dt>
-        <dd className="text-[15px] leading-relaxed text-electric-text-muted md:text-base">
+        </p>
+        <p className="text-[15px] leading-relaxed text-electric-text-muted md:text-base">
           {body}
-        </dd>
+        </p>
       </div>
     </div>
   );
