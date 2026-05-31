@@ -80,10 +80,10 @@ export default async function DashboardPage() {
     <div className="space-y-12">
       {/* Hero — Welcome */}
       <section>
-        <p className="text-xs font-medium uppercase tracking-widest text-neutral-600">
+        <p className="text-xs font-medium uppercase tracking-widest text-electric-text-muted">
           Welcome back,
         </p>
-        <h1 className="mt-1 font-display text-3xl leading-tight text-brand-green sm:text-4xl">
+        <h1 className="mt-1 font-display text-3xl font-semibold leading-tight text-electric-cyan sm:text-4xl">
           {firstName}
         </h1>
       </section>
@@ -91,7 +91,7 @@ export default async function DashboardPage() {
       {/* Overview */}
       <section>
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="font-display text-2xl text-brand-black">Overview</h2>
+          <h2 className="font-display text-2xl font-semibold text-electric-text">Overview</h2>
           <MonthlyReportButton />
         </div>
         <OverviewCards overview={overview} />
@@ -99,7 +99,7 @@ export default async function DashboardPage() {
 
       {/* Quick Actions */}
       <section>
-        <h2 className="mb-6 font-display text-2xl text-brand-black">
+        <h2 className="mb-6 font-display text-2xl font-semibold text-electric-text">
           Quick actions
         </h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -116,19 +116,19 @@ function ActionCard({ href, title, sub, icon: Icon }: QuickAction) {
   return (
     <Link
       href={href}
-      className="group flex flex-col items-start gap-4 rounded-xl border border-neutral-300/30 bg-white p-6 shadow-[0_4px_12px_rgba(27,77,62,0.04)] transition-all hover:-translate-y-0.5 hover:bg-brand-green/5 hover:shadow-[0_8px_24px_rgba(27,77,62,0.08)]"
+      className="group flex flex-col items-start gap-4 rounded-xl border border-electric-border bg-electric-surface p-6 transition-all hover:-translate-y-0.5 hover:border-electric-cyan/40 hover:bg-electric-surface-2"
     >
-      <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-brand-off-white text-brand-green transition-colors group-hover:bg-brand-green group-hover:text-white">
+      <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-electric-surface-2 text-electric-cyan transition-colors group-hover:bg-electric-cyan group-hover:text-electric-bg">
         <Icon className="h-6 w-6" aria-hidden="true" />
       </div>
       <div>
-        <h3 className="text-sm font-bold uppercase tracking-wider text-brand-black">
+        <h3 className="text-sm font-bold uppercase tracking-wider text-electric-text">
           {title}
         </h3>
-        <p className="mt-1 text-sm text-neutral-600">{sub}</p>
+        <p className="mt-1 text-sm text-electric-text-muted">{sub}</p>
       </div>
       <ArrowRight
-        className="mt-auto self-end h-5 w-5 text-neutral-600 transition-colors group-hover:text-brand-green"
+        className="mt-auto self-end h-5 w-5 text-electric-text-muted transition-colors group-hover:text-electric-cyan"
         aria-hidden="true"
       />
     </Link>

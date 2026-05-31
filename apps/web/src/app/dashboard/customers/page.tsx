@@ -66,10 +66,10 @@ export default async function CustomersPage({ searchParams }: PageProps) {
     <div className="space-y-8">
       <header className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <h1 className="font-display text-3xl leading-tight text-brand-green sm:text-4xl">
+          <h1 className="font-display text-3xl font-semibold leading-tight text-electric-cyan sm:text-4xl">
             Customers
           </h1>
-          <p className="mt-2 text-sm text-neutral-600">
+          <p className="mt-2 text-sm text-electric-text-muted">
             {result.total.toLocaleString()} total · showing{" "}
             {result.items.length}
           </p>

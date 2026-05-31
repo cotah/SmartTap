@@ -13,20 +13,20 @@ export default async function SegmentsPage() {
     <main className="space-y-6">
       <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-sm text-brand-black/60">
+          <p className="text-sm text-electric-text-muted">
             <Link href="/dashboard" className="underline">
               Dashboard
             </Link>{" "}
             / Segments
           </p>
-          <h1 className="font-display text-3xl">Segments</h1>
-          <p className="mt-1 text-sm text-brand-black/60">
+          <h1 className="font-display text-3xl font-semibold text-electric-text">Segments</h1>
+          <p className="mt-1 text-sm text-electric-text-muted">
             Group customers by visit history, stamps and contact channel.
           </p>
         </div>
         <Link
           href="/dashboard/segments/new"
-          className="rounded-full bg-brand-green px-5 py-2.5 text-sm font-semibold text-brand-off-white"
+          className="rounded-full bg-electric-cyan px-5 py-2.5 text-sm font-semibold text-electric-bg transition-colors hover:bg-electric-cyan-deep"
         >
           New segment
         </Link>
@@ -49,15 +49,15 @@ export default async function SegmentsPage() {
 
 function EmptyState() {
   return (
-    <div className="rounded-2xl border border-dashed border-brand-black/20 bg-white p-8 text-center">
-      <p className="font-display text-lg">No segments yet</p>
-      <p className="mt-1 text-sm text-brand-black/60">
+    <div className="rounded-2xl border border-dashed border-electric-border bg-electric-surface p-8 text-center">
+      <p className="font-display text-lg font-semibold text-electric-text">No segments yet</p>
+      <p className="mt-1 text-sm text-electric-text-muted">
         Build a reusable group — like &ldquo;loyal regulars&rdquo; or
         &ldquo;new this week&rdquo; — then use it to target campaigns later.
       </p>
       <Link
         href="/dashboard/segments/new"
-        className="mt-4 inline-block rounded-full bg-brand-green px-5 py-2 text-sm font-semibold text-brand-off-white"
+        className="mt-4 inline-block rounded-full bg-electric-cyan px-5 py-2 text-sm font-semibold text-electric-bg transition-colors hover:bg-electric-cyan-deep"
       >
         Create your first segment
       </Link>
@@ -69,10 +69,10 @@ function SegmentCard({ segment }: { segment: Segment }) {
   return (
     <Link
       href={`/dashboard/segments/${segment.id}`}
-      className="block rounded-2xl border border-brand-black/10 bg-white p-4 shadow-sm transition hover:border-brand-green"
+      className="block rounded-2xl border border-electric-border bg-electric-surface p-4 transition hover:border-electric-cyan"
     >
-      <p className="font-display text-lg">{segment.name}</p>
-      <p className="mt-1 text-sm text-brand-black/60">
+      <p className="font-display text-lg font-semibold text-electric-text">{segment.name}</p>
+      <p className="mt-1 text-sm text-electric-text-muted">
         {summariseCriteria(segment.criteria)}
       </p>
     </Link>

@@ -47,12 +47,12 @@ export function ExportButton({ search, filter, sort }: Props) {
         type="button"
         onClick={onClick}
         disabled={pending}
-        className="inline-flex items-center gap-2 rounded-lg border border-brand-green px-5 py-2.5 text-sm font-bold uppercase tracking-wider text-brand-green transition-colors hover:bg-brand-green hover:text-white disabled:opacity-60"
+        className="inline-flex items-center gap-2 rounded-lg border border-electric-cyan px-5 py-2.5 text-sm font-bold uppercase tracking-wider text-electric-cyan transition-colors hover:bg-electric-cyan hover:text-electric-bg disabled:opacity-60"
       >
         <Download className="h-4 w-4" aria-hidden="true" />
         {pending ? "Exporting…" : "Export CSV"}
       </button>
-      {error ? <p className="text-xs text-red-600">{error}</p> : null}
+      {error ? <p className="text-xs text-red-300">{error}</p> : null}
     </div>
   );
 }

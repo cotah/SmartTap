@@ -50,19 +50,19 @@ interface StatusStyle {
 const STATUS_STYLES: Record<Status, StatusStyle> = {
   reward_ready: {
     label: "Reward ready",
-    className: "bg-brand-amber/20 text-amber-600",
+    className: "bg-electric-cyan/15 text-electric-cyan",
   },
   at_risk: {
     label: "At risk",
-    className: "bg-red-100 text-red-700",
+    className: "bg-red-500/15 text-red-300",
   },
   new: {
     label: "New",
-    className: "bg-neutral-300/30 text-neutral-600",
+    className: "bg-electric-surface-2 text-electric-text-muted",
   },
   regular: {
     label: "Regular",
-    className: "bg-brand-green/10 text-brand-green",
+    className: "bg-electric-surface-2 text-electric-text",
   },
 };
 
@@ -150,7 +150,7 @@ export function CustomersTable({
       {/* Search + Sort row */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="relative w-full max-w-md">
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-600">
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-electric-text-muted">
             <Search className="h-5 w-5" aria-hidden="true" />
           </span>
           <input
@@ -158,13 +158,13 @@ export function CustomersTable({
             value={searchInput}
             onChange={onSearchChange}
             placeholder="Search by name or phone…"
-            className="w-full rounded-lg border border-neutral-300/40 bg-white py-3 pl-10 pr-4 text-sm text-brand-black shadow-[inset_0_2px_4px_rgba(27,77,62,0.04)] outline-none transition-colors placeholder:text-neutral-600/50 focus:border-brand-amber focus:ring-2 focus:ring-brand-amber/30"
+            className="w-full rounded-lg border border-electric-border bg-electric-surface py-3 pl-10 pr-4 text-sm text-electric-text outline-none transition-colors placeholder:text-electric-text-muted/60 focus:border-electric-cyan focus:ring-2 focus:ring-electric-cyan/30"
           />
         </div>
         <div className="flex items-center gap-2">
           <label
             htmlFor="customers-sort"
-            className="text-xs font-bold uppercase tracking-wider text-neutral-600"
+            className="text-xs font-bold uppercase tracking-wider text-electric-text-muted"
           >
             Sort
           </label>
@@ -172,7 +172,7 @@ export function CustomersTable({
             id="customers-sort"
             value={sort}
             onChange={onSortChange}
-            className="rounded-lg border border-neutral-300/40 bg-white px-3 py-2.5 text-sm text-brand-black focus:border-brand-amber focus:outline-none focus:ring-2 focus:ring-brand-amber/30"
+            className="rounded-lg border border-electric-border bg-electric-surface px-3 py-2.5 text-sm text-electric-text focus:border-electric-cyan focus:outline-none focus:ring-2 focus:ring-electric-cyan/30"
           >
             {(Object.keys(SORT_LABELS) as CustomerListSort[]).map((key) => (
               <option key={key} value={key}>
@@ -200,8 +200,8 @@ export function CustomersTable({
               onClick={() => onFilterChange(key)}
               className={`rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
                 active
-                  ? "bg-brand-green text-white shadow-sm"
-                  : "bg-white text-neutral-600 hover:bg-brand-green/5 hover:text-brand-green"
+                  ? "bg-electric-cyan text-electric-bg shadow-[0_0_14px_rgba(0,212,255,0.35)]"
+                  : "bg-electric-surface text-electric-text-muted hover:bg-electric-surface-2 hover:text-electric-cyan"
               }`}
             >
               {FILTER_LABELS[key]}
@@ -213,7 +213,7 @@ export function CustomersTable({
       {items.length === 0 ? (
         <EmptyState filter={filter} hasSearch={Boolean(initialSearch)} />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-brand-green/5 bg-white shadow-[0_4px_12px_rgba(27,77,62,0.04)]">
+        <div className="overflow-hidden rounded-xl border border-electric-border bg-electric-surface">
           <DesktopTable items={items} stampsForReward={stampsForReward} />
           <MobileCards items={items} stampsForReward={stampsForReward} />
         </div>
@@ -242,38 +242,38 @@ function DesktopTable({
   return (
     <div className="hidden overflow-x-auto md:block">
       <table className="w-full text-left">
-        <thead className="border-b border-neutral-300/30 bg-brand-off-white">
+        <thead className="border-b border-electric-border bg-electric-surface-2">
           <tr>
-            <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-neutral-600">
+            <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-electric-text-muted">
               Name
             </th>
-            <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-neutral-600">
+            <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-electric-text-muted">
               Phone
             </th>
-            <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-neutral-600">
+            <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-electric-text-muted">
               Stamps
             </th>
-            <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider text-neutral-600">
+            <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider text-electric-text-muted">
               Visits
             </th>
-            <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-neutral-600">
+            <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-electric-text-muted">
               Last visit
             </th>
-            <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-neutral-600">
+            <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-electric-text-muted">
               Status
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-neutral-300/20">
+        <tbody className="divide-y divide-electric-border">
           {items.map((item) => (
             <tr
               key={item.id}
-              className="transition-colors hover:bg-brand-off-white/50"
+              className="transition-colors hover:bg-electric-surface-2"
             >
-              <td className="px-6 py-4 text-sm font-medium text-brand-black">
+              <td className="px-6 py-4 text-sm font-medium text-electric-text">
                 {item.name || "—"}
               </td>
-              <td className="px-6 py-4 text-sm text-neutral-600">
+              <td className="px-6 py-4 text-sm text-electric-text-muted">
                 {item.phone || "—"}
               </td>
               <td className="px-6 py-4">
@@ -283,10 +283,10 @@ function DesktopTable({
                   ready={item.has_reward_ready}
                 />
               </td>
-              <td className="px-6 py-4 text-right text-sm text-brand-black">
+              <td className="px-6 py-4 text-right text-sm text-electric-text">
                 {item.total_visits}
               </td>
-              <td className="px-6 py-4 text-sm text-neutral-600">
+              <td className="px-6 py-4 text-sm text-electric-text-muted">
                 {formatRelative(item.last_visit_at)}
               </td>
               <td className="px-6 py-4">
@@ -308,15 +308,15 @@ function MobileCards({
   stampsForReward: number;
 }) {
   return (
-    <ul className="divide-y divide-neutral-300/20 md:hidden">
+    <ul className="divide-y divide-electric-border md:hidden">
       {items.map((item) => (
         <li key={item.id} className="space-y-3 p-4">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="truncate font-medium text-brand-black">
+              <p className="truncate font-medium text-electric-text">
                 {item.name || "Unnamed"}
               </p>
-              <p className="text-xs text-neutral-600">
+              <p className="text-xs text-electric-text-muted">
                 {item.phone || "no phone"}
               </p>
             </div>
@@ -327,9 +327,9 @@ function MobileCards({
             total={stampsForReward}
             ready={item.has_reward_ready}
           />
-          <div className="flex items-center justify-between text-xs text-neutral-600">
+          <div className="flex items-center justify-between text-xs text-electric-text-muted">
             <span>
-              <strong className="text-brand-black">{item.total_visits}</strong>{" "}
+              <strong className="text-electric-text">{item.total_visits}</strong>{" "}
               visits
             </span>
             <span>{formatRelative(item.last_visit_at)}</span>
@@ -351,15 +351,15 @@ function StampProgress({
 }) {
   const safeTotal = Math.max(total, 1);
   const pct = Math.min(100, Math.max(0, (current / safeTotal) * 100));
-  const barColor = ready ? "bg-brand-amber" : "bg-brand-green";
-  const valueColor = ready ? "text-brand-amber" : "text-brand-black";
+  const barColor = ready ? "bg-electric-cyan" : "bg-electric-cyan/50";
+  const valueColor = ready ? "text-electric-cyan" : "text-electric-text";
 
   return (
     <div className="flex items-center gap-2">
       <span className={`text-sm font-bold tabular-nums ${valueColor}`}>
         {current}/{total}
       </span>
-      <div className="h-1.5 w-16 overflow-hidden rounded-full bg-neutral-300/30">
+      <div className="h-1.5 w-16 overflow-hidden rounded-full bg-electric-surface-2">
         <div
           className={`h-full rounded-full transition-all duration-300 ${barColor}`}
           style={{ width: `${pct}%` }}
@@ -403,9 +403,9 @@ function EmptyState({
     body = "When customers hit your stamp threshold they show up here.";
   }
   return (
-    <div className="rounded-xl border border-dashed border-neutral-300/60 bg-white p-10 text-center">
-      <p className="font-display text-xl text-brand-green">{title}</p>
-      <p className="mt-2 text-sm text-neutral-600">{body}</p>
+    <div className="rounded-xl border border-dashed border-electric-border bg-electric-surface p-10 text-center">
+      <p className="font-display text-xl font-semibold text-electric-cyan">{title}</p>
+      <p className="mt-2 text-sm text-electric-text-muted">{body}</p>
     </div>
   );
 }
@@ -434,18 +434,18 @@ function Pagination({
         type="button"
         onClick={onPrev}
         disabled={!hasPrev || pending}
-        className="rounded-lg border border-neutral-300/50 bg-white px-4 py-2 font-medium text-brand-black transition-colors hover:border-brand-green hover:text-brand-green disabled:opacity-40"
+        className="rounded-lg border border-electric-border bg-electric-surface px-4 py-2 font-medium text-electric-text transition-colors hover:border-electric-cyan hover:text-electric-cyan disabled:opacity-40"
       >
         ← Prev
       </button>
-      <span className="text-neutral-600">
+      <span className="text-electric-text-muted">
         Page {page} of {totalPages}
       </span>
       <button
         type="button"
         onClick={onNext}
         disabled={!hasNext || pending}
-        className="rounded-lg border border-neutral-300/50 bg-white px-4 py-2 font-medium text-brand-black transition-colors hover:border-brand-green hover:text-brand-green disabled:opacity-40"
+        className="rounded-lg border border-electric-border bg-electric-surface px-4 py-2 font-medium text-electric-text transition-colors hover:border-electric-cyan hover:text-electric-cyan disabled:opacity-40"
       >
         Next →
       </button>

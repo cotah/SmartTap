@@ -50,11 +50,11 @@ export function MonthlyReportButton() {
         type="button"
         onClick={onClick}
         disabled={pending}
-        className="rounded-lg border border-neutral-300/50 bg-white px-4 py-2.5 text-sm font-medium text-brand-black transition-colors hover:border-brand-green hover:text-brand-green disabled:opacity-60"
+        className="rounded-lg border border-electric-border bg-electric-surface px-4 py-2.5 text-sm font-medium text-electric-text transition-colors hover:border-electric-cyan hover:text-electric-cyan disabled:opacity-60"
       >
         {pending ? "Preparing…" : "Download monthly PDF"}
       </button>
-      {error ? <p className="text-xs text-red-600">{error}</p> : null}
+      {error ? <p className="text-xs text-red-300">{error}</p> : null}
     </div>
   );
 }
