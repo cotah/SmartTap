@@ -11,7 +11,7 @@ export function SignOutButton() {
       <button
         type="submit"
         disabled={pending}
-        className="text-sm font-medium text-neutral-600 underline transition-colors hover:text-brand-green disabled:opacity-60"
+        className="text-sm font-medium text-electric-text-muted underline transition-colors hover:text-electric-cyan disabled:opacity-60"
       >
         {pending ? "Signing out…" : "Sign out"}
       </button>

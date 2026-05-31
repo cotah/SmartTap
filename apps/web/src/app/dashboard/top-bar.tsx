@@ -22,24 +22,24 @@ export function TopBar({
   onMenuClick,
 }: Props) {
   return (
-    <header className="flex items-center justify-between border-b border-neutral-300/30 bg-brand-off-white px-4 py-4 md:px-10">
+    <header className="flex items-center justify-between border-b border-electric-border bg-electric-bg px-4 py-4 md:px-10">
       <div className="flex items-center gap-3 md:gap-4">
         <button
           type="button"
           onClick={onMenuClick}
           aria-label="Open menu"
-          className="rounded-lg p-1 text-brand-green hover:bg-brand-green/5 md:hidden"
+          className="rounded-lg p-1 text-electric-cyan hover:bg-electric-surface-2 md:hidden"
         >
           <Menu className="h-6 w-6" aria-hidden="true" />
         </button>
-        <h1 className="truncate font-display text-xl leading-tight text-brand-black sm:text-2xl md:text-3xl">
+        <h1 className="truncate font-display text-xl font-semibold leading-tight text-electric-text sm:text-2xl md:text-3xl">
           {tenantName}
         </h1>
         <TrialPill status={trialStatus} trialEndsAt={trialEndsAt} />
       </div>
       <div className="flex shrink-0 items-center gap-4">
         {email ? (
-          <span className="hidden text-sm text-neutral-600 md:inline">
+          <span className="hidden text-sm text-electric-text-muted md:inline">
             {email}
           </span>
         ) : null}
@@ -76,7 +76,7 @@ function TrialPill({
 
   const dayText = days === 1 ? "1 day" : `${days} days`;
   return (
-    <span className="hidden rounded-full bg-brand-amber/15 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-brand-green sm:inline-block">
+    <span className="hidden rounded-full bg-electric-cyan/15 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-electric-cyan sm:inline-block">
       Trial · {dayText} left
     </span>
   );

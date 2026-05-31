@@ -38,7 +38,7 @@ export function DashboardShell({
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
-    <div className="min-h-dvh bg-brand-off-white text-brand-black">
+    <div className="min-h-dvh bg-electric-bg text-electric-text">
       <SideNav
         mobileOpen={drawerOpen}
         onClose={() => setDrawerOpen(false)}

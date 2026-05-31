@@ -72,8 +72,8 @@ function Banner({
 }) {
   const styles =
     tone === "amber"
-      ? "border-brand-amber/30 bg-brand-amber/10 text-brand-black"
-      : "border-red-200 bg-red-50 text-red-900";
+      ? "border-electric-cyan/30 bg-electric-cyan/10 text-electric-text"
+      : "border-red-500/40 bg-red-500/10 text-red-200";
   return (
     <div
       role="alert"
@@ -95,8 +95,8 @@ function Cta({
 }) {
   const styles =
     tone === "amber"
-      ? "bg-brand-amber text-brand-black"
-      : "bg-red-600 text-white";
+      ? "bg-electric-cyan text-electric-bg"
+      : "bg-red-500 text-white";
   return (
     <Link
       href={href}

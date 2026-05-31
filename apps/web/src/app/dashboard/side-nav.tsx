@@ -51,22 +51,22 @@ export function SideNav({ mobileOpen, onClose }: Props) {
   return (
     <nav
       aria-label="Dashboard navigation"
-      className={`fixed left-0 top-0 z-40 flex h-full w-64 flex-col border-r border-neutral-300/40 bg-white transition-transform duration-300 md:translate-x-0 ${
+      className={`fixed left-0 top-0 z-40 flex h-full w-64 flex-col border-r border-electric-border bg-electric-surface transition-transform duration-300 md:translate-x-0 ${
         mobileOpen ? "translate-x-0" : "-translate-x-full"
       }`}
     >
-      <div className="flex items-start justify-between border-b border-neutral-300/40 p-6">
+      <div className="flex items-start justify-between border-b border-electric-border p-6">
         <div>
-          <h2 className="font-display text-2xl leading-tight text-brand-green">
+          <h2 className="font-display text-2xl font-semibold leading-tight text-electric-text">
             SmartTap
           </h2>
-          <p className="mt-1 text-xs text-neutral-600">Business Dashboard</p>
+          <p className="mt-1 text-xs text-electric-text-muted">Business Dashboard</p>
         </div>
         <button
           type="button"
           onClick={onClose}
           aria-label="Close menu"
-          className="p-1 text-neutral-600 hover:text-brand-green md:hidden"
+          className="p-1 text-electric-text-muted hover:text-electric-cyan md:hidden"
         >
           <X className="h-5 w-5" aria-hidden="true" />
         </button>
@@ -84,8 +84,8 @@ export function SideNav({ mobileOpen, onClose }: Props) {
               aria-current={active ? "page" : undefined}
               className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-bold tracking-wide transition-all ${
                 active
-                  ? "translate-x-1 bg-brand-green text-white shadow-sm"
-                  : "text-neutral-600 hover:bg-brand-green/5 hover:text-brand-green"
+                  ? "translate-x-1 bg-electric-cyan text-electric-bg shadow-[0_0_16px_rgba(0,212,255,0.4)]"
+                  : "text-electric-text-muted hover:bg-electric-surface-2 hover:text-electric-cyan"
               }`}
             >
               <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
@@ -95,11 +95,11 @@ export function SideNav({ mobileOpen, onClose }: Props) {
         })}
       </div>
 
-      <div className="border-t border-neutral-300/40 p-4">
+      <div className="border-t border-electric-border p-4">
         <Link
           href="/dashboard/redeem"
           onClick={onClose}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-green px-4 py-3 text-sm font-bold uppercase tracking-wider text-white shadow-sm transition-colors hover:bg-green-800"
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-electric-cyan px-4 py-3 text-sm font-bold uppercase tracking-wider text-electric-bg shadow-sm transition-colors hover:bg-electric-cyan-deep"
         >
           <Ticket className="h-5 w-5" aria-hidden="true" />
           Redeem reward
