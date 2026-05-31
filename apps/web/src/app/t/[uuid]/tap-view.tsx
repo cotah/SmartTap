@@ -28,9 +28,13 @@ interface Props {
  *  8. Footer
  *
  * The Review button remains the largest interactive element on the page —
- * review volume is the single biggest KPI per LANDING-SPEC §1. Visual
- * language (light parchment canvas, white cards, ambient green-tinted
- * shadows) comes from the "Irish Heritage Tech" Stitch design refresh.
+ * review volume is the single biggest KPI per LANDING-SPEC §1.
+ *
+ * Visual language: Dark Electric chrome (near-black canvas, raised dark
+ * surfaces, white/muted text) but WHITE-LABEL preserved — the Review CTA,
+ * stamps, progress bar, reward strip and campaign pill all use
+ * `tenant.accent_color` (the business's own brand), separated from the dark
+ * canvas by a subtle white ring so any accent colour stays legible.
  */
 export function TapView({ data }: Props) {
   const {
@@ -50,9 +54,9 @@ export function TapView({ data }: Props) {
     : `Welcome to ${tenant.name}`;
 
   return (
-    <main className="relative min-h-dvh overflow-x-hidden bg-brand-off-white text-brand-black">
+    <main className="relative min-h-dvh overflow-x-hidden bg-electric-bg text-electric-text">
       {/* Ambient top glow — subtle physical feel */}
-      <div className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-64 bg-gradient-to-b from-brand-green/5 to-transparent" />
+      <div className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-64 bg-gradient-to-b from-electric-cyan/10 to-transparent" />
 
       <div className="mx-auto flex min-h-dvh max-w-[480px] flex-col gap-6 px-4 py-8">
         {/* 1. Header */}
@@ -70,7 +74,7 @@ export function TapView({ data }: Props) {
               className="h-16 w-auto object-contain"
             />
           ) : (
-            <p className="font-display text-xl text-brand-green">
+            <p className="font-display text-xl font-semibold text-electric-text">
               {tenant.name}
             </p>
           )}
@@ -83,10 +87,10 @@ export function TapView({ data }: Props) {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="text-center"
         >
-          <h1 className="font-display text-[28px] leading-9 text-brand-green">
+          <h1 className="font-display text-[28px] font-semibold leading-9 text-electric-text">
             {greeting}
           </h1>
-          <p className="mx-auto mt-2 max-w-[280px] text-sm text-neutral-600">
+          <p className="mx-auto mt-2 max-w-[280px] text-sm text-electric-text-muted">
             Check your loyalty progress below.
           </p>
         </motion.section>
@@ -97,7 +101,7 @@ export function TapView({ data }: Props) {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.15 }}
-            className="flex items-center justify-between gap-3 rounded-xl border-l-4 bg-white px-4 py-3 shadow-[0_4px_24px_rgba(27,77,62,0.04)]"
+            className="flex items-center justify-between gap-3 rounded-xl border-l-4 bg-electric-surface px-4 py-3 shadow-[0_4px_24px_rgba(0,0,0,0.4)]"
             style={{ borderLeftColor: accent }}
           >
             <div className="min-w-0">
@@ -112,7 +116,7 @@ export function TapView({ data }: Props) {
               </p>
             </div>
             <p
-              className="shrink-0 font-mono text-xl font-bold tracking-widest text-brand-green"
+              className="shrink-0 font-mono text-xl font-bold tracking-widest text-electric-text"
               aria-label={`Validation code ${reward_available.validation_code}`}
             >
               {reward_available.validation_code.replace(
@@ -135,7 +139,7 @@ export function TapView({ data }: Props) {
               tenantSlug={tenant.slug}
               accentColor={accent}
             />
-            <p className="mt-3 text-center text-xs text-neutral-600/80">
+            <p className="mt-3 text-center text-xs text-electric-text-muted">
               Your feedback helps the shop grow.
             </p>
           </motion.section>
@@ -147,7 +151,7 @@ export function TapView({ data }: Props) {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="relative overflow-hidden rounded-xl border border-brand-green/5 bg-white p-6 shadow-[0_8px_32px_rgba(27,77,62,0.08)]"
+            className="relative overflow-hidden rounded-xl border border-electric-border bg-electric-surface p-6 shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
           >
             {/* Decorative accent blur */}
             <div
@@ -166,7 +170,7 @@ export function TapView({ data }: Props) {
               accent={accent}
             />
             {/* Progress bar */}
-            <div className="relative z-10 mt-8 h-1.5 overflow-hidden rounded-full bg-neutral-300/30">
+            <div className="relative z-10 mt-8 h-1.5 overflow-hidden rounded-full bg-electric-surface-2">
               <div
                 className="absolute left-0 top-0 h-full rounded-full transition-all duration-500"
                 style={{
@@ -185,7 +189,8 @@ export function TapView({ data }: Props) {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.35 }}
-            className="rounded-full bg-brand-amber px-3 py-1.5 text-center text-xs font-bold uppercase tracking-wide text-brand-green"
+            className="rounded-full px-3 py-1.5 text-center text-xs font-bold uppercase tracking-wide ring-1 ring-white/10"
+            style={{ backgroundColor: accent, color: "#0A0A0F" }}
           >
             {active_campaign.multiplier}× stamps today · {active_campaign.name}
           </motion.div>
@@ -210,28 +215,28 @@ export function TapView({ data }: Props) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 0.5 }}
-          className="mt-4 border-t border-neutral-300/30 py-6"
+          className="mt-4 border-t border-electric-border py-6"
         >
           <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
-            <span className="text-xs font-bold uppercase tracking-widest text-brand-green">
+            <span className="text-xs font-bold uppercase tracking-widest text-electric-cyan">
               Powered by SmartTap
             </span>
             <div className="flex gap-5">
               <a
                 href="/terms"
-                className="text-xs text-neutral-600/70 transition-colors hover:text-brand-amber"
+                className="text-xs text-electric-text-muted transition-colors hover:text-electric-cyan"
               >
                 Terms
               </a>
               <a
                 href="/privacy"
-                className="text-xs text-neutral-600/70 transition-colors hover:text-brand-amber"
+                className="text-xs text-electric-text-muted transition-colors hover:text-electric-cyan"
               >
                 Privacy
               </a>
               <a
                 href="/data-request"
-                className="text-xs text-neutral-600/70 transition-colors hover:text-brand-amber"
+                className="text-xs text-electric-text-muted transition-colors hover:text-electric-cyan"
               >
                 Delete my data
               </a>
@@ -257,24 +262,24 @@ function StampCardHeader({
   return (
     <div className="relative z-10 mb-8 flex items-end justify-between gap-3">
       <div className="min-w-0">
-        <p className="text-[11px] font-bold uppercase tracking-widest text-brand-green/80">
+        <p className="text-[11px] font-bold uppercase tracking-widest text-electric-text-muted">
           Reward Progress
         </p>
         <p className="mt-1 flex flex-wrap items-baseline gap-2">
-          <span className="text-lg font-medium text-brand-black">
+          <span className="text-lg font-medium text-electric-text">
             {state.current_stamps} of {state.stamps_for_reward} collected
           </span>
           {stampAwarded ? (
             <span
-              className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-green"
-              style={{ backgroundColor: accent }}
+              className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1 ring-white/10"
+              style={{ backgroundColor: accent, color: "#0A0A0F" }}
             >
               +{stampDelta > 1 ? stampDelta : 1}
             </span>
           ) : null}
         </p>
       </div>
-      <div className="flex shrink-0 items-center gap-1.5 rounded-full border border-brand-green/10 bg-brand-off-white px-3 py-1.5 text-[11px] font-medium text-brand-green">
+      <div className="flex shrink-0 items-center gap-1.5 rounded-full border border-electric-border bg-electric-surface-2 px-3 py-1.5 text-[11px] font-medium text-electric-text-muted">
         <Gift className="h-3.5 w-3.5" aria-hidden="true" />
         Reward at {state.stamps_for_reward}
       </div>
@@ -300,7 +305,7 @@ function StampGrid({
         isFilled ? (
           <div
             key={i}
-            className="flex h-12 w-12 items-center justify-center justify-self-center rounded-full text-brand-green shadow-md transition-transform hover:scale-105"
+            className="flex h-12 w-12 items-center justify-center justify-self-center rounded-full text-electric-bg shadow-md ring-1 ring-white/10 transition-transform hover:scale-105"
             style={{ backgroundColor: accent }}
             aria-label="Stamp collected"
           >
@@ -309,7 +314,7 @@ function StampGrid({
         ) : (
           <div
             key={i}
-            className="flex h-12 w-12 items-center justify-center justify-self-center rounded-full border border-dashed border-neutral-300 bg-brand-off-white/30 text-neutral-600 opacity-40"
+            className="flex h-12 w-12 items-center justify-center justify-self-center rounded-full border border-dashed border-electric-border bg-electric-surface-2 text-electric-text-muted opacity-50"
             aria-label="Stamp not collected"
           >
             <Stamp className="h-5 w-5" aria-hidden="true" />
