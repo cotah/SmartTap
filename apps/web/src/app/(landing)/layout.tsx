@@ -28,13 +28,13 @@ export default function LandingLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-dvh flex-col bg-cream text-neutral-900">
+    <div className="flex min-h-dvh flex-col bg-electric-bg text-electric-text">
       <LandingJsonLd />
       <TopBanner />
       {/* Skip link for keyboard users — surfaces on :focus only. */}
       <a
         href="#main"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-green-900 focus:px-4 focus:py-2 focus:text-cream focus:shadow-lg"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-electric-cyan focus:px-4 focus:py-2 focus:text-electric-bg focus:shadow-lg"
       >
         Skip to content
       </a>

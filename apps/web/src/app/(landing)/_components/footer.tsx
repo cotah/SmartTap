@@ -10,9 +10,9 @@ import { BrandLogo } from "./brand-logo";
  * routes (/privacy, /terms, /gdpr) are real pages (stubs until Phase 5
  * legal copy lands).
  *
- * The footer is intentionally NOT a Section primitive — it has a darker
- * background (green-900) and breaks the cream rhythm. Treated as its own
- * `<footer>` element, full-bleed.
+ * The footer is intentionally NOT a Section primitive — near-black, with a
+ * thin cyan-tinted top border separating it from the page. Treated as its
+ * own `<footer>` element, full-bleed.
  */
 const PRODUCT_LINKS = [
   { label: "How it works", href: "#how-it-works" },
@@ -34,16 +34,16 @@ const LEGAL_LINKS = [
 
 export function Footer() {
   return (
-    <footer className="bg-green-900 text-cream">
+    <footer className="border-t border-electric-border bg-electric-bg text-electric-text">
       <div className="mx-auto max-w-[1200px] px-6 py-16 md:px-12 md:py-20 lg:px-16">
         <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           {/* Brand + tagline */}
           <div>
-            <BrandLogo size={40} className="text-cream" />
+            <BrandLogo size={40} variant="electric" />
             <p className="mt-6 font-display text-3xl leading-tight tracking-tight">
               TAP. CONNECT. GROW.
             </p>
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-cream/75">
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-electric-text-muted">
               Built and hosted in Ireland. GDPR compliant. Your data, always.
             </p>
           </div>
@@ -56,9 +56,9 @@ export function Footer() {
           <FooterColumn title="Legal" links={LEGAL_LINKS} />
         </div>
 
-        <hr className="my-10 border-green-800" />
+        <hr className="my-10 border-electric-border" />
 
-        <div className="flex flex-col items-start justify-between gap-3 text-xs text-cream/65 md:flex-row md:items-center">
+        <div className="flex flex-col items-start justify-between gap-3 text-xs text-electric-text-muted md:flex-row md:items-center">
           <p>© {new Date().getFullYear()} SmartTap · Built in Dublin · GDPR-compliant</p>
           <p className="font-mono uppercase tracking-[0.12em]">
             smarttap.ie
@@ -78,7 +78,7 @@ function FooterColumn({
 }) {
   return (
     <div>
-      <h2 className="font-mono text-xs font-medium uppercase tracking-[0.12em] text-amber-500">
+      <h2 className="font-mono text-xs font-medium uppercase tracking-[0.12em] text-electric-cyan">
         {title}
       </h2>
       <ul className="mt-5 space-y-3 text-sm">
@@ -86,7 +86,7 @@ function FooterColumn({
           <li key={link.href}>
             <Link
               href={link.href}
-              className="text-cream/85 underline-offset-4 transition-colors hover:text-cream hover:underline"
+              className="text-electric-text-muted underline-offset-4 transition-colors hover:text-electric-text hover:underline"
             >
               {link.label}
             </Link>

@@ -69,7 +69,8 @@ export function TopBanner() {
       role="region"
       aria-label="Founding member offer"
       className={cn(
-        "relative z-40 w-full border-b border-green-800 bg-green-900 text-cream",
+        "relative z-40 w-full border-b border-electric-border bg-electric-surface text-electric-text",
+        "shadow-[0_1px_0_0_rgba(0,212,255,0.12)]",
       )}
     >
       <div className="mx-auto flex max-w-[1280px] items-center justify-between gap-4 px-6 py-2.5 text-sm md:px-12 lg:px-16">
@@ -78,17 +79,17 @@ export function TopBanner() {
             <>
               <span aria-hidden="true">🇮🇪</span>
               <span>
-                <strong className="font-semibold text-amber-500">
+                <strong className="font-semibold text-electric-cyan">
                   {FOUNDING_SPOTS_REMAINING} of {FOUNDING_TOTAL} founding spots
                   open
                 </strong>
-                <span className="ml-2 hidden text-cream/85 sm:inline">
+                <span className="ml-2 hidden text-electric-text-muted sm:inline">
                   — stand free, €29/mo for life
                 </span>
               </span>
             </>
           ) : (
-            <span className="text-cream/85">
+            <span className="text-electric-text-muted">
               Founding offer closed — standard pricing live.
             </span>
           )}
@@ -99,8 +100,8 @@ export function TopBanner() {
           aria-label="Dismiss banner"
           className={cn(
             "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
-            "text-cream/70 transition-colors hover:bg-green-800 hover:text-cream",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500",
+            "text-electric-text-muted transition-colors hover:bg-electric-surface-2 hover:text-electric-text",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-electric-cyan",
           )}
         >
           <X className="h-4 w-4" aria-hidden="true" />

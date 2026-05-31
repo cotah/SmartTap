@@ -5,12 +5,12 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Landing-page Button primitive.
+ * Landing-page Button primitive (Dark Electric, 2026-05-31).
  *
- * Three variants per LANDING-SPEC.md §4:
- * - `primary`   solid green-900 background, cream text, amber-500 focus
- * - `secondary` cream background, 1px green-900 border + text
- * - `tertiary`  link-style with amber underline on hover, no border
+ * Three variants:
+ * - `primary`   solid cyan background, near-black text, cyan glow on hover
+ * - `secondary` ghost — transparent with 1px border, cyan on hover
+ * - `tertiary`  link-style, cyan underline on hover, no border
  *
  * Sizes track the visual rhythm — `lg` (the default for hero CTAs) is the
  * 56-pixel touch-friendly tap target; `md` for inline CTAs; `sm` for
@@ -25,25 +25,25 @@ const buttonStyles = cva(
     "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl",
     "font-sans font-semibold tracking-tight",
     "transition-[background-color,border-color,color,transform,box-shadow] duration-200",
-    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-cream",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-electric-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-electric-bg",
     "disabled:cursor-not-allowed disabled:opacity-60",
   ),
   {
     variants: {
       variant: {
         primary: cn(
-          "bg-green-900 text-cream shadow-sm",
-          "hover:bg-green-800 hover:shadow-md",
+          "bg-electric-cyan text-electric-bg shadow-[0_0_0_0_rgba(0,212,255,0)]",
+          "hover:bg-electric-cyan-deep hover:shadow-[0_0_24px_rgba(0,212,255,0.35)]",
           "active:translate-y-px",
         ),
         secondary: cn(
-          "border border-green-900 bg-cream text-green-900",
-          "hover:border-amber-500 hover:text-amber-600",
+          "border border-electric-border bg-transparent text-electric-text",
+          "hover:border-electric-cyan hover:text-electric-cyan",
           "active:translate-y-px",
         ),
         tertiary: cn(
-          "text-green-900 underline-offset-4",
-          "hover:text-amber-600 hover:underline hover:decoration-amber-500",
+          "text-electric-text underline-offset-4",
+          "hover:text-electric-cyan hover:underline hover:decoration-electric-cyan",
         ),
       },
       size: {

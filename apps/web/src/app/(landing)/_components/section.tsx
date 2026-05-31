@@ -67,9 +67,9 @@ export function Section({
 }
 
 /**
- * Mono-eyebrow label used above every section header. JetBrains Mono,
- * uppercase, 0.12em tracking, with a small green dot prefix that adds the
- * Linear-style structural rhythm without resorting to numbered sections.
+ * Mono-eyebrow label used above every section header. Geist Mono, uppercase,
+ * 0.12em tracking, with a small cyan dot prefix that adds the Linear-style
+ * structural rhythm without resorting to numbered sections.
  */
 export function SectionEyebrow({
   children,
@@ -81,14 +81,14 @@ export function SectionEyebrow({
   return (
     <p
       className={cn(
-        "font-mono text-xs font-medium uppercase tracking-[0.12em] text-green-900",
+        "font-mono text-xs font-medium uppercase tracking-[0.12em] text-electric-cyan",
         "flex items-center gap-2",
         className,
       )}
     >
       <span
         aria-hidden="true"
-        className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500"
+        className="inline-block h-1.5 w-1.5 rounded-full bg-electric-cyan shadow-[0_0_8px_rgba(0,212,255,0.8)]"
       />
       {children}
     </p>
