@@ -27,7 +27,7 @@ export function Faq() {
     <Section id="faq" containerSize="narrow">
       <header className="mb-10 flex flex-col items-start gap-4 md:mb-12">
         <SectionEyebrow>Common questions</SectionEyebrow>
-        <h2 className="font-display text-3xl leading-tight tracking-[-0.02em] text-neutral-900 md:text-[44px]">
+        <h2 className="font-display text-3xl font-semibold leading-tight tracking-[-0.02em] text-electric-text md:text-[44px]">
           Everything an owner asks before signing.
         </h2>
       </header>
@@ -38,7 +38,7 @@ export function Faq() {
             key={item.q}
             value={item.q}
             className={cn(
-              "border-b border-neutral-300/80",
+              "border-b border-electric-border",
               i === 0 && "border-t",
             )}
           >
@@ -46,16 +46,16 @@ export function Faq() {
               <Accordion.Trigger
                 className={cn(
                   "group flex w-full items-center justify-between gap-6 py-5 text-left md:py-6",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-cream",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-electric-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-electric-bg",
                 )}
               >
-                <span className="font-display text-lg leading-snug tracking-tight text-neutral-900 md:text-xl">
+                <span className="font-display text-lg font-semibold leading-snug tracking-tight text-electric-text md:text-xl">
                   {item.q}
                 </span>
                 <Plus
                   className={cn(
-                    "h-5 w-5 shrink-0 text-green-900 transition-transform duration-300",
-                    "group-data-[state=open]:rotate-45 group-data-[state=open]:text-amber-600",
+                    "h-5 w-5 shrink-0 text-electric-cyan transition-transform duration-300",
+                    "group-data-[state=open]:rotate-45",
                   )}
                   aria-hidden="true"
                 />
@@ -67,7 +67,7 @@ export function Faq() {
                 "data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up",
               )}
             >
-              <p className="pb-6 pr-12 text-base leading-relaxed text-neutral-600 md:text-[17px]">
+              <p className="pb-6 pr-12 text-base leading-relaxed text-electric-text-muted md:text-[17px]">
                 {item.a}
               </p>
             </Accordion.Content>
