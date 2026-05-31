@@ -75,8 +75,11 @@ function TextRepelInner({
     pointerY.set(FAR);
   }, [pointerX, pointerY]);
 
-  // Preserve spaces as non-repelling gaps; split the rest into chars.
-  const chars = React.useMemo(() => children.split(""), [children]);
+  // Split into words so line wrapping only ever happens at spaces — each
+  // word is an inline-block nowrap group with the per-char drift spans
+  // inside. Without this, char-level inline-block lets the browser break
+  // mid-word ("back" becomes "bac" + newline + "k").
+  const words = React.useMemo(() => children.split(" "), [children]);
 
   return (
     <Tag
@@ -85,19 +88,22 @@ function TextRepelInner({
       onPointerMove={handleMove}
       onPointerLeave={handleLeave}
     >
-      {chars.map((char, i) =>
-        char === " " ? (
-          <span key={i}>{" "}</span>
-        ) : (
-          <RepelChar
-            key={i}
-            char={char}
-            containerRef={containerRef}
-            pointerX={pointerX}
-            pointerY={pointerY}
-          />
-        ),
-      )}
+      {words.map((word, wi) => (
+        <React.Fragment key={wi}>
+          <span className="inline-block whitespace-nowrap">
+            {word.split("").map((char, ci) => (
+              <RepelChar
+                key={ci}
+                char={char}
+                containerRef={containerRef}
+                pointerX={pointerX}
+                pointerY={pointerY}
+              />
+            ))}
+          </span>
+          {wi < words.length - 1 ? " " : null}
+        </React.Fragment>
+      ))}
     </Tag>
   );
 }
@@ -155,6 +161,11 @@ function RepelChar({
 
   const x = useSpring(driftX, { stiffness: 250, damping: 18, mass: 0.6 });
   const y = useSpring(driftY, { stiffness: 250, damping: 18, mass: 0.6 });
+
+  // Render spaces as a plain inline space (no transform needed).
+  if (char === " ") {
+    return <span> </span>;
+  }
 
   return (
     <motion.span ref={ref} style={{ x, y }} className="inline-block">
