@@ -30,7 +30,7 @@ export default async function EditCampaignPage({ params }: Props) {
   return (
     <main className="space-y-6">
       <header>
-        <p className="text-sm text-brand-black/60">
+        <p className="text-sm text-electric-text-muted">
           <Link href="/dashboard/campaigns" className="underline">
             Campaigns
           </Link>{" "}

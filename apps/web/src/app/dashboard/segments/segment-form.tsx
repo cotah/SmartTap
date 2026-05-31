@@ -115,12 +115,12 @@ export function SegmentForm({
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g. Loyal regulars"
           maxLength={80}
-          className={`w-full rounded-xl border bg-white px-3 py-2 text-sm ${
-            fieldErrors.name ? "border-red-400" : "border-brand-black/15"
+          className={`w-full rounded-xl border bg-electric-surface px-3 py-2 text-sm ${
+            fieldErrors.name ? "border-red-400" : "border-electric-border"
           }`}
         />
         {fieldErrors.name ? (
-          <p className="mt-1 text-xs text-red-600">{fieldErrors.name}</p>
+          <p className="mt-1 text-xs text-red-300">{fieldErrors.name}</p>
         ) : null}
       </Section>
 
@@ -203,16 +203,16 @@ export function SegmentForm({
       </Section>
 
       {/* Preview panel */}
-      <div className="rounded-2xl border border-brand-black/10 bg-brand-off-white/40 p-4">
+      <div className="rounded-2xl border border-electric-border bg-electric-surface-2/40 p-4">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold uppercase tracking-wide text-brand-black/60">
+          <p className="text-sm font-semibold uppercase tracking-wide text-electric-text-muted">
             Preview
           </p>
           <button
             type="button"
             onClick={onPreview}
             disabled={previewing}
-            className="rounded-full border border-brand-black/20 px-4 py-1.5 text-sm font-semibold hover:border-brand-green disabled:opacity-60"
+            className="rounded-full border border-electric-border px-4 py-1.5 text-sm font-semibold hover:border-electric-cyan disabled:opacity-60"
           >
             {previewing ? "Evaluating…" : "Run preview"}
           </button>
@@ -220,28 +220,28 @@ export function SegmentForm({
         {preview ? (
           <PreviewBlock preview={preview} />
         ) : (
-          <p className="mt-2 text-sm text-brand-black/60">
+          <p className="mt-2 text-sm text-electric-text-muted">
             Click <strong>Run preview</strong> to see how many customers
             match. Doesn&apos;t save anything.
           </p>
         )}
       </div>
 
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      {error ? <p className="text-sm text-red-300">{error}</p> : null}
 
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-brand-black/10 pt-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-electric-border pt-4">
         <div className="flex flex-wrap gap-2">
           <button
             type="submit"
             disabled={saving}
-            className="rounded-full bg-brand-green px-5 py-2 text-sm font-semibold text-brand-off-white disabled:opacity-60"
+            className="rounded-full bg-electric-cyan px-5 py-2 text-sm font-semibold text-electric-bg disabled:opacity-60"
           >
             {saving ? "Saving…" : mode === "create" ? "Save segment" : "Save changes"}
           </button>
           <button
             type="button"
             onClick={() => router.push("/dashboard/segments")}
-            className="rounded-full border border-brand-black/20 px-5 py-2 text-sm font-semibold"
+            className="rounded-full border border-electric-border px-5 py-2 text-sm font-semibold"
           >
             Cancel
           </button>
@@ -251,7 +251,7 @@ export function SegmentForm({
           <div className="flex items-center gap-2">
             {confirmDelete ? (
               <>
-                <span className="text-xs text-brand-black/60">Confirm?</span>
+                <span className="text-xs text-electric-text-muted">Confirm?</span>
                 <button
                   type="button"
                   onClick={onDelete}
@@ -263,7 +263,7 @@ export function SegmentForm({
                 <button
                   type="button"
                   onClick={() => setConfirmDelete(false)}
-                  className="rounded-full border border-brand-black/20 px-4 py-1.5 text-xs font-semibold"
+                  className="rounded-full border border-electric-border px-4 py-1.5 text-xs font-semibold"
                 >
                   Keep
                 </button>
@@ -272,7 +272,7 @@ export function SegmentForm({
               <button
                 type="button"
                 onClick={() => setConfirmDelete(true)}
-                className="text-xs font-semibold text-red-600 hover:underline"
+                className="text-xs font-semibold text-red-300 hover:underline"
               >
                 Delete segment
               </button>
@@ -300,11 +300,11 @@ function Section({
   return (
     <section className="space-y-2">
       <div>
-        <p className="text-sm font-semibold uppercase tracking-wide text-brand-black/70">
+        <p className="text-sm font-semibold uppercase tracking-wide text-electric-text-muted">
           {title}
         </p>
         {hint ? (
-          <p className="text-xs text-brand-black/50">{hint}</p>
+          <p className="text-xs text-electric-text-muted">{hint}</p>
         ) : null}
       </div>
       {children}
@@ -335,7 +335,7 @@ function RangeRow({
       <div>
         <NumberInput label={maxLabel} value={maxValue} onChange={onMaxChange} />
         {maxError ? (
-          <p className="mt-1 text-xs text-red-600">{maxError}</p>
+          <p className="mt-1 text-xs text-red-300">{maxError}</p>
         ) : null}
       </div>
     </div>
@@ -353,7 +353,7 @@ function NumberInput({
 }) {
   return (
     <label className="flex flex-col gap-1 text-sm">
-      <span className="text-xs text-brand-black/60">{label}</span>
+      <span className="text-xs text-electric-text-muted">{label}</span>
       <input
         type="number"
         min={0}
@@ -366,7 +366,7 @@ function NumberInput({
             onChange(Number.isFinite(n) && n >= 0 ? n : null);
           }
         }}
-        className="rounded-xl border border-brand-black/15 bg-white px-3 py-2 text-sm"
+        className="rounded-xl border border-electric-border bg-electric-surface px-3 py-2 text-sm"
       />
     </label>
   );
@@ -383,7 +383,7 @@ function DaysInput({
 }) {
   return (
     <label className="flex flex-col gap-1 text-sm">
-      <span className="text-xs text-brand-black/60">{label}</span>
+      <span className="text-xs text-electric-text-muted">{label}</span>
       <input
         type="number"
         min={1}
@@ -397,7 +397,7 @@ function DaysInput({
             onChange(Number.isFinite(n) && n >= 1 ? n : null);
           }
         }}
-        className="rounded-xl border border-brand-black/15 bg-white px-3 py-2 text-sm"
+        className="rounded-xl border border-electric-border bg-electric-surface px-3 py-2 text-sm"
       />
     </label>
   );
@@ -456,24 +456,24 @@ function PreviewBlock({ preview }: { preview: SegmentPreview }) {
         <strong>{preview.total.toLocaleString()}</strong>{" "}
         {preview.total === 1 ? "customer matches" : "customers match"}.
         {more > 0 ? (
-          <span className="text-brand-black/60">
+          <span className="text-electric-text-muted">
             {" "}Showing first {shown}.
           </span>
         ) : null}
       </p>
       {preview.items.length > 0 ? (
-        <ul className="divide-y divide-brand-black/10 rounded-xl border border-brand-black/10 bg-white text-sm">
+        <ul className="divide-y divide-electric-border rounded-xl border border-electric-border bg-electric-surface text-sm">
           {preview.items.map((c) => (
             <li key={c.id} className="flex items-center justify-between px-3 py-2">
               <div>
                 <p className="font-medium">{c.name || "—"}</p>
-                <p className="text-xs text-brand-black/60">
+                <p className="text-xs text-electric-text-muted">
                   {c.phone || c.email || "no contact"} ·{" "}
                   {c.total_visits} {c.total_visits === 1 ? "visit" : "visits"} ·{" "}
                   {c.current_stamps} stamps
                 </p>
               </div>
-              <span className="text-xs text-brand-black/50">
+              <span className="text-xs text-electric-text-muted">
                 {c.last_visit_at
                   ? new Date(c.last_visit_at).toLocaleDateString("en-IE", {
                       day: "numeric",
@@ -485,7 +485,7 @@ function PreviewBlock({ preview }: { preview: SegmentPreview }) {
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-brand-black/60">
+        <p className="text-sm text-electric-text-muted">
           No customers match yet — try loosening the criteria.
         </p>
       )}

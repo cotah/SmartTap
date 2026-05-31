@@ -17,14 +17,14 @@ export default async function NewCampaignPage() {
   return (
     <main className="space-y-6">
       <header>
-        <p className="text-sm text-brand-black/60">
+        <p className="text-sm text-electric-text-muted">
           <Link href="/dashboard/campaigns" className="underline">
             Campaigns
           </Link>{" "}
           / New
         </p>
         <h1 className="font-display text-3xl">New campaign</h1>
-        <p className="mt-1 text-sm text-brand-black/60">
+        <p className="mt-1 text-sm text-electric-text-muted">
           Double-stamp campaigns multiply stamps awarded during a time window.
           You can only run one at a time.
         </p>

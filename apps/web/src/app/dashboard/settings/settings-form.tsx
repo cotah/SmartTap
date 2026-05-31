@@ -153,8 +153,8 @@ export function SettingsForm({ initial }: Props) {
           role="status"
           className={`rounded-lg px-4 py-3 text-sm ${
             banner.kind === "success"
-              ? "bg-brand-green/10 text-brand-green"
-              : "bg-red-50 text-red-700"
+              ? "bg-electric-cyan/10 text-electric-cyan"
+              : "bg-red-500/10 text-red-300"
           }`}
         >
           {banner.text}
@@ -165,7 +165,7 @@ export function SettingsForm({ initial }: Props) {
         <button
           type="submit"
           disabled={pending}
-          className="rounded-lg bg-brand-green px-6 py-3 text-sm font-bold uppercase tracking-wider text-white shadow-sm transition-colors hover:bg-green-800 disabled:opacity-60"
+          className="rounded-lg bg-electric-cyan px-6 py-3 text-sm font-bold uppercase tracking-wider text-electric-bg shadow-sm transition-colors hover:bg-electric-cyan-deep disabled:opacity-60"
         >
           {pending ? "Saving…" : "Save changes"}
         </button>
@@ -175,10 +175,10 @@ export function SettingsForm({ initial }: Props) {
 }
 
 const INPUT_CLASS =
-  "block w-full rounded-lg border border-neutral-300/40 bg-brand-off-white px-4 py-3 text-base text-brand-black shadow-[inset_0_2px_4px_rgba(27,77,62,0.04)] outline-none transition-colors placeholder:text-neutral-600/40 focus:border-brand-amber focus:ring-2 focus:ring-brand-amber/30";
+  "block w-full rounded-lg border border-electric-border bg-electric-surface-2 px-4 py-3 text-base text-electric-text shadow-[inset_0_2px_4px_rgba(0,0,0,0.04)] outline-none transition-colors placeholder:text-electric-text-muted focus:border-electric-cyan focus:ring-2 focus:ring-electric-cyan/30";
 
 const INPUT_CLASS_WITH_ICON =
-  "block w-full rounded-lg border border-neutral-300/40 bg-brand-off-white py-3 pl-11 pr-4 text-base text-brand-black shadow-[inset_0_2px_4px_rgba(27,77,62,0.04)] outline-none transition-colors placeholder:text-neutral-600/40 focus:border-brand-amber focus:ring-2 focus:ring-brand-amber/30";
+  "block w-full rounded-lg border border-electric-border bg-electric-surface-2 py-3 pl-11 pr-4 text-base text-electric-text shadow-[inset_0_2px_4px_rgba(0,0,0,0.04)] outline-none transition-colors placeholder:text-electric-text-muted focus:border-electric-cyan focus:ring-2 focus:ring-electric-cyan/30";
 
 function Section({
   title,
@@ -192,15 +192,15 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="overflow-hidden rounded-xl border border-brand-green/5 bg-white shadow-[0_4px_24px_rgba(27,77,62,0.04)]">
-      <div className="flex items-center gap-4 border-b border-neutral-300/20 p-6 md:p-8">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-off-white text-brand-green">
+    <section className="overflow-hidden rounded-xl border border-electric-border bg-electric-surface shadow-[0_4px_24px_rgba(0,0,0,0.04)]">
+      <div className="flex items-center gap-4 border-b border-electric-border p-6 md:p-8">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-electric-surface-2 text-electric-cyan">
           <Icon className="h-5 w-5" aria-hidden="true" />
         </div>
         <div>
-          <h2 className="font-display text-xl text-brand-green">{title}</h2>
+          <h2 className="font-display text-xl text-electric-cyan">{title}</h2>
           {subtitle ? (
-            <p className="mt-1 text-sm text-neutral-600">{subtitle}</p>
+            <p className="mt-1 text-sm text-electric-text-muted">{subtitle}</p>
           ) : null}
         </div>
       </div>
@@ -222,14 +222,14 @@ function Field({
 }) {
   return (
     <div className="space-y-2">
-      <label className="block text-xs font-bold uppercase tracking-wider text-brand-black">
+      <label className="block text-xs font-bold uppercase tracking-wider text-electric-text">
         {label}
       </label>
       {children}
       {error ? (
-        <p className="text-xs text-red-600">{error}</p>
+        <p className="text-xs text-red-300">{error}</p>
       ) : hint ? (
-        <p className="text-xs text-neutral-600">{hint}</p>
+        <p className="text-xs text-electric-text-muted">{hint}</p>
       ) : null}
     </div>
   );
@@ -244,7 +244,7 @@ function IconInput({
 }) {
   return (
     <div className="relative">
-      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-600">
+      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-electric-text-muted">
         <Icon className="h-5 w-5" aria-hidden="true" />
       </span>
       {children}
@@ -255,7 +255,7 @@ function IconInput({
 function ColorInput({ name, initial }: { name: string; initial: string }) {
   const [value, setValue] = useState(initial);
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-neutral-300/40 bg-white p-3">
+    <div className="flex items-center gap-3 rounded-lg border border-electric-border bg-electric-surface p-3">
       <input
         type="color"
         value={value}
@@ -271,7 +271,7 @@ function ColorInput({ name, initial }: { name: string; initial: string }) {
         pattern="^#[0-9A-Fa-f]{6}$"
         maxLength={7}
         required
-        className="w-full rounded-lg border border-neutral-300/40 bg-brand-off-white px-3 py-2 font-mono text-sm uppercase text-brand-black shadow-[inset_0_2px_4px_rgba(27,77,62,0.04)] outline-none focus:border-brand-amber focus:ring-2 focus:ring-brand-amber/30"
+        className="w-full rounded-lg border border-electric-border bg-electric-surface-2 px-3 py-2 font-mono text-sm uppercase text-electric-text shadow-[inset_0_2px_4px_rgba(0,0,0,0.04)] outline-none focus:border-electric-cyan focus:ring-2 focus:ring-electric-cyan/30"
       />
     </div>
   );

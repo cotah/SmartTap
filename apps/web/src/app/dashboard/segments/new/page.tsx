@@ -10,7 +10,7 @@ export default async function NewSegmentPage() {
   return (
     <main className="space-y-6">
       <header>
-        <p className="text-sm text-brand-black/60">
+        <p className="text-sm text-electric-text-muted">
           <Link href="/dashboard" className="underline">
             Dashboard
           </Link>{" "}
@@ -21,7 +21,7 @@ export default async function NewSegmentPage() {
           / New
         </p>
         <h1 className="font-display text-3xl">New segment</h1>
-        <p className="mt-1 text-sm text-brand-black/60">
+        <p className="mt-1 text-sm text-electric-text-muted">
           Combine filters with AND. Leave anything blank to ignore it.
         </p>
       </header>

@@ -11,10 +11,10 @@ export default async function SettingsPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-8">
       <header>
-        <h1 className="font-display text-3xl leading-tight text-brand-green sm:text-4xl">
+        <h1 className="font-display text-3xl leading-tight text-electric-cyan sm:text-4xl">
           Settings
         </h1>
-        <p className="mt-2 text-sm text-neutral-600">
+        <p className="mt-2 text-sm text-electric-text-muted">
           Brand info shown to your customers, plus the Google review link they
           land on after a tap.
         </p>

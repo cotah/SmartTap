@@ -13,14 +13,14 @@ export default async function BillingPage() {
   return (
     <main className="space-y-8">
       <header>
-        <p className="text-sm text-brand-black/60">
+        <p className="text-sm text-electric-text-muted">
           <Link href="/dashboard" className="underline">
             Dashboard
           </Link>{" "}
           / Billing
         </p>
         <h1 className="font-display text-3xl">Billing</h1>
-        <p className="mt-1 text-sm text-brand-black/60">
+        <p className="mt-1 text-sm text-electric-text-muted">
           Manage your plan, payment method and invoices.
         </p>
       </header>

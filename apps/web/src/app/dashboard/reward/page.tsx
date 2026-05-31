@@ -11,10 +11,10 @@ export default async function RewardPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-8">
       <header>
-        <h1 className="font-display text-3xl leading-tight text-brand-green sm:text-4xl">
+        <h1 className="font-display text-3xl leading-tight text-electric-cyan sm:text-4xl">
           Reward
         </h1>
-        <p className="mt-2 text-sm text-neutral-600">
+        <p className="mt-2 text-sm text-electric-text-muted">
           Decide how many stamps customers need and what they get.
         </p>
       </header>

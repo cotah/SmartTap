@@ -78,7 +78,7 @@ export function CampaignForm({ initial, mode }: Props) {
       {editsLocked ? (
         <div
           role="status"
-          className="rounded-lg border border-brand-amber/30 bg-brand-amber/10 px-3 py-2 text-sm text-brand-black"
+          className="rounded-lg border border-electric-cyan/30 bg-electric-cyan/15 px-3 py-2 text-sm text-electric-text"
         >
           This campaign is <strong>{initial.status}</strong>. Pause it to draft
           first if you want to edit its fields.
@@ -87,7 +87,7 @@ export function CampaignForm({ initial, mode }: Props) {
 
       <form
         onSubmit={onSubmit}
-        className="space-y-5 rounded-2xl border border-brand-black/10 bg-white p-6 shadow-sm"
+        className="space-y-5 rounded-2xl border border-electric-border bg-electric-surface p-6 shadow-sm"
       >
         <Field
           label="Campaign name"
@@ -103,7 +103,7 @@ export function CampaignForm({ initial, mode }: Props) {
             maxLength={80}
             required
             disabled={editsLocked}
-            className="w-full rounded-lg border border-brand-black/20 px-3 py-2 outline-none focus:border-brand-green disabled:bg-brand-off-white"
+            className="w-full rounded-lg border border-electric-border px-3 py-2 outline-none focus:border-electric-cyan disabled:bg-electric-surface-2"
           />
         </Field>
 
@@ -117,7 +117,7 @@ export function CampaignForm({ initial, mode }: Props) {
             name="multiplier"
             defaultValue={String(initial.multiplier)}
             disabled={editsLocked}
-            className="w-32 rounded-lg border border-brand-black/20 px-3 py-2 outline-none focus:border-brand-green disabled:bg-brand-off-white"
+            className="w-32 rounded-lg border border-electric-border px-3 py-2 outline-none focus:border-electric-cyan disabled:bg-electric-surface-2"
           >
             {[2, 3, 4, 5].map((n) => (
               <option key={n} value={n}>
@@ -135,7 +135,7 @@ export function CampaignForm({ initial, mode }: Props) {
               defaultValue={initial.starts_at}
               required
               disabled={editsLocked}
-              className="w-full rounded-lg border border-brand-black/20 px-3 py-2 outline-none focus:border-brand-green disabled:bg-brand-off-white"
+              className="w-full rounded-lg border border-electric-border px-3 py-2 outline-none focus:border-electric-cyan disabled:bg-electric-surface-2"
             />
           </Field>
           <Field label="Ends" error={fieldErrors.ends_at}>
@@ -145,7 +145,7 @@ export function CampaignForm({ initial, mode }: Props) {
               defaultValue={initial.ends_at}
               required
               disabled={editsLocked}
-              className="w-full rounded-lg border border-brand-black/20 px-3 py-2 outline-none focus:border-brand-green disabled:bg-brand-off-white"
+              className="w-full rounded-lg border border-electric-border px-3 py-2 outline-none focus:border-electric-cyan disabled:bg-electric-surface-2"
             />
           </Field>
         </div>
@@ -158,7 +158,7 @@ export function CampaignForm({ initial, mode }: Props) {
             <select
               name="status"
               defaultValue="draft"
-              className="w-40 rounded-lg border border-brand-black/20 px-3 py-2 outline-none focus:border-brand-green"
+              className="w-40 rounded-lg border border-electric-border px-3 py-2 outline-none focus:border-electric-cyan"
             >
               <option value="draft">Save as draft</option>
               <option value="active">Activate now</option>
@@ -171,8 +171,8 @@ export function CampaignForm({ initial, mode }: Props) {
             role="status"
             className={`rounded-lg px-3 py-2 text-sm ${
               banner.kind === "success"
-                ? "bg-brand-green/10 text-brand-green"
-                : "bg-red-50 text-red-700"
+                ? "bg-electric-cyan/10 text-electric-cyan"
+                : "bg-red-500/10 text-red-300"
             }`}
           >
             {banner.text}
@@ -184,7 +184,7 @@ export function CampaignForm({ initial, mode }: Props) {
             <button
               type="submit"
               disabled={pending}
-              className="rounded-full bg-brand-green px-6 py-2.5 text-sm font-semibold text-brand-off-white disabled:opacity-60"
+              className="rounded-full bg-electric-cyan px-6 py-2.5 text-sm font-semibold text-electric-bg disabled:opacity-60"
             >
               {pending ? "Saving…" : mode === "create" ? "Create campaign" : "Save changes"}
             </button>
@@ -226,11 +226,11 @@ function StatusControls({
   if (actions.length === 0) return null;
 
   return (
-    <div className="rounded-2xl border border-brand-black/10 bg-white p-5 shadow-sm">
-      <p className="text-sm font-semibold uppercase tracking-wide text-brand-black/70">
+    <div className="rounded-2xl border border-electric-border bg-electric-surface p-5 shadow-sm">
+      <p className="text-sm font-semibold uppercase tracking-wide text-electric-text-muted">
         Status
       </p>
-      <p className="mt-1 text-sm text-brand-black/60">
+      <p className="mt-1 text-sm text-electric-text-muted">
         Currently <strong>{status}</strong>. {hint(status)}
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
@@ -242,10 +242,10 @@ function StatusControls({
             disabled={pending}
             className={`rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wide disabled:opacity-60 ${
               a.target === "ended"
-                ? "border border-red-200 bg-white text-red-700"
+                ? "border border-red-500/30 bg-electric-surface text-red-300"
                 : a.target === "active"
-                  ? "bg-brand-green text-brand-off-white"
-                  : "border border-brand-black/20 bg-white text-brand-black"
+                  ? "bg-electric-cyan text-electric-bg"
+                  : "border border-electric-border bg-electric-surface text-electric-text"
             }`}
           >
             {a.label}
@@ -287,12 +287,12 @@ function Field({
       <label className="block text-sm font-semibold">{label}</label>
       <div className="flex items-center gap-2">
         {children}
-        {suffix ? <span className="text-sm text-brand-black/60">{suffix}</span> : null}
+        {suffix ? <span className="text-sm text-electric-text-muted">{suffix}</span> : null}
       </div>
       {error ? (
-        <p className="text-xs text-red-600">{error}</p>
+        <p className="text-xs text-red-300">{error}</p>
       ) : hint ? (
-        <p className="text-xs text-brand-black/55">{hint}</p>
+        <p className="text-xs text-electric-text-muted">{hint}</p>
       ) : null}
     </div>
   );

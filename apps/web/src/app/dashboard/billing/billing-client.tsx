@@ -126,8 +126,8 @@ export function BillingClient({ subscription }: Props) {
           role="status"
           className={`rounded-lg px-3 py-2 text-sm ${
             banner.kind === "success"
-              ? "bg-brand-green/10 text-brand-green"
-              : "bg-red-50 text-red-700"
+              ? "bg-electric-cyan/10 text-electric-cyan"
+              : "bg-red-500/10 text-red-300"
           }`}
         >
           {banner.text}
@@ -135,11 +135,11 @@ export function BillingClient({ subscription }: Props) {
       ) : null}
 
       {hasSubscription ? (
-        <section className="rounded-2xl border border-brand-black/10 bg-white p-5 shadow-sm">
+        <section className="rounded-2xl border border-electric-border bg-electric-surface p-5 shadow-sm">
           <div className="flex flex-col items-start gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="font-display text-lg">Manage subscription</p>
-              <p className="text-sm text-brand-black/60">
+              <p className="text-sm text-electric-text-muted">
                 Change plan, update card, download invoices, or cancel — handled
                 securely by Stripe.
               </p>
@@ -148,7 +148,7 @@ export function BillingClient({ subscription }: Props) {
               type="button"
               onClick={handleOpenPortal}
               disabled={pendingPlan !== null}
-              className="rounded-full bg-brand-black px-5 py-2 text-sm font-semibold text-brand-off-white disabled:opacity-60"
+              className="rounded-full border border-electric-border bg-electric-surface-2 px-5 py-2 text-sm font-semibold text-electric-text transition-colors hover:border-electric-cyan hover:text-electric-cyan disabled:opacity-60"
             >
               {pendingPlan === "portal" ? "Opening…" : "Open billing portal"}
             </button>
@@ -157,7 +157,7 @@ export function BillingClient({ subscription }: Props) {
       ) : null}
 
       <section>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-brand-black/70">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-electric-text-muted">
           Plans
         </h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -184,10 +184,10 @@ function SubscriptionStatus({ subscription }: { subscription: SubscriptionInfo }
   const nextCharge = formatDate(subscription.current_period_end);
 
   return (
-    <section className="rounded-2xl border border-brand-black/10 bg-white p-5 shadow-sm">
+    <section className="rounded-2xl border border-electric-border bg-electric-surface p-5 shadow-sm">
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div className="space-y-1">
-          <p className="text-xs font-semibold uppercase tracking-wide text-brand-black/55">
+          <p className="text-xs font-semibold uppercase tracking-wide text-electric-text-muted">
             Current plan
           </p>
           <p className="font-display text-2xl">{planDisplayName(subscription.plan)}</p>
@@ -203,15 +203,15 @@ function SubscriptionStatus({ subscription }: { subscription: SubscriptionInfo }
             ) : null}
           </div>
         </div>
-        <div className="text-sm text-brand-black/60">
+        <div className="text-sm text-electric-text-muted">
           {nextCharge ? (
             <p>
-              <span className="font-semibold text-brand-black">Next charge:</span>{" "}
+              <span className="font-semibold text-electric-text">Next charge:</span>{" "}
               {nextCharge}
             </p>
           ) : subscription.trial_ends_at ? (
             <p>
-              <span className="font-semibold text-brand-black">Trial ends:</span>{" "}
+              <span className="font-semibold text-electric-text">Trial ends:</span>{" "}
               {formatDate(subscription.trial_ends_at)}
             </p>
           ) : null}
@@ -255,31 +255,31 @@ function PlanCard({
 
   return (
     <article
-      className={`flex flex-col rounded-2xl border bg-white p-5 shadow-sm ${
-        plan.highlight ? "border-brand-green" : "border-brand-black/10"
-      } ${isCurrent ? "ring-2 ring-brand-green ring-offset-2" : ""}`}
+      className={`flex flex-col rounded-2xl border bg-electric-surface p-5 shadow-sm ${
+        plan.highlight ? "border-electric-cyan" : "border-electric-border"
+      } ${isCurrent ? "ring-2 ring-electric-cyan ring-offset-2" : ""}`}
     >
       <header className="space-y-1">
         {plan.highlight ? (
-          <p className="text-xs font-semibold uppercase tracking-wide text-brand-green">
+          <p className="text-xs font-semibold uppercase tracking-wide text-electric-cyan">
             Most popular
           </p>
         ) : null}
         <h3 className="font-display text-xl">{plan.name}</h3>
-        <p className="text-sm text-brand-black/60">{plan.customers}</p>
+        <p className="text-sm text-electric-text-muted">{plan.customers}</p>
       </header>
 
       <div className="mt-4 space-y-1">
         <p className="font-display text-2xl">{priceLine}</p>
         {!isFoundingMember || !isCurrent ? (
-          <p className="text-xs text-brand-black/55">+ €{plan.setupFee} one-time setup</p>
+          <p className="text-xs text-electric-text-muted">+ €{plan.setupFee} one-time setup</p>
         ) : null}
       </div>
 
       <ul className="mt-4 flex-1 space-y-1.5 text-sm">
         {plan.features.map((feature) => (
           <li key={feature} className="flex items-start gap-2">
-            <span aria-hidden className="mt-1 text-brand-green">✓</span>
+            <span aria-hidden className="mt-1 text-electric-cyan">✓</span>
             <span>{feature}</span>
           </li>
         ))}
@@ -291,8 +291,8 @@ function PlanCard({
         disabled={disabled || isCurrent}
         className={`mt-5 rounded-full px-4 py-2 text-sm font-semibold disabled:opacity-60 ${
           isCurrent
-            ? "border border-brand-black/20 bg-transparent text-brand-black"
-            : "bg-brand-green text-brand-off-white"
+            ? "border border-electric-border bg-transparent text-electric-text"
+            : "bg-electric-cyan text-electric-bg"
         }`}
       >
         {buttonLabel}
@@ -309,10 +309,10 @@ function StatusBadge({
   children: React.ReactNode;
 }) {
   const styles: Record<typeof tone, string> = {
-    green: "bg-brand-green/10 text-brand-green",
-    amber: "bg-brand-amber/10 text-brand-amber",
-    red: "bg-red-50 text-red-700",
-    neutral: "bg-brand-black/5 text-brand-black/70",
+    green: "bg-electric-cyan/10 text-electric-cyan",
+    amber: "bg-electric-cyan/15 text-electric-cyan",
+    red: "bg-red-500/10 text-red-300",
+    neutral: "bg-electric-surface-2 text-electric-text-muted",
   };
   return (
     <span

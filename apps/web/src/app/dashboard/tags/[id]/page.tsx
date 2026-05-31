@@ -37,7 +37,7 @@ export default async function EditTagPage({ params }: Props) {
   return (
     <main className="space-y-6">
       <header>
-        <p className="text-sm text-brand-black/60">
+        <p className="text-sm text-electric-text-muted">
           <Link href="/dashboard/tags" className="underline">
             NFC tags
           </Link>{" "}

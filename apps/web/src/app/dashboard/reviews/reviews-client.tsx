@@ -35,22 +35,22 @@ export function ReviewsClient({ reviews }: { reviews: Review[] }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2 rounded-2xl border border-brand-black/10 bg-white p-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-2 rounded-2xl border border-electric-border bg-electric-surface p-4 md:flex-row md:items-center md:justify-between">
         <div>
           <p className="font-display text-lg">Connect Google Business</p>
-          <p className="text-sm text-brand-black/60">
+          <p className="text-sm text-electric-text-muted">
             Authorise SmartTap to read your reviews and post your approved
             replies.
           </p>
           {connectError ? (
-            <p className="mt-1 text-sm text-red-600">{connectError}</p>
+            <p className="mt-1 text-sm text-red-300">{connectError}</p>
           ) : null}
         </div>
         <button
           type="button"
           onClick={handleConnect}
           disabled={connecting}
-          className="shrink-0 rounded-full bg-brand-green px-5 py-2.5 text-sm font-semibold text-brand-off-white disabled:opacity-60"
+          className="shrink-0 rounded-full bg-electric-cyan px-5 py-2.5 text-sm font-semibold text-electric-bg disabled:opacity-60"
         >
           {connecting ? "Connecting…" : "Connect Google"}
         </button>
@@ -73,9 +73,9 @@ export function ReviewsClient({ reviews }: { reviews: Review[] }) {
 
 function EmptyState() {
   return (
-    <div className="rounded-2xl border border-dashed border-brand-black/20 bg-white p-8 text-center">
+    <div className="rounded-2xl border border-dashed border-electric-border bg-electric-surface p-8 text-center">
       <p className="font-display text-lg">No reviews waiting</p>
-      <p className="mt-1 text-sm text-brand-black/60">
+      <p className="mt-1 text-sm text-electric-text-muted">
         When new Google reviews come in, a suggested reply will appear here for
         you to approve.
       </p>
@@ -123,8 +123,8 @@ function ReviewCard({
 
   return (
     <div
-      className={`rounded-2xl border bg-white p-4 shadow-sm ${
-        isNegative ? "border-red-300" : "border-brand-black/10"
+      className={`rounded-2xl border bg-electric-surface p-4 shadow-sm ${
+        isNegative ? "border-red-300" : "border-electric-border"
       }`}
     >
       <div className="flex items-start justify-between gap-3">
@@ -133,39 +133,39 @@ function ReviewCard({
           <Stars rating={review.rating} />
         </div>
         {isNegative ? (
-          <span className="rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700">
+          <span className="rounded-full bg-red-500/15 px-2.5 py-1 text-xs font-semibold text-red-300">
             Needs care
           </span>
         ) : null}
       </div>
 
       {review.comment ? (
-        <p className="mt-3 whitespace-pre-wrap text-sm text-brand-black/80">
+        <p className="mt-3 whitespace-pre-wrap text-sm text-electric-text-muted">
           {review.comment}
         </p>
       ) : (
-        <p className="mt-3 text-sm italic text-brand-black/40">No written comment</p>
+        <p className="mt-3 text-sm italic text-electric-text-muted">No written comment</p>
       )}
 
-      <label className="mt-4 block text-xs font-semibold uppercase tracking-wide text-brand-black/50">
+      <label className="mt-4 block text-xs font-semibold uppercase tracking-wide text-electric-text-muted">
         Suggested reply (edit before publishing)
       </label>
       <textarea
         value={reply}
         onChange={(e) => setReply(e.target.value)}
         rows={4}
-        className="mt-1 w-full rounded-xl border border-brand-black/15 p-3 text-sm focus:border-brand-green focus:outline-none"
+        className="mt-1 w-full rounded-xl border border-electric-border p-3 text-sm focus:border-electric-cyan focus:outline-none"
         placeholder="Write a reply…"
       />
 
-      {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
+      {error ? <p className="mt-2 text-sm text-red-300">{error}</p> : null}
 
       <div className="mt-3 flex gap-2">
         <button
           type="button"
           onClick={handlePublish}
           disabled={pending}
-          className="rounded-full bg-brand-green px-5 py-2 text-sm font-semibold text-brand-off-white disabled:opacity-60"
+          className="rounded-full bg-electric-cyan px-5 py-2 text-sm font-semibold text-electric-bg disabled:opacity-60"
         >
           {pending ? "Working…" : "Publish to Google"}
         </button>
@@ -173,7 +173,7 @@ function ReviewCard({
           type="button"
           onClick={handleDismiss}
           disabled={pending}
-          className="rounded-full border border-brand-black/20 px-5 py-2 text-sm font-semibold text-brand-black/70 disabled:opacity-60"
+          className="rounded-full border border-electric-border px-5 py-2 text-sm font-semibold text-electric-text-muted disabled:opacity-60"
         >
           Dismiss
         </button>
@@ -185,9 +185,9 @@ function ReviewCard({
 function Stars({ rating }: { rating: number | null }) {
   const r = rating ?? 0;
   return (
-    <p className="mt-0.5 text-sm text-amber-500" aria-label={`${r} out of 5 stars`}>
+    <p className="mt-0.5 text-sm text-electric-cyan" aria-label={`${r} out of 5 stars`}>
       {"★".repeat(r)}
-      <span className="text-brand-black/20">{"★".repeat(Math.max(0, 5 - r))}</span>
+      <span className="text-electric-text-muted">{"★".repeat(Math.max(0, 5 - r))}</span>
     </p>
   );
 }

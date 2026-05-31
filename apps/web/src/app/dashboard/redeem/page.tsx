@@ -8,10 +8,10 @@ export default async function RedeemPage() {
   return (
     <div className="mx-auto max-w-xl space-y-8">
       <header>
-        <h1 className="font-display text-3xl leading-tight text-brand-green sm:text-4xl">
+        <h1 className="font-display text-3xl leading-tight text-electric-cyan sm:text-4xl">
           Redeem reward
         </h1>
-        <p className="mt-2 text-sm text-neutral-600">
+        <p className="mt-2 text-sm text-electric-text-muted">
           Ask the customer for their 6-digit code, type it in, and confirm.
         </p>
       </header>

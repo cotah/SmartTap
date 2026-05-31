@@ -11,7 +11,7 @@ export default async function NewTagPage() {
   return (
     <main className="space-y-6">
       <header>
-        <p className="text-sm text-brand-black/60">
+        <p className="text-sm text-electric-text-muted">
           <Link href="/dashboard" className="underline">
             Dashboard
           </Link>{" "}
@@ -22,7 +22,7 @@ export default async function NewTagPage() {
           / New
         </p>
         <h1 className="font-display text-3xl">New NFC tag</h1>
-        <p className="mt-1 text-sm text-brand-black/60">
+        <p className="mt-1 text-sm text-electric-text-muted">
           Once saved, the next screen shows the URL to write onto the
           physical tag.
         </p>

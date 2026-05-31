@@ -112,7 +112,7 @@ export function TagForm({
         <select
           value={format}
           onChange={(e) => setFormat(e.target.value as NfcTagFormat)}
-          className="w-full rounded-xl border border-brand-black/15 bg-white px-3 py-2 text-sm"
+          className="w-full rounded-xl border border-electric-border bg-electric-surface px-3 py-2 text-sm"
         >
           {FORMAT_OPTIONS.map((f) => (
             <option key={f} value={f}>
@@ -121,7 +121,7 @@ export function TagForm({
           ))}
         </select>
         {fieldErrors.format ? (
-          <p className="mt-1 text-xs text-red-600">{fieldErrors.format}</p>
+          <p className="mt-1 text-xs text-red-300">{fieldErrors.format}</p>
         ) : null}
       </Section>
 
@@ -134,14 +134,14 @@ export function TagForm({
                 key={c}
                 type="button"
                 onClick={() => setColor(c)}
-                className={`flex items-center gap-2 rounded-xl border bg-white p-2 text-left text-xs transition ${
+                className={`flex items-center gap-2 rounded-xl border bg-electric-surface p-2 text-left text-xs transition ${
                   selected
-                    ? "border-brand-green ring-2 ring-brand-green/30"
-                    : "border-brand-black/15 hover:border-brand-black/40"
+                    ? "border-electric-cyan ring-2 ring-electric-cyan/30"
+                    : "border-electric-border hover:border-electric-border"
                 }`}
               >
                 <span
-                  className="inline-block h-5 w-5 rounded-full border border-brand-black/10"
+                  className="inline-block h-5 w-5 rounded-full border border-electric-border"
                   style={{ backgroundColor: COLOR_SWATCH[c] }}
                   aria-hidden
                 />
@@ -151,7 +151,7 @@ export function TagForm({
           })}
         </div>
         {fieldErrors.color ? (
-          <p className="mt-1 text-xs text-red-600">{fieldErrors.color}</p>
+          <p className="mt-1 text-xs text-red-300">{fieldErrors.color}</p>
         ) : null}
       </Section>
 
@@ -165,12 +165,12 @@ export function TagForm({
           onChange={(e) => setLocationName(e.target.value)}
           maxLength={80}
           placeholder="(optional)"
-          className={`w-full rounded-xl border bg-white px-3 py-2 text-sm ${
-            fieldErrors.location_name ? "border-red-400" : "border-brand-black/15"
+          className={`w-full rounded-xl border bg-electric-surface px-3 py-2 text-sm ${
+            fieldErrors.location_name ? "border-red-400" : "border-electric-border"
           }`}
         />
         {fieldErrors.location_name ? (
-          <p className="mt-1 text-xs text-red-600">
+          <p className="mt-1 text-xs text-red-300">
             {fieldErrors.location_name}
           </p>
         ) : null}
@@ -184,14 +184,14 @@ export function TagForm({
             title="Public URL"
             hint="Write this URL to the physical NFC tag using TagWriter (or any NFC-writing app). Same URL also works as a QR code target."
           >
-            <div className="flex items-center gap-2 rounded-xl border border-brand-black/15 bg-brand-off-white/40 px-3 py-2 text-sm">
+            <div className="flex items-center gap-2 rounded-xl border border-electric-border bg-electric-surface-2/40 px-3 py-2 text-sm">
               <code className="flex-1 truncate font-mono text-xs">
                 {siteUrl}/t/{tagUuid}
               </code>
               <button
                 type="button"
                 onClick={onCopyUrl}
-                className="rounded-full border border-brand-black/20 px-3 py-1 text-xs font-semibold hover:border-brand-green"
+                className="rounded-full border border-electric-border px-3 py-1 text-xs font-semibold hover:border-electric-cyan"
               >
                 {copied ? "Copied ✓" : "Copy"}
               </button>
@@ -199,12 +199,12 @@ export function TagForm({
           </Section>
 
           <Section title="Status">
-            <div className="flex items-center justify-between rounded-xl border border-brand-black/10 bg-white px-3 py-2 text-sm">
+            <div className="flex items-center justify-between rounded-xl border border-electric-border bg-electric-surface px-3 py-2 text-sm">
               <div>
                 <p className="font-medium">
                   {isActive ? "Active" : "Inactive"}
                 </p>
-                <p className="text-xs text-brand-black/60">
+                <p className="text-xs text-electric-text-muted">
                   {isActive
                     ? "Customers tapping this tag earn stamps."
                     : "Tap requests are rejected. Tap history is preserved."}
@@ -216,8 +216,8 @@ export function TagForm({
                 disabled={toggling}
                 className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
                   isActive
-                    ? "border border-brand-black/20 hover:border-red-400"
-                    : "bg-brand-green text-brand-off-white"
+                    ? "border border-electric-border hover:border-red-400"
+                    : "bg-electric-cyan text-electric-bg"
                 } disabled:opacity-60`}
               >
                 {toggling
@@ -231,13 +231,13 @@ export function TagForm({
         </>
       ) : null}
 
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      {error ? <p className="text-sm text-red-300">{error}</p> : null}
 
-      <div className="flex flex-wrap gap-2 border-t border-brand-black/10 pt-4">
+      <div className="flex flex-wrap gap-2 border-t border-electric-border pt-4">
         <button
           type="submit"
           disabled={saving}
-          className="rounded-full bg-brand-green px-5 py-2 text-sm font-semibold text-brand-off-white disabled:opacity-60"
+          className="rounded-full bg-electric-cyan px-5 py-2 text-sm font-semibold text-electric-bg disabled:opacity-60"
         >
           {saving
             ? "Saving…"
@@ -248,7 +248,7 @@ export function TagForm({
         <button
           type="button"
           onClick={() => router.push("/dashboard/tags")}
-          className="rounded-full border border-brand-black/20 px-5 py-2 text-sm font-semibold"
+          className="rounded-full border border-electric-border px-5 py-2 text-sm font-semibold"
         >
           Cancel
         </button>
@@ -269,10 +269,10 @@ function Section({
   return (
     <section className="space-y-2">
       <div>
-        <p className="text-sm font-semibold uppercase tracking-wide text-brand-black/70">
+        <p className="text-sm font-semibold uppercase tracking-wide text-electric-text-muted">
           {title}
         </p>
-        {hint ? <p className="text-xs text-brand-black/50">{hint}</p> : null}
+        {hint ? <p className="text-xs text-electric-text-muted">{hint}</p> : null}
       </div>
       {children}
     </section>
