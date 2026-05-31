@@ -63,9 +63,12 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
+  // Dark-mode chrome now matches the Dark Electric base. Light kept for the
+  // surfaces not yet migrated (dashboard, /t, etc). The landing overrides
+  // this with a fixed dark theme-color in its own (landing)/layout viewport.
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#F7F5F0" },
-    { media: "(prefers-color-scheme: dark)", color: "#1B4D3E" },
+    { media: "(prefers-color-scheme: dark)", color: "#0A0A0F" },
   ],
 };
 

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import * as React from "react";
 
 import { Footer } from "./_components/footer";
@@ -20,6 +20,13 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
+};
+
+// The landing is always Dark Electric (not OS-scheme dependent), so its
+// browser chrome is pinned to the near-black base — overrides the root
+// layout's light/dark media-query theme-color for this route group only.
+export const viewport: Viewport = {
+  themeColor: "#0A0A0F",
 };
 
 export default function LandingLayout({
