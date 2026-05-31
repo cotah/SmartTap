@@ -18,10 +18,10 @@ export function Comparison() {
     <Section id="comparison">
       <header className="mb-10 flex flex-col items-start gap-4 md:mb-12">
         <SectionEyebrow>Why shops switch</SectionEyebrow>
-        <h2 className="max-w-[820px] font-display text-3xl leading-tight tracking-[-0.02em] text-neutral-900 md:text-[44px]">
+        <h2 className="max-w-[820px] font-display text-3xl font-semibold leading-tight tracking-[-0.02em] text-electric-text md:text-[44px]">
           Why shops switch to SmartTap.
         </h2>
-        <p className="max-w-[640px] text-base leading-relaxed text-neutral-600 md:text-lg">
+        <p className="max-w-[640px] text-base leading-relaxed text-electric-text-muted md:text-lg">
           Five things owners ask about before signing. Five honest answers.
         </p>
       </header>

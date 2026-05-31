@@ -18,25 +18,25 @@ import { cn } from "@/lib/utils";
 export function ComparisonTable() {
   return (
     <div className="hidden md:block">
-      <div className="overflow-hidden rounded-2xl border border-neutral-300 bg-cream">
+      <div className="overflow-hidden rounded-2xl border border-electric-border bg-electric-surface">
         <table className="w-full text-left">
-          <thead className="bg-cream/50">
-            <tr className="border-b border-neutral-300">
+          <thead className="bg-electric-surface-2/50">
+            <tr className="border-b border-electric-border">
               <th
                 scope="col"
-                className="w-2/5 px-6 py-5 font-mono text-xs font-medium uppercase tracking-[0.12em] text-neutral-600"
+                className="w-2/5 px-6 py-5 font-mono text-xs font-medium uppercase tracking-[0.12em] text-electric-text-muted"
               >
                 What matters
               </th>
               <th
                 scope="col"
-                className="w-[30%] bg-green-900/[0.04] px-6 py-5 font-display text-xl tracking-tight text-green-900"
+                className="w-[30%] bg-electric-cyan/[0.06] px-6 py-5 font-display text-xl font-semibold tracking-tight text-electric-cyan"
               >
                 SmartTap
               </th>
               <th
                 scope="col"
-                className="w-[30%] px-6 py-5 font-display text-xl tracking-tight text-neutral-600"
+                className="w-[30%] px-6 py-5 font-display text-xl font-semibold tracking-tight text-electric-text-muted"
               >
                 Typical alternatives
               </th>
@@ -47,28 +47,28 @@ export function ComparisonTable() {
               <tr
                 key={row.axis}
                 className={cn(
-                  i !== COMPARISON_ROWS.length - 1 && "border-b border-neutral-300/70",
+                  i !== COMPARISON_ROWS.length - 1 && "border-b border-electric-border",
                 )}
               >
                 <th
                   scope="row"
-                  className="px-6 py-5 text-base font-medium text-neutral-900"
+                  className="px-6 py-5 text-base font-medium text-electric-text"
                 >
                   {row.axis}
                 </th>
-                <td className="bg-green-900/[0.04] px-6 py-5">
-                  <span className="flex items-center gap-2 text-base text-neutral-900">
+                <td className="bg-electric-cyan/[0.06] px-6 py-5">
+                  <span className="flex items-center gap-2 text-base text-electric-text">
                     <Check
-                      className="h-4 w-4 shrink-0 text-green-900"
+                      className="h-4 w-4 shrink-0 text-electric-cyan"
                       aria-hidden="true"
                     />
                     <span>{row.smarttap}</span>
                   </span>
                 </td>
                 <td className="px-6 py-5">
-                  <span className="flex items-center gap-2 text-base text-neutral-600">
+                  <span className="flex items-center gap-2 text-base text-electric-text-muted">
                     <X
-                      className="h-4 w-4 shrink-0 text-neutral-600"
+                      className="h-4 w-4 shrink-0 text-electric-text-muted"
                       aria-hidden="true"
                     />
                     <span>{row.others}</span>

@@ -8,12 +8,12 @@ import { cn } from "@/lib/utils";
 import { LandingButton } from "../button";
 
 /**
- * Single pricing card.
+ * Single pricing card (Dark Electric).
  *
  * Two visual variants driven by `plan.highlight`:
- * - Default: cream background, neutral border, green CTA
- * - Highlighted ("Most popular"): green-900 background, cream text, amber
- *   badge, slightly lifted via shadow and a 1px amber ring
+ * - Default: raised dark surface, subtle border, ghost CTA
+ * - Highlighted ("Most popular"): cyan border + glow + faint cyan gradient,
+ *   cyan badge, cyan price, filled cyan CTA, slightly lifted
  *
  * Setup fee is the visual hook (€49+) but monthly is the larger number —
  * the eye is supposed to land on €29/mo first. Per-plan features stay
@@ -27,15 +27,16 @@ export function PricingCard({ plan }: { plan: Plan }) {
       className={cn(
         "relative flex h-full flex-col rounded-2xl border p-6 transition-colors md:p-7",
         highlighted
-          ? "border-amber-500 bg-green-900 text-cream shadow-xl ring-1 ring-amber-500/40 md:scale-[1.02]"
-          : "border-neutral-300 bg-cream text-neutral-900 shadow-sm hover:border-green-900/30",
+          ? "border-electric-cyan bg-gradient-to-b from-electric-surface-2 to-electric-surface text-electric-text shadow-[0_0_40px_rgba(0,212,255,0.18)] ring-1 ring-electric-cyan/40 md:scale-[1.02]"
+          : "border-electric-border bg-electric-surface text-electric-text hover:border-electric-cyan/40",
       )}
     >
       {highlighted && (
         <span
           className={cn(
             "absolute -top-3 left-1/2 -translate-x-1/2 rounded-full",
-            "bg-amber-500 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-900",
+            "bg-electric-cyan px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-electric-bg",
+            "shadow-[0_0_16px_rgba(0,212,255,0.6)]",
           )}
         >
           ★ Most popular
@@ -43,49 +44,25 @@ export function PricingCard({ plan }: { plan: Plan }) {
       )}
 
       <header className="flex flex-col gap-1">
-        <h3
-          className={cn(
-            "font-display text-2xl leading-tight tracking-tight",
-            highlighted ? "text-cream" : "text-neutral-900",
-          )}
-        >
+        <h3 className="font-display text-2xl font-semibold leading-tight tracking-tight text-electric-text">
           {plan.name}
         </h3>
-        <p
-          className={cn(
-            "text-sm",
-            highlighted ? "text-cream/75" : "text-neutral-600",
-          )}
-        >
-          {plan.tagline}
-        </p>
+        <p className="text-sm text-electric-text-muted">{plan.tagline}</p>
       </header>
 
       <div className="mt-6 flex flex-col gap-1">
         <p className="flex items-baseline gap-1">
           <span
             className={cn(
-              "font-display text-[40px] leading-none tracking-tight",
-              highlighted ? "text-cream" : "text-neutral-900",
+              "font-display text-[40px] font-semibold leading-none tracking-tight",
+              highlighted ? "text-electric-cyan" : "text-electric-text",
             )}
           >
             €{plan.monthlyEur}
           </span>
-          <span
-            className={cn(
-              "text-sm",
-              highlighted ? "text-cream/75" : "text-neutral-600",
-            )}
-          >
-            /month
-          </span>
+          <span className="text-sm text-electric-text-muted">/month</span>
         </p>
-        <p
-          className={cn(
-            "text-[13px]",
-            highlighted ? "text-cream/70" : "text-neutral-600",
-          )}
-        >
+        <p className="text-[13px] text-electric-text-muted">
           €{plan.setupFeeEur} one-time setup · {plan.customerCap}
         </p>
       </div>
@@ -94,16 +71,10 @@ export function PricingCard({ plan }: { plan: Plan }) {
         {plan.features.map((feat) => (
           <li
             key={feat}
-            className={cn(
-              "flex items-start gap-2 text-sm leading-relaxed",
-              highlighted ? "text-cream/90" : "text-neutral-900",
-            )}
+            className="flex items-start gap-2 text-sm leading-relaxed text-electric-text-muted"
           >
             <Check
-              className={cn(
-                "mt-0.5 h-4 w-4 shrink-0",
-                highlighted ? "text-amber-500" : "text-green-900",
-              )}
+              className="mt-0.5 h-4 w-4 shrink-0 text-electric-cyan"
               aria-hidden="true"
             />
             <span>{feat}</span>
@@ -114,16 +85,9 @@ export function PricingCard({ plan }: { plan: Plan }) {
       <div className="mt-7">
         <LandingButton
           href={`/signup?plan=${plan.id}`}
-          variant={highlighted ? "secondary" : "primary"}
+          variant={highlighted ? "primary" : "secondary"}
           size="md"
-          className={cn(
-            "w-full",
-            highlighted &&
-              cn(
-                "border-cream bg-cream text-green-900",
-                "hover:border-amber-500 hover:bg-amber-500 hover:text-neutral-900",
-              ),
-          )}
+          className="w-full"
         >
           {PRICING_CTA_LABEL}
         </LandingButton>

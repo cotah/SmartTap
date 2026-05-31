@@ -36,18 +36,18 @@ export function FoundingCallout() {
     <div
       ref={ref}
       className={cn(
-        "mt-10 flex flex-col gap-4 rounded-2xl border border-amber-500/60 bg-amber-50/70 p-6 md:mt-12 md:flex-row md:items-center md:justify-between md:gap-8 md:p-8",
+        "mt-10 flex flex-col gap-4 rounded-2xl border border-electric-cyan/50 bg-electric-cyan/[0.06] p-6 shadow-[0_0_40px_rgba(0,212,255,0.1)] md:mt-12 md:flex-row md:items-center md:justify-between md:gap-8 md:p-8",
         "transition-opacity duration-700",
         visible ? "opacity-100" : "opacity-0",
       )}
     >
       <div className="flex flex-col gap-2">
-        <p className="font-mono text-xs font-medium uppercase tracking-[0.12em] text-amber-600">
+        <p className="font-mono text-xs font-medium uppercase tracking-[0.12em] text-electric-cyan">
           Founding members only
         </p>
-        <p className="font-display text-2xl leading-tight tracking-tight text-neutral-900 md:text-[26px]">
+        <p className="font-display text-2xl font-semibold leading-tight tracking-tight text-electric-text md:text-[26px]">
           First{" "}
-          <span className="text-amber-600">
+          <span className="text-electric-cyan">
             {/* Visual animating count — hidden from screen readers so the
              * tween doesn't trigger N announcements as it climbs. */}
             <span aria-hidden="true">

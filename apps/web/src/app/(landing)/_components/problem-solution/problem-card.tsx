@@ -22,10 +22,10 @@ export function ProblemCard({
   return (
     <ScrollFade delay={delay} className="h-full">
       <div className="flex h-full flex-col gap-4 py-2">
-        <p className="font-mono text-xs font-medium uppercase tracking-[0.12em] text-amber-600">
+        <p className="font-mono text-xs font-medium uppercase tracking-[0.12em] text-electric-cyan">
           {number}
         </p>
-        <p className="font-display text-2xl leading-snug tracking-tight text-neutral-900 md:text-[28px]">
+        <p className="font-display text-2xl font-semibold leading-snug tracking-tight text-electric-text md:text-[28px]">
           {text}
         </p>
       </div>

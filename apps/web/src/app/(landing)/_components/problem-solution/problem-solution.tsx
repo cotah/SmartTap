@@ -32,10 +32,10 @@ const PROBLEMS = [
 
 export function ProblemSolution() {
   return (
-    <Section id="problem" className="bg-green-50/40">
+    <Section id="problem" className="bg-electric-surface/30">
       <header className="mb-12 flex flex-col items-start gap-4 md:mb-16">
         <SectionEyebrow>The honest part</SectionEyebrow>
-        <h2 className="font-display text-3xl leading-tight tracking-[-0.02em] text-neutral-900 md:text-[44px]">
+        <h2 className="font-display text-3xl font-semibold leading-tight tracking-[-0.02em] text-electric-text md:text-[44px]">
           Sound familiar?
         </h2>
       </header>
@@ -49,19 +49,20 @@ export function ProblemSolution() {
       </ul>
 
       <div className="mt-16 max-w-[820px] md:mt-20">
-        <p className="font-display text-2xl leading-tight tracking-[-0.01em] text-green-900 md:text-3xl lg:text-[34px]">
+        <p className="font-display text-2xl font-semibold leading-tight tracking-[-0.01em] text-electric-text md:text-3xl lg:text-[34px]">
           SmartTap turns one tap into{" "}
-          <span className="relative inline-block">
+          <span className="relative inline-block text-electric-cyan">
             both
             <svg
               aria-hidden="true"
               className="absolute -bottom-1 left-0 h-2 w-full md:-bottom-1.5 md:h-3"
               viewBox="0 0 80 12"
               preserveAspectRatio="none"
+              style={{ filter: "drop-shadow(0 0 6px rgba(0,212,255,0.7))" }}
             >
               <path
                 d="M2 8 Q20 2 40 6 T78 8"
-                stroke="#E8A020"
+                stroke="#00D4FF"
                 strokeWidth="3"
                 strokeLinecap="round"
                 fill="none"
@@ -70,7 +71,7 @@ export function ProblemSolution() {
           </span>
           .
         </p>
-        <p className="mt-4 max-w-[640px] text-base leading-relaxed text-neutral-600 md:text-lg">
+        <p className="mt-4 max-w-[640px] text-base leading-relaxed text-electric-text-muted md:text-lg">
           A review that pulls a stranger in. A stamp that brings the regular
           back. One tap on the counter, both jobs done.
         </p>
