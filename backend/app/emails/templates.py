@@ -9,7 +9,7 @@ strip <style> tags and ignore external CSS.
 
 Design rules (don't change without alignment):
     - Container 600px, single column, centered
-    - Brand palette: #1B4D3E (green), #E8A020 (amber), #F7F5F0 (off-white)
+    - Dark Electric hybrid: dark header (#0A0A0F) + cyan CTA (#00D4FF), light body
     - DM Sans falls back to system sans-serif (no @font-face in email)
     - One CTA per email; secondary links inline only
     - No emojis, no exclamation marks in subjects
@@ -24,8 +24,12 @@ from typing import Any
 # inbox eventually. Local dev with Resend "delivered" sandbox stays consistent.
 SITE_URL = "https://smarttap.ie"
 
-GREEN = "#1B4D3E"
-AMBER = "#E8A020"
+# Dark Electric (hybrid email): dark header strip + cyan accents on a LIGHT,
+# reliable body. Full-dark email bodies render inconsistently across clients
+# (Outlook ignores bg-color, Gmail/Apple auto-invert), so the card stays light
+# for legibility; only the header strip + OTP chip are dark (with bgcolor attrs).
+DARK = "#0A0A0F"
+CYAN = "#00D4FF"
 OFF_WHITE = "#F7F5F0"
 BLACK = "#1A1A1A"
 GREY = "#6B6B6B"
@@ -54,6 +58,8 @@ def _layout(*, preheader: str, body_html: str, cta_label: str, cta_url: str) -> 
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
 <title>SmartTap</title>
 </head>
 <body style="margin:0;padding:0;background-color:{OFF_WHITE};font-family:'DM Sans',Helvetica,Arial,sans-serif;color:{BLACK};">
@@ -63,13 +69,13 @@ def _layout(*, preheader: str, body_html: str, cta_label: str, cta_url: str) -> 
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:{OFF_WHITE};">
     <tr><td align="center" style="padding:24px 12px;">
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:12px;overflow:hidden;border:1px solid rgba(0,0,0,0.06);">
-        <tr><td style="background-color:{GREEN};padding:20px 24px;">
-          <p style="margin:0;color:{OFF_WHITE};font-size:12px;letter-spacing:4px;text-transform:uppercase;">SmartTap</p>
+        <tr><td bgcolor="{DARK}" style="background-color:{DARK};padding:20px 24px;">
+          <p style="margin:0;color:{CYAN};font-size:12px;letter-spacing:4px;text-transform:uppercase;font-weight:700;">SmartTap</p>
         </td></tr>
         <tr><td style="padding:32px 24px;font-size:15px;line-height:1.55;color:{BLACK};">
           {body_html}
           <p style="margin:28px 0 0 0;">
-            <a href="{_escape(cta_url)}" style="display:inline-block;background-color:{AMBER};color:{BLACK};text-decoration:none;padding:12px 24px;border-radius:999px;font-weight:600;font-size:14px;">{_escape(cta_label)}</a>
+            <a href="{_escape(cta_url)}" style="display:inline-block;background-color:{CYAN};color:{DARK};text-decoration:none;padding:12px 24px;border-radius:999px;font-weight:600;font-size:14px;">{_escape(cta_label)}</a>
           </p>
         </td></tr>
         <tr><td style="padding:20px 24px;border-top:1px solid rgba(0,0,0,0.06);font-size:12px;color:{GREY};">
@@ -264,6 +270,8 @@ def reactivation_email(
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
 <title>{_escape(business)}</title>
 </head>
 <body style="margin:0;padding:0;background-color:{OFF_WHITE};font-family:'DM Sans',Helvetica,Arial,sans-serif;color:{BLACK};">
@@ -271,13 +279,13 @@ def reactivation_email(
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:{OFF_WHITE};">
     <tr><td align="center" style="padding:24px 12px;">
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:12px;overflow:hidden;border:1px solid rgba(0,0,0,0.06);">
-        <tr><td style="background-color:{GREEN};padding:20px 24px;">
-          <p style="margin:0;color:{OFF_WHITE};font-size:12px;letter-spacing:4px;text-transform:uppercase;">{_escape(business)}</p>
+        <tr><td bgcolor="{DARK}" style="background-color:{DARK};padding:20px 24px;">
+          <p style="margin:0;color:#FFFFFF;font-size:12px;letter-spacing:4px;text-transform:uppercase;font-weight:700;">{_escape(business)}</p>
         </td></tr>
         <tr><td style="padding:32px 24px;font-size:15px;line-height:1.55;color:{BLACK};">
           {body_html}
           <p style="margin:28px 0 0 0;">
-            <a href="{_escape(magic_link_url)}" style="display:inline-block;background-color:{AMBER};color:{BLACK};text-decoration:none;padding:12px 24px;border-radius:999px;font-weight:600;font-size:14px;">Show my stamps</a>
+            <a href="{_escape(magic_link_url)}" style="display:inline-block;background-color:{CYAN};color:{DARK};text-decoration:none;padding:12px 24px;border-radius:999px;font-weight:600;font-size:14px;">Show my stamps</a>
           </p>
         </td></tr>
         <tr><td style="padding:20px 24px;border-top:1px solid rgba(0,0,0,0.06);font-size:12px;color:{GREY};">
@@ -337,6 +345,8 @@ def review_nudge_email(
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
 <title>{_escape(business)}</title>
 </head>
 <body style="margin:0;padding:0;background-color:{OFF_WHITE};font-family:'DM Sans',Helvetica,Arial,sans-serif;color:{BLACK};">
@@ -344,13 +354,13 @@ def review_nudge_email(
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:{OFF_WHITE};">
     <tr><td align="center" style="padding:24px 12px;">
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:12px;overflow:hidden;border:1px solid rgba(0,0,0,0.06);">
-        <tr><td style="background-color:{GREEN};padding:20px 24px;">
-          <p style="margin:0;color:{OFF_WHITE};font-size:12px;letter-spacing:4px;text-transform:uppercase;">{_escape(business)}</p>
+        <tr><td bgcolor="{DARK}" style="background-color:{DARK};padding:20px 24px;">
+          <p style="margin:0;color:#FFFFFF;font-size:12px;letter-spacing:4px;text-transform:uppercase;font-weight:700;">{_escape(business)}</p>
         </td></tr>
         <tr><td style="padding:32px 24px;font-size:15px;line-height:1.55;color:{BLACK};">
           {body_html}
           <p style="margin:28px 0 0 0;">
-            <a href="{_escape(review_url)}" style="display:inline-block;background-color:{AMBER};color:{BLACK};text-decoration:none;padding:12px 24px;border-radius:999px;font-weight:600;font-size:14px;">Leave a review</a>
+            <a href="{_escape(review_url)}" style="display:inline-block;background-color:{CYAN};color:{DARK};text-decoration:none;padding:12px 24px;border-radius:999px;font-weight:600;font-size:14px;">Leave a review</a>
           </p>
         </td></tr>
         <tr><td style="padding:20px 24px;border-top:1px solid rgba(0,0,0,0.06);font-size:12px;color:{GREY};">
@@ -380,7 +390,7 @@ def whatsapp_otp_email(*, code: str) -> RenderedEmail:
         <h1 style="margin:0 0 12px 0;font-size:22px;color:{BLACK};">Your WhatsApp verification code</h1>
         <p style="margin:0 0 12px 0;">Hi there,</p>
         <p style="margin:0 0 16px 0;">Use this code in WhatsApp to link your number to your SmartTap account:</p>
-        <p style="margin:0 0 16px 0;font-size:32px;font-weight:700;letter-spacing:8px;color:{GREEN};">{safe_code}</p>
+        <p style="margin:0 0 16px 0;"><span bgcolor="{DARK}" style="display:inline-block;background-color:{DARK};color:{CYAN};font-size:30px;font-weight:700;letter-spacing:8px;padding:12px 20px;border-radius:10px;">{safe_code}</span></p>
         <p style="margin:0 0 12px 0;color:{GREY};font-size:13px;">This code expires in 10 minutes. If you didn't request it, you can ignore this email.</p>
     """
     text = (
@@ -393,6 +403,8 @@ def whatsapp_otp_email(*, code: str) -> RenderedEmail:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
 <title>SmartTap</title>
 </head>
 <body style="margin:0;padding:0;background-color:{OFF_WHITE};font-family:'DM Sans',Helvetica,Arial,sans-serif;color:{BLACK};">
@@ -400,8 +412,8 @@ def whatsapp_otp_email(*, code: str) -> RenderedEmail:
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:{OFF_WHITE};">
     <tr><td align="center" style="padding:24px 12px;">
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:12px;overflow:hidden;border:1px solid rgba(0,0,0,0.06);">
-        <tr><td style="background-color:{GREEN};padding:20px 24px;">
-          <p style="margin:0;color:{OFF_WHITE};font-size:12px;letter-spacing:4px;text-transform:uppercase;">SmartTap</p>
+        <tr><td bgcolor="{DARK}" style="background-color:{DARK};padding:20px 24px;">
+          <p style="margin:0;color:{CYAN};font-size:12px;letter-spacing:4px;text-transform:uppercase;font-weight:700;">SmartTap</p>
         </td></tr>
         <tr><td style="padding:32px 24px;font-size:15px;line-height:1.55;color:{BLACK};">
           {body_html}

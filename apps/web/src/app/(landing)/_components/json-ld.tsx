@@ -34,7 +34,7 @@ export function LandingJsonLd() {
         contactPoint: [
           {
             "@type": "ContactPoint",
-            email: "henrique@smarttap.ie",
+            email: "support@smarttap.ie",
             contactType: "customer support",
             areaServed: "IE",
             availableLanguage: ["en"],

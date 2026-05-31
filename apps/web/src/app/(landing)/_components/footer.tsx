@@ -22,7 +22,7 @@ const PRODUCT_LINKS = [
 
 const COMPANY_LINKS = [
   { label: "Founder note", href: "/about" },
-  { label: "Contact", href: "mailto:henrique@smarttap.ie" },
+  { label: "Contact", href: "mailto:support@smarttap.ie" },
   { label: "Roadmap", href: "/roadmap" },
 ];
 

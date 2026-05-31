@@ -53,10 +53,10 @@ export function LegalStub({
       <p className="text-sm text-neutral-600">
         Need the detail now?{" "}
         <a
-          href="mailto:henrique@smarttap.ie"
+          href="mailto:support@smarttap.ie"
           className="font-medium text-green-900 underline-offset-4 hover:text-amber-600 hover:underline"
         >
-          henrique@smarttap.ie
+          support@smarttap.ie
         </a>
       </p>
 

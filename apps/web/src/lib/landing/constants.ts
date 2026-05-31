@@ -21,7 +21,7 @@ export const FOUNDING_TOTAL = 5;
 export const BOOK_CALL_URL = "henrique-pasquetto-tt5xm5/15min";
 
 /** Mailto destination when BOOK_CALL_URL is empty. */
-export const BOOK_CALL_MAILTO = "henrique@smarttap.ie";
+export const BOOK_CALL_MAILTO = "support@smarttap.ie";
 
 /** Hero microtrust line copy — kept here so adjusting it doesn't require
  * touching JSX. */
