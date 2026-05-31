@@ -46,17 +46,17 @@ export function AnimatedDemo() {
           {/* Left: caption */}
           <div className="flex flex-col gap-5">
             <SectionEyebrow>The interaction</SectionEyebrow>
-            <h2 className="font-display text-3xl leading-[1.1] tracking-[-0.02em] md:text-4xl lg:text-[44px]">
+            <h2 className="font-display text-3xl font-semibold leading-[1.1] tracking-[-0.02em] md:text-4xl lg:text-[44px]">
               This is what your customers see.
               <br />
-              <span className="text-green-900">One tap. That&apos;s it.</span>
+              <span className="text-electric-cyan">One tap. That&apos;s it.</span>
             </h2>
-            <p className="max-w-[480px] text-base leading-relaxed text-neutral-600 md:text-lg">
+            <p className="max-w-[480px] text-base leading-relaxed text-electric-text-muted md:text-lg">
               No app to download. No QR code to scan. No menu to navigate. The
               phone touches the stand, the page opens, and the review takes
               one tap to send.
             </p>
-            <ul className="mt-2 grid gap-3 text-sm text-neutral-600 md:text-[15px]">
+            <ul className="mt-2 grid gap-3 text-sm text-electric-text-muted md:text-[15px]">
               <li className="flex items-start gap-2">
                 <Bullet />
                 <span>
@@ -85,7 +85,7 @@ export function AnimatedDemo() {
           <div className="relative">
             <div
               aria-hidden="true"
-              className="absolute inset-x-0 inset-y-8 -z-10 rounded-[40%] bg-green-50 opacity-80 blur-2xl"
+              className="absolute inset-x-0 inset-y-8 -z-10 rounded-[40%] bg-electric-cyan/15 blur-3xl"
             />
             <svg
               viewBox="0 0 500 400"
@@ -110,7 +110,7 @@ function Bullet() {
   return (
     <span
       aria-hidden="true"
-      className="mt-2 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500"
+      className="mt-2 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-electric-cyan"
     />
   );
 }
