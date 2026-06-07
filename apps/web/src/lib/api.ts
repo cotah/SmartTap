@@ -37,6 +37,7 @@ export type {
   CustomerListItem,
   CustomerListResponse,
   CustomerListParams,
+  CustomerStats,
   OnboardingComplete,
   BillingPlanId,
   CheckoutSessionInput,

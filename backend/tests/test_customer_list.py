@@ -7,6 +7,7 @@ from app.services import customer_service
 from app.services.customer_service import (
     ExportCustomersContext,
     ListCustomersContext,
+    customer_stats,
     export_customers_csv,
     list_customers,
 )
@@ -216,3 +217,64 @@ def test_export_csv_raises_when_tenant_missing(
                 tenant_id="missing", search=None, filter_mode="all", sort="recent"
             )
         )
+
+
+# ---------------------------------------------------------------------------
+# customer_stats — loyalty summary header (Fase D)
+# ---------------------------------------------------------------------------
+
+
+def test_customer_stats_counts_each_filter(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The four cards must each report the unpaginated total of their own
+    filter, so a card's number always matches the list it opens."""
+    monkeypatch.setattr(
+        customer_service.tenants,
+        "get_by_id",
+        lambda _id: {"id": "t-1", "stamps_for_reward": 10},
+    )
+
+    totals = {"all": 42, "active": 18, "at_risk": 7, "has_reward": 3}
+
+    def fake_list(**kwargs: Any) -> tuple[list[Any], int]:
+        # count-only: only the total matters; mode drives the number
+        return [], totals[kwargs["filter_mode"]]
+
+    monkeypatch.setattr(customer_service.customers, "list_for_tenant", fake_list)
+
+    stats = customer_stats("t-1")
+
+    assert stats.total == 42
+    assert stats.active == 18
+    assert stats.at_risk == 7
+    assert stats.reward_ready == 3
+
+
+def test_customer_stats_passes_stamps_for_reward_to_has_reward_count(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """reward_ready depends on the tenant's threshold — it must be forwarded."""
+    monkeypatch.setattr(
+        customer_service.tenants,
+        "get_by_id",
+        lambda _id: {"id": "t-1", "stamps_for_reward": 8},
+    )
+    seen: dict[str, Any] = {}
+
+    def fake_list(**kwargs: Any) -> tuple[list[Any], int]:
+        if kwargs["filter_mode"] == "has_reward":
+            seen["stamps_for_reward"] = kwargs["stamps_for_reward"]
+        return [], 0
+
+    monkeypatch.setattr(customer_service.customers, "list_for_tenant", fake_list)
+
+    customer_stats("t-1")
+
+    assert seen["stamps_for_reward"] == 8
+
+
+def test_customer_stats_raises_when_tenant_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(customer_service.tenants, "get_by_id", lambda _id: None)
+    with pytest.raises(NotFoundError):
+        customer_stats("missing")

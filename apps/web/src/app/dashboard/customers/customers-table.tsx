@@ -1,6 +1,13 @@
 "use client";
 
-import { Search } from "lucide-react";
+import {
+  AlertTriangle,
+  Gift,
+  type LucideIcon,
+  Search,
+  UserCheck,
+  Users,
+} from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   type ChangeEvent,
@@ -14,6 +21,7 @@ import type {
   CustomerListFilter,
   CustomerListItem,
   CustomerListSort,
+  CustomerStats,
 } from "@/lib/api";
 
 interface Props {
@@ -25,14 +33,44 @@ interface Props {
   total: number;
   items: CustomerListItem[];
   stampsForReward: number;
+  stats: CustomerStats;
 }
 
-const FILTER_LABELS: Record<CustomerListFilter, string> = {
-  all: "All",
-  active: "Active",
-  at_risk: "At risk",
-  has_reward: "Reward ready",
-};
+// The four summary cards double as the filter: each shows its own count and
+// applies its filter on click. Order matters (Total first).
+interface StatCard {
+  key: CustomerListFilter;
+  label: string;
+  icon: LucideIcon;
+  badge: string; // icon-plate tint (literal so Tailwind keeps it)
+}
+
+const STAT_CARDS: StatCard[] = [
+  {
+    key: "all",
+    label: "Total members",
+    icon: Users,
+    badge: "bg-electric-cyan/15 text-electric-cyan",
+  },
+  {
+    key: "active",
+    label: "Active",
+    icon: UserCheck,
+    badge: "bg-emerald-500/15 text-emerald-300",
+  },
+  {
+    key: "at_risk",
+    label: "At risk",
+    icon: AlertTriangle,
+    badge: "bg-red-500/15 text-red-300",
+  },
+  {
+    key: "has_reward",
+    label: "Rewards ready",
+    icon: Gift,
+    badge: "bg-fuchsia-500/15 text-fuchsia-300",
+  },
+];
 
 const SORT_LABELS: Record<CustomerListSort, string> = {
   recent: "Most recent",
@@ -90,6 +128,7 @@ export function CustomersTable({
   total,
   items,
   stampsForReward,
+  stats,
 }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -183,28 +222,49 @@ export function CustomersTable({
         </div>
       </div>
 
-      {/* Filter pills */}
+      {/* Summary cards — each shows its count and applies its filter on click */}
       <div
-        className="flex flex-wrap gap-2"
+        className="grid grid-cols-2 gap-3 sm:grid-cols-4"
         role="tablist"
-        aria-label="Filter customers"
+        aria-label="Filter customers by loyalty status"
       >
-        {(Object.keys(FILTER_LABELS) as CustomerListFilter[]).map((key) => {
-          const active = key === filter;
+        {STAT_CARDS.map((card) => {
+          const active = card.key === filter;
+          const count =
+            card.key === "all"
+              ? stats.total
+              : card.key === "active"
+                ? stats.active
+                : card.key === "at_risk"
+                  ? stats.at_risk
+                  : stats.reward_ready;
+          const Icon = card.icon;
           return (
             <button
-              key={key}
+              key={card.key}
               type="button"
               role="tab"
               aria-selected={active}
-              onClick={() => onFilterChange(key)}
-              className={`rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+              onClick={() => onFilterChange(card.key)}
+              className={`flex flex-col gap-3 rounded-xl border p-4 text-left transition-all ${
                 active
-                  ? "bg-electric-cyan text-electric-bg shadow-[0_0_14px_rgba(0,212,255,0.35)]"
-                  : "bg-electric-surface text-electric-text-muted hover:bg-electric-surface-2 hover:text-electric-cyan"
+                  ? "border-electric-cyan bg-electric-surface-2 shadow-[0_0_18px_rgba(0,212,255,0.18)]"
+                  : "border-electric-border bg-electric-surface hover:border-electric-cyan/40 hover:bg-electric-surface-2"
               }`}
             >
-              {FILTER_LABELS[key]}
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-electric-text-muted">
+                  {card.label}
+                </span>
+                <span
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${card.badge}`}
+                >
+                  <Icon className="h-4 w-4" aria-hidden="true" />
+                </span>
+              </div>
+              <span className="font-display text-2xl font-semibold leading-none text-electric-text sm:text-3xl">
+                {count.toLocaleString()}
+              </span>
             </button>
           );
         })}

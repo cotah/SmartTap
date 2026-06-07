@@ -48,8 +48,9 @@ export default async function CustomersPage({ searchParams }: PageProps) {
 
   const api = getAuthApiClient();
 
-  // Parallelize: customer list + reward config (for stamps_for_reward).
-  const [result, tenantResult] = await Promise.all([
+  // Parallelize: customer list + reward config (for stamps_for_reward) + the
+  // loyalty summary counts.
+  const [result, tenantResult, stats] = await Promise.all([
     api.listCustomers({
       search: search || undefined,
       filter,
@@ -58,6 +59,7 @@ export default async function CustomersPage({ searchParams }: PageProps) {
       limit: PAGE_SIZE,
     }),
     api.getTenant(),
+    api.getCustomerStats(),
   ]);
 
   const stampsForReward = tenantResult.tenant.stamps_for_reward;
@@ -86,6 +88,7 @@ export default async function CustomersPage({ searchParams }: PageProps) {
         total={result.total}
         items={result.items}
         stampsForReward={stampsForReward}
+        stats={stats}
       />
     </div>
   );

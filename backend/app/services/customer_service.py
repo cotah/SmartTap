@@ -210,3 +210,40 @@ def export_customers_csv(ctx: ExportCustomersContext) -> str:
         page += 1
 
     return buf.getvalue()
+
+
+@dataclass(frozen=True)
+class CustomerStatsResult:
+    total: int
+    active: int
+    at_risk: int
+    reward_ready: int
+
+
+def customer_stats(tenant_id: str) -> CustomerStatsResult:
+    """Counts for the loyalty summary cards. Each count reuses list_for_tenant
+    so a card's number always matches the list that card's filter opens (same
+    cutoff + reward-threshold logic, no duplication)."""
+    tenant = tenants.get_by_id(tenant_id)
+    if tenant is None:
+        raise NotFoundError("Tenant not found", detail={"tenant_id": tenant_id})
+    stamps_for_reward = int(tenant.get("stamps_for_reward") or 0)
+
+    def count(mode: FilterMode) -> int:
+        _, total = customers.list_for_tenant(
+            tenant_id=tenant_id,
+            search=None,
+            filter_mode=mode,
+            sort="recent",
+            page=1,
+            limit=1,
+            stamps_for_reward=stamps_for_reward,
+        )
+        return total
+
+    return CustomerStatsResult(
+        total=count("all"),
+        active=count("active"),
+        at_risk=count("at_risk"),
+        reward_ready=count("has_reward"),
+    )

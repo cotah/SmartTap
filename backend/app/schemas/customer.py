@@ -35,3 +35,10 @@ class CustomerListResponse(BaseModel):
     total: int = Field(ge=0)
     page: int = Field(ge=1)
     limit: int = Field(ge=1)
+
+
+class CustomerStats(BaseModel):
+    total: int = Field(ge=0)
+    active: int = Field(ge=0)
+    at_risk: int = Field(ge=0)
+    reward_ready: int = Field(ge=0)

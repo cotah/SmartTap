@@ -140,6 +140,13 @@ export interface CustomerListParams {
   limit?: number;
 }
 
+export interface CustomerStats {
+  total: number;
+  active: number;
+  at_risk: number;
+  reward_ready: number;
+}
+
 export type TrialStatus =
   | "active"
   | "expiring_soon"
@@ -421,6 +428,7 @@ export interface ApiClient {
   getOverview: () => Promise<DashboardOverview>;
   getTapsTimeseries: (days?: number) => Promise<TapsTimeseries>;
   listCustomers: (params?: CustomerListParams) => Promise<CustomerListResponse>;
+  getCustomerStats: () => Promise<CustomerStats>;
   getTenant: () => Promise<{ tenant: TenantSelf }>;
   updateTenantSettings: (body: TenantSettingsUpdate) => Promise<{ tenant: TenantSelf }>;
   updateRewardConfig: (body: RewardConfig) => Promise<{ tenant: TenantSelf }>;
@@ -571,6 +579,7 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
       const suffix = qs.toString() ? `?${qs.toString()}` : "";
       return request<CustomerListResponse>(`/v1/customers${suffix}`);
     },
+    getCustomerStats: () => request<CustomerStats>(`/v1/customers/stats`),
     getTenant: () => request<{ tenant: TenantSelf }>(`/v1/tenant`),
     updateTenantSettings: (body) =>
       request<{ tenant: TenantSelf }>(`/v1/tenant/settings`, {

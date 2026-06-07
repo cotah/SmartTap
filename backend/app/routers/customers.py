@@ -9,12 +9,14 @@ from app.schemas.customer import (
     CustomerIdentifyOut,
     CustomerListItem,
     CustomerListResponse,
+    CustomerStats,
 )
 from app.services import reactivation_service
 from app.services.customer_service import (
     ExportCustomersContext,
     IdentifyContext,
     ListCustomersContext,
+    customer_stats,
     export_customers_csv,
     identify_customer,
     list_customers,
@@ -91,6 +93,21 @@ def export_customers_endpoint(
         content=csv_text,
         media_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": 'attachment; filename="customers.csv"'},
+    )
+
+
+@router.get("/customers/stats", response_model=CustomerStats)
+def customer_stats_endpoint(
+    tenant_id: Annotated[str, Depends(get_current_tenant_id)],
+) -> CustomerStats:
+    """Counts for the four loyalty summary cards (total / active / at risk /
+    reward ready), each matching the list its filter opens."""
+    s = customer_stats(tenant_id)
+    return CustomerStats(
+        total=s.total,
+        active=s.active,
+        at_risk=s.at_risk,
+        reward_ready=s.reward_ready,
     )
 
 
