@@ -21,6 +21,7 @@ def _to_out(row: dict[str, Any]) -> NfcTagOut:
         id=row["id"],
         tenant_id=row["tenant_id"],
         tag_uuid=row["tag_uuid"],
+        tag_number=row.get("tag_number"),
         format=row["format"],
         color=row["color"],
         location_name=row.get("location_name"),

@@ -59,6 +59,7 @@ class NfcTagOut(BaseModel):
     id: str
     tenant_id: str
     tag_uuid: str
+    tag_number: int | None  # per-tenant sequential label (#1, #2, …)
     format: NfcTagFormat
     color: NfcTagColor
     location_name: str | None

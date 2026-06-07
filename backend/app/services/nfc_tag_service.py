@@ -48,6 +48,9 @@ def create_tag(
         # An all-whitespace input is effectively unset — store NULL so
         # the dashboard's "<format> · <color>" fallback kicks in.
         clean_location = None
+    # Human-friendly per-tenant number (#1, #2, …) for labelling the physical
+    # stand. tag_uuid stays the opaque public id; this is what the owner reads.
+    tag_number = nfc_tags.max_tag_number(tenant_id) + 1
     row = nfc_tags.create(
         {
             "tenant_id": tenant_id,
@@ -55,6 +58,7 @@ def create_tag(
             "color": color,
             "location_name": clean_location,
             "is_active": True,
+            "tag_number": tag_number,
         }
     )
     log.info(

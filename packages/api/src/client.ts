@@ -260,6 +260,8 @@ export interface NfcTag {
   tenant_id: string;
   /** Immutable public path component — `https://smarttap.ie/t/<tag_uuid>`. */
   tag_uuid: string;
+  /** Per-tenant sequential label (#1, #2, …) for the physical stand. */
+  tag_number: number | null;
   format: NfcTagFormat;
   color: NfcTagColor;
   location_name: string | null;

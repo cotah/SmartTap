@@ -67,6 +67,14 @@ class FakeNfcTagsDB:
     def list_for_tenant(self, tenant_id: str) -> list[dict[str, Any]]:
         return [r for r in self.rows if r["tenant_id"] == tenant_id]
 
+    def max_tag_number(self, tenant_id: str) -> int:
+        nums = [
+            int(r["tag_number"])
+            for r in self.rows
+            if r["tenant_id"] == tenant_id and r.get("tag_number") is not None
+        ]
+        return max(nums, default=0)
+
 
 @pytest.fixture
 def db(monkeypatch: pytest.MonkeyPatch) -> FakeNfcTagsDB:
@@ -76,6 +84,9 @@ def db(monkeypatch: pytest.MonkeyPatch) -> FakeNfcTagsDB:
     monkeypatch.setattr(nfc_tag_service.nfc_tags, "update", fake.update)
     monkeypatch.setattr(
         nfc_tag_service.nfc_tags, "list_for_tenant", fake.list_for_tenant
+    )
+    monkeypatch.setattr(
+        nfc_tag_service.nfc_tags, "max_tag_number", fake.max_tag_number
     )
     return fake
 
@@ -303,3 +314,21 @@ def test_update_tag_rejects_cross_tenant(db: FakeNfcTagsDB) -> None:
     )
     with pytest.raises(NotFoundError):
         update_tag(tenant_id="t-1", tag_id="tag-1", color="navy")
+
+
+# ---------------------------------------------------------------------------
+# tag numbering (per-tenant sequential label)
+# ---------------------------------------------------------------------------
+
+
+def test_create_tag_assigns_sequential_per_tenant_numbers(db: FakeNfcTagsDB) -> None:
+    a = create_tag(tenant_id="t-1", format="counter_stand", color="black", location_name=None)
+    b = create_tag(tenant_id="t-1", format="sticker", color="red", location_name=None)
+    # A different tenant starts its own count at 1.
+    c = create_tag(tenant_id="t-2", format="sticker", color="white", location_name=None)
+    d = create_tag(tenant_id="t-1", format="table_tent", color="navy", location_name=None)
+
+    assert a["tag_number"] == 1
+    assert b["tag_number"] == 2
+    assert c["tag_number"] == 1
+    assert d["tag_number"] == 3

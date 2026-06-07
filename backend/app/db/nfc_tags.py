@@ -34,6 +34,25 @@ def create(fields: dict[str, Any]) -> Row:
     return rows[0]
 
 
+def max_tag_number(tenant_id: str) -> int:
+    """Highest human-friendly tag number for a tenant, or 0 if none yet.
+
+    Computed in Python (tags-per-tenant is a handful) to dodge NULL-ordering
+    pitfalls — any unbackfilled rows are simply ignored. The service adds 1 to
+    get the next number; the UNIQUE (tenant_id, tag_number) index is the final
+    guard against a race."""
+    client = get_supabase_admin()
+    res = (
+        client.table("nfc_tags")
+        .select("tag_number")
+        .eq("tenant_id", tenant_id)
+        .execute()
+    )
+    rows = cast(list[Row], res.data or [])
+    numbers = [int(r["tag_number"]) for r in rows if r.get("tag_number") is not None]
+    return max(numbers, default=0)
+
+
 def update(tag_id: str, fields: dict[str, Any]) -> Row:
     client = get_supabase_admin()
     res = client.table("nfc_tags").update(fields).eq("id", tag_id).execute()

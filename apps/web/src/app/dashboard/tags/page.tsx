@@ -80,6 +80,11 @@ function TagCard({ tag, siteUrl }: { tag: NfcTag; siteUrl: string }) {
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2">
+          {tag.tag_number != null ? (
+            <span className="shrink-0 rounded-md bg-electric-surface-2 px-1.5 py-0.5 font-mono text-xs font-semibold text-electric-cyan">
+              #{String(tag.tag_number).padStart(3, "0")}
+            </span>
+          ) : null}
           <span
             className="inline-block h-5 w-5 rounded-full border border-electric-border"
             style={{ backgroundColor: COLOR_SWATCH[tag.color] }}
