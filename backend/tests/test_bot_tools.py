@@ -28,6 +28,7 @@ def test_get_overview_returns_metrics(monkeypatch: pytest.MonkeyPatch) -> None:
             reviews_month=3,
             customers_at_risk=5,
             active_stamps_total=88,
+            loyalty_visits_today=6,
         )
 
     monkeypatch.setattr(bot_tools.dashboard_service, "overview", fake_overview)
@@ -40,6 +41,7 @@ def test_get_overview_returns_metrics(monkeypatch: pytest.MonkeyPatch) -> None:
     assert out["reviews_last_30_days"] == 3
     assert out["customers_at_risk_30d"] == 5
     assert out["active_stamps_total"] == 88
+    assert out["loyalty_visits_today"] == 6
 
 
 def test_query_customers_maps_filter_and_clamps_limit(

@@ -13,6 +13,8 @@ export type {
   IdentifyResponse,
   ValidateRewardResponse,
   DashboardOverview,
+  TapPoint,
+  TapsTimeseries,
   MeResponse,
   BootstrapInput,
   BootstrapResponse,

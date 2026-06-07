@@ -122,6 +122,7 @@ def _get_overview(tenant_id: str) -> str:
             "reviews_last_30_days": m.reviews_month,
             "customers_at_risk_30d": m.customers_at_risk,
             "active_stamps_total": m.active_stamps_total,
+            "loyalty_visits_today": m.loyalty_visits_today,
         }
     )
 

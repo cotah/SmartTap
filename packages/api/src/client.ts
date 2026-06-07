@@ -98,6 +98,17 @@ export interface DashboardOverview {
   reviews_month: number;
   customers_at_risk: number;
   active_stamps_total: number;
+  loyalty_visits_today: number;
+}
+
+export interface TapPoint {
+  date: string; // Dublin calendar date, YYYY-MM-DD
+  stamps: number;
+  reviews: number;
+}
+
+export interface TapsTimeseries {
+  points: TapPoint[];
 }
 
 export type CustomerListFilter = "all" | "active" | "at_risk" | "has_reward";
@@ -396,6 +407,7 @@ export interface ApiClient {
   getMe: () => Promise<MeResponse>;
   bootstrapMe: (body: BootstrapInput) => Promise<BootstrapResponse>;
   getOverview: () => Promise<DashboardOverview>;
+  getTapsTimeseries: (days?: number) => Promise<TapsTimeseries>;
   listCustomers: (params?: CustomerListParams) => Promise<CustomerListResponse>;
   getTenant: () => Promise<{ tenant: TenantSelf }>;
   updateTenantSettings: (body: TenantSettingsUpdate) => Promise<{ tenant: TenantSelf }>;
@@ -532,6 +544,10 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
         body: JSON.stringify(body),
       }),
     getOverview: () => request<DashboardOverview>(`/v1/dashboard/overview`),
+    getTapsTimeseries: (days) =>
+      request<TapsTimeseries>(
+        `/v1/dashboard/taps-timeseries${days ? `?days=${days}` : ""}`,
+      ),
     listCustomers: (params) => {
       const qs = new URLSearchParams();
       if (params?.search) qs.set("search", params.search);

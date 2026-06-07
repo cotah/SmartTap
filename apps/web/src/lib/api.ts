@@ -28,6 +28,8 @@ export type {
   IdentifyResponse,
   ValidateRewardResponse,
   DashboardOverview,
+  TapPoint,
+  TapsTimeseries,
   MeResponse,
   BootstrapResponse,
   CustomerListFilter,

@@ -14,6 +14,7 @@ import Link from "next/link";
 import { getAuthApiClient } from "@/lib/api";
 import { getDashboardContext } from "@/lib/dashboard-data";
 
+import { ActivityChart } from "./activity-chart";
 import { MonthlyReportButton } from "./monthly-report-button";
 import { OverviewCards } from "./overview-cards";
 
@@ -72,7 +73,10 @@ const QUICK_ACTIONS: QuickAction[] = [
 export default async function DashboardPage() {
   const ctx = await getDashboardContext();
   const api = getAuthApiClient();
-  const overview = await api.getOverview();
+  const [overview, timeseries] = await Promise.all([
+    api.getOverview(),
+    api.getTapsTimeseries(30),
+  ]);
 
   const firstName = ctx.email?.split("@")[0] ?? "there";
 
@@ -95,6 +99,9 @@ export default async function DashboardPage() {
           <MonthlyReportButton />
         </div>
         <OverviewCards overview={overview} />
+        <div className="mt-4">
+          <ActivityChart points={timeseries.points} />
+        </div>
       </section>
 
       {/* Quick Actions */}

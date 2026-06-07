@@ -7,3 +7,14 @@ class DashboardOverview(BaseModel):
     reviews_month: int = Field(ge=0)
     customers_at_risk: int = Field(ge=0)
     active_stamps_total: int = Field(ge=0)
+    loyalty_visits_today: int = Field(ge=0)
+
+
+class TapPoint(BaseModel):
+    date: str  # Dublin calendar date, YYYY-MM-DD
+    stamps: int = Field(ge=0)
+    reviews: int = Field(ge=0)
+
+
+class TapsTimeseries(BaseModel):
+    points: list[TapPoint]

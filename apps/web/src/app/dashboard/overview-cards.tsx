@@ -1,5 +1,6 @@
 import {
   AlertTriangle,
+  CalendarCheck,
   type LucideIcon,
   Smartphone,
   Stamp,
@@ -21,20 +22,30 @@ export function OverviewCards({ overview }: Props) {
         value={overview.customers_total}
         hint="All-time signups"
         icon={Users}
+        accent="cyan"
         size="hero"
         className="md:col-span-2"
+      />
+      <MetricCard
+        label="Loyalty visits today"
+        value={overview.loyalty_visits_today}
+        hint="Stamp taps today"
+        icon={CalendarCheck}
+        accent="fuchsia"
       />
       <MetricCard
         label="Taps this week"
         value={overview.taps_week}
         hint="Last 7 days"
         icon={Smartphone}
+        accent="violet"
       />
       <MetricCard
         label="Reviews"
         value={overview.reviews_month}
         hint="Last 30 days"
         icon={Star}
+        accent="amber"
       />
       <MetricCard
         label="At risk"
@@ -48,16 +59,31 @@ export function OverviewCards({ overview }: Props) {
         value={overview.active_stamps_total}
         hint="Across all customers"
         icon={Stamp}
+        accent="emerald"
       />
     </div>
   );
 }
+
+type Accent = "cyan" | "violet" | "amber" | "emerald" | "fuchsia";
+
+// Per-metric icon badge tints. These live as full literal strings so Tailwind's
+// JIT keeps them. They only tint the icon plate on the dark surface (large
+// element, never small text), so the cyan-on-light contrast rule doesn't apply.
+const ACCENT_BADGE: Record<Accent, string> = {
+  cyan: "bg-electric-cyan/15 text-electric-cyan",
+  violet: "bg-violet-500/15 text-violet-300",
+  amber: "bg-amber-500/15 text-amber-300",
+  emerald: "bg-emerald-500/15 text-emerald-300",
+  fuchsia: "bg-fuchsia-500/15 text-fuchsia-300",
+};
 
 interface MetricCardProps {
   label: string;
   value: number;
   hint: string;
   icon: LucideIcon;
+  accent?: Accent;
   size?: "default" | "hero";
   tone?: "default" | "error";
   className?: string;
@@ -68,6 +94,7 @@ function MetricCard({
   value,
   hint,
   icon: Icon,
+  accent = "cyan",
   size = "default",
   tone = "default",
   className = "",
@@ -80,9 +107,7 @@ function MetricCard({
     : isHero
       ? "bg-electric-surface border-electric-cyan/40 shadow-[0_0_30px_rgba(0,212,255,0.1)]"
       : "bg-electric-surface border-electric-border";
-  const iconStyles = isError
-    ? "bg-red-500/15 text-red-300"
-    : "bg-electric-surface-2 text-electric-cyan";
+  const iconStyles = isError ? "bg-red-500/15 text-red-300" : ACCENT_BADGE[accent];
   const valueColor = isError
     ? "text-red-300"
     : isHero
