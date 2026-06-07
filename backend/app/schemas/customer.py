@@ -42,3 +42,28 @@ class CustomerStats(BaseModel):
     active: int = Field(ge=0)
     at_risk: int = Field(ge=0)
     reward_ready: int = Field(ge=0)
+
+
+# --- Sprint 5.6: phone OTP identification ----------------------------------
+
+
+class IdentifyRequestIn(BaseModel):
+    tenant_id: str
+    phone: str = Field(pattern=r"^\+353[1-9]\d{6,9}$")
+
+
+class IdentifyRequestOut(BaseModel):
+    # Always true — anti-enumeration. Says nothing about whether the phone is
+    # a customer or whether an SMS was actually sent.
+    ok: bool = True
+
+
+class IdentifyVerifyIn(BaseModel):
+    tenant_id: str
+    phone: str = Field(pattern=r"^\+353[1-9]\d{6,9}$")
+    code: str = Field(pattern=r"^\d{4}$")
+
+
+class IdentifyVerifyOut(BaseModel):
+    ok: bool = True
+    magic_link_token: str

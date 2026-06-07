@@ -84,6 +84,23 @@ export interface IdentifyResponse {
   stamps_current: number;
 }
 
+// Sprint 5.6 — phone OTP re-identification.
+export interface OtpRequestInput {
+  tenant_id: string;
+  phone: string;
+}
+
+export interface OtpVerifyInput {
+  tenant_id: string;
+  phone: string;
+  code: string;
+}
+
+export interface OtpVerifyResponse {
+  ok: boolean;
+  magic_link_token: string;
+}
+
 export interface ValidateRewardResponse {
   reward_id: string;
   redeemed_at: string;
@@ -424,6 +441,8 @@ export interface ReviewStats {
 export interface ApiClient {
   tap: (tagUuid: string, body: TapEvent) => Promise<TapResponse>;
   identifyCustomer: (body: CustomerIdentify) => Promise<IdentifyResponse>;
+  requestIdentifyCode: (body: OtpRequestInput) => Promise<{ ok: boolean }>;
+  verifyIdentifyCode: (body: OtpVerifyInput) => Promise<OtpVerifyResponse>;
   optOutCustomer: (magicLinkToken: string) => Promise<void>;
   getMe: () => Promise<MeResponse>;
   bootstrapMe: (body: BootstrapInput) => Promise<BootstrapResponse>;
@@ -550,6 +569,16 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
       }),
     identifyCustomer: (body) =>
       request<IdentifyResponse>(`/v1/customers/identify`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    requestIdentifyCode: (body) =>
+      request<{ ok: boolean }>(`/v1/customers/identify-request`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    verifyIdentifyCode: (body) =>
+      request<OtpVerifyResponse>(`/v1/customers/identify-verify`, {
         method: "POST",
         body: JSON.stringify(body),
       }),

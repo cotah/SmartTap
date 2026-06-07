@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form";
 import { type CustomerIdentify, customerIdentifySchema } from "@smarttap/core";
 
 import { optInAction } from "./actions";
+import { AlreadyMember } from "./already-member";
 
 const CONSENT_TEXT =
   "I agree to receive offers and updates from this business via SMS or WhatsApp. " +
@@ -59,6 +60,7 @@ export function OptInForm({ tenantId, tenantName }: Props) {
   };
 
   return (
+    <div className="flex w-full flex-col">
     <form
       onSubmit={handleSubmit(onSubmit)}
       className="flex w-full flex-col rounded-xl border border-electric-border bg-electric-surface p-6 text-left text-electric-text shadow-[0_4px_24px_rgba(0,0,0,0.4)]"
@@ -175,5 +177,13 @@ export function OptInForm({ tenantId, tenantName }: Props) {
         </button>
       </div>
     </form>
+      {/* Sprint 5.6 — gated off until the OTP infra is live (migration 012
+          applied + Twilio configured). Flip NEXT_PUBLIC_OTP_ENABLED=true on
+          Vercel to reveal it; default-off keeps a non-functional block out of
+          prod, matching the backend's build-to-activate discipline. */}
+      {process.env.NEXT_PUBLIC_OTP_ENABLED === "true" ? (
+        <AlreadyMember tenantId={tenantId} />
+      ) : null}
+    </div>
   );
 }

@@ -10,8 +10,12 @@ from app.schemas.customer import (
     CustomerListItem,
     CustomerListResponse,
     CustomerStats,
+    IdentifyRequestIn,
+    IdentifyRequestOut,
+    IdentifyVerifyIn,
+    IdentifyVerifyOut,
 )
-from app.services import reactivation_service
+from app.services import otp_service, reactivation_service
 from app.services.customer_service import (
     ExportCustomersContext,
     IdentifyContext,
@@ -70,6 +74,36 @@ def identify_customer_endpoint(
         magic_link_token=result.magic_link_token,
         stamps_current=result.stamps_current,
     )
+
+
+_otp_request_rl = rate_limited("otp_request", limit=10, window_seconds=60)
+_otp_verify_rl = rate_limited("otp_verify", limit=20, window_seconds=60)
+
+
+@router.post("/customers/identify-request", response_model=IdentifyRequestOut)
+def identify_request_endpoint(
+    body: IdentifyRequestIn,
+    _rl: Annotated[None, Depends(_otp_request_rl)] = None,
+) -> IdentifyRequestOut:
+    """Send a 4-digit SMS code to a returning customer. Always responds
+    {ok:true} (anti-enumeration); per-phone+tenant rate-limit lives in the
+    service, this IP limit is the coarse outer guard."""
+    otp_service.request_code(tenant_id=body.tenant_id, phone=body.phone)
+    return IdentifyRequestOut()
+
+
+@router.post("/customers/identify-verify", response_model=IdentifyVerifyOut)
+def identify_verify_endpoint(
+    body: IdentifyVerifyIn,
+    _rl: Annotated[None, Depends(_otp_verify_rl)] = None,
+) -> IdentifyVerifyOut:
+    """Verify the code and return the customer's magic_link_token so the page
+    can set the cookie and re-tap. Failures raise typed BusinessErrors
+    (invalid_code / expired / rate_limited) handled globally."""
+    token = otp_service.verify_code(
+        tenant_id=body.tenant_id, phone=body.phone, code=body.code
+    )
+    return IdentifyVerifyOut(magic_link_token=token)
 
 
 @router.get("/customers/export.csv")
