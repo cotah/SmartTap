@@ -87,6 +87,22 @@ def list_for_tenant(tenant_id: str, *, status: str | None = None, limit: int = 1
     return cast(list[Row], res.data or [])
 
 
+def list_all_ratings(tenant_id: str, *, limit: int = 5000) -> list[int | None]:
+    """Fetch just the `rating` of every review for a tenant, for the summary
+    header. Reviews are low-volume (a busy small business has dozens, not
+    thousands); the cap is a runaway rail, mirroring db.taps.list_in_range."""
+    client = get_supabase_admin()
+    res = (
+        client.table("reviews")
+        .select("rating")
+        .eq("tenant_id", tenant_id)
+        .limit(limit)
+        .execute()
+    )
+    rows = cast(list[Row], res.data or [])
+    return [r.get("rating") for r in rows]
+
+
 def update(review_id: str, fields: dict[str, Any]) -> Row:
     client = get_supabase_admin()
     res = client.table("reviews").update(fields).eq("id", review_id).execute()

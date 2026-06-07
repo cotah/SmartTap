@@ -62,4 +62,6 @@ export type {
   NfcTagUpdateInput,
   Review,
   ReviewStatus,
+  RatingBucket,
+  ReviewStats,
 } from "@smarttap/api";

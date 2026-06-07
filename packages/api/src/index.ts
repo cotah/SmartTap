@@ -48,4 +48,6 @@ export type {
   NfcTagUpdateInput,
   Review,
   ReviewStatus,
+  RatingBucket,
+  ReviewStats,
 } from "./client";

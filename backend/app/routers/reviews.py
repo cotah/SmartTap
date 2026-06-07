@@ -12,8 +12,14 @@ from fastapi import APIRouter, Depends, Query
 from app.db import reviews as reviews_db
 from app.dependencies import get_current_tenant_id, require_active_tenant
 from app.errors import NotFoundError
-from app.schemas.review import ReplyUpdateIn, ReviewListResponse, ReviewOut
-from app.services import review_response_service
+from app.schemas.review import (
+    RatingBucket,
+    ReplyUpdateIn,
+    ReviewListResponse,
+    ReviewOut,
+    ReviewStats,
+)
+from app.services import review_response_service, review_stats_service
 
 router = APIRouter(tags=["reviews"])
 
@@ -42,6 +48,22 @@ def list_reviews(
 ) -> ReviewListResponse:
     rows = reviews_db.list_for_tenant(tenant_id, status=status, limit=limit)
     return ReviewListResponse(items=[_to_out(r) for r in rows])
+
+
+@router.get("/reviews/stats", response_model=ReviewStats)
+def review_stats(
+    tenant_id: Annotated[str, Depends(get_current_tenant_id)],
+) -> ReviewStats:
+    """Average, total, and 5★→1★ distribution over all of a tenant's reviews."""
+    s = review_stats_service.compute_stats(tenant_id)
+    return ReviewStats(
+        total=s.total,
+        rated_count=s.rated_count,
+        average=s.average,
+        distribution=[
+            RatingBucket(rating=star, count=count) for star, count in s.distribution
+        ],
+    )
 
 
 @router.put("/reviews/{review_id}/reply", response_model=ReviewOut)

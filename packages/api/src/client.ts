@@ -400,6 +400,18 @@ export interface Review {
   created_at: string;
 }
 
+export interface RatingBucket {
+  rating: number; // 1–5
+  count: number;
+}
+
+export interface ReviewStats {
+  total: number;
+  rated_count: number;
+  average: number | null;
+  distribution: RatingBucket[]; // ordered 5★ → 1★
+}
+
 export interface ApiClient {
   tap: (tagUuid: string, body: TapEvent) => Promise<TapResponse>;
   identifyCustomer: (body: CustomerIdentify) => Promise<IdentifyResponse>;
@@ -440,6 +452,7 @@ export interface ApiClient {
   createTag: (body: NfcTagCreateInput) => Promise<NfcTag>;
   updateTag: (id: string, body: NfcTagUpdateInput) => Promise<NfcTag>;
   listReviews: (status?: ReviewStatus) => Promise<{ items: Review[] }>;
+  getReviewStats: () => Promise<ReviewStats>;
   updateReviewReply: (id: string, replyText: string) => Promise<Review>;
   publishReview: (id: string) => Promise<Review>;
   dismissReview: (id: string) => Promise<Review>;
@@ -674,6 +687,7 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
       const qs = status ? `?status=${encodeURIComponent(status)}` : "";
       return request<{ items: Review[] }>(`/v1/reviews${qs}`);
     },
+    getReviewStats: () => request<ReviewStats>(`/v1/reviews/stats`),
     updateReviewReply: (id, replyText) =>
       request<Review>(`/v1/reviews/${id}/reply`, {
         method: "PUT",

@@ -3,12 +3,16 @@ import Link from "next/link";
 import { getAuthApiClient } from "@/lib/api";
 import { getDashboardContext } from "@/lib/dashboard-data";
 
+import { ReviewSummary } from "./review-summary";
 import { ReviewsClient } from "./reviews-client";
 
 export default async function ReviewsPage() {
   await getDashboardContext();
   const api = getAuthApiClient();
-  const { items } = await api.listReviews("pending");
+  const [{ items }, stats] = await Promise.all([
+    api.listReviews("pending"),
+    api.getReviewStats(),
+  ]);
 
   return (
     <main className="space-y-6">
@@ -27,6 +31,8 @@ export default async function ReviewsPage() {
           </p>
         </div>
       </header>
+
+      <ReviewSummary stats={stats} />
 
       <ReviewsClient reviews={items} />
     </main>
