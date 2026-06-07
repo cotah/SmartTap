@@ -55,12 +55,12 @@ export function SignupForm() {
         <div className="flex flex-col gap-2">
           <label
             htmlFor="signup-email"
-            className="text-xs font-bold uppercase tracking-wider text-brand-black"
+            className="text-xs font-bold uppercase tracking-wider text-electric-text-muted"
           >
             Email address
           </label>
           <div className="relative">
-            <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-600">
+            <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-electric-text-muted">
               <Mail className="h-5 w-5" aria-hidden="true" />
             </span>
             <input
@@ -78,12 +78,12 @@ export function SignupForm() {
         <div className="flex flex-col gap-2">
           <label
             htmlFor="signup-password"
-            className="text-xs font-bold uppercase tracking-wider text-brand-black"
+            className="text-xs font-bold uppercase tracking-wider text-electric-text-muted"
           >
             Password
           </label>
           <div className="relative">
-            <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-600">
+            <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-electric-text-muted">
               <Lock className="h-5 w-5" aria-hidden="true" />
             </span>
             <input
@@ -102,13 +102,13 @@ export function SignupForm() {
         <div className="flex flex-col gap-2">
           <label
             htmlFor="signup-business"
-            className="text-xs font-bold uppercase tracking-wider text-brand-black"
+            className="text-xs font-bold uppercase tracking-wider text-electric-text-muted"
           >
             Business name{" "}
-            <span className="text-neutral-600/70 normal-case">(optional)</span>
+            <span className="text-electric-text-muted/70 normal-case">(optional)</span>
           </label>
           <div className="relative">
-            <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-600">
+            <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-electric-text-muted">
               <Briefcase className="h-5 w-5" aria-hidden="true" />
             </span>
             <input
@@ -120,13 +120,13 @@ export function SignupForm() {
               className={INPUT_CLASS}
             />
           </div>
-          <p className="text-xs text-neutral-600">
+          <p className="text-xs text-electric-text-muted">
             You can change this later in Settings.
           </p>
         </div>
 
         {error ? (
-          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+          <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300">
             {error}
           </p>
         ) : null}
@@ -134,16 +134,16 @@ export function SignupForm() {
         <button
           type="submit"
           disabled={pending}
-          className="mt-2 w-full rounded-lg bg-brand-green px-6 py-4 text-sm font-bold uppercase tracking-wider text-white shadow-sm transition-colors hover:bg-green-800 active:scale-[0.98] disabled:opacity-60"
+          className="mt-2 w-full rounded-lg bg-electric-cyan px-6 py-4 text-sm font-bold uppercase tracking-wider text-electric-bg shadow-[0_0_20px_rgba(0,212,255,0.25)] transition-colors hover:bg-electric-cyan-deep active:scale-[0.98] disabled:opacity-60"
         >
           {pending ? "Creating account…" : "Create account"}
         </button>
 
-        <p className="mt-2 text-center text-sm text-neutral-600">
+        <p className="mt-2 text-center text-sm text-electric-text-muted">
           Already have an account?{" "}
           <Link
             href="/login"
-            className="font-bold text-brand-green transition-colors hover:text-brand-amber"
+            className="font-bold text-electric-cyan transition-colors hover:text-electric-cyan-deep"
           >
             Sign in
           </Link>
@@ -154,4 +154,4 @@ export function SignupForm() {
 }
 
 const INPUT_CLASS =
-  "block w-full rounded-lg border border-transparent bg-brand-off-white py-3 pl-10 pr-3 text-base text-brand-black shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] outline-none transition-colors placeholder:text-neutral-600/40 focus:border-brand-amber focus:ring-2 focus:ring-brand-amber/40";
+  "block w-full rounded-lg border border-electric-border bg-electric-surface-2 py-3 pl-10 pr-3 text-base text-electric-text outline-none transition-colors placeholder:text-electric-text-muted/50 focus:border-electric-cyan focus:ring-2 focus:ring-electric-cyan/30";

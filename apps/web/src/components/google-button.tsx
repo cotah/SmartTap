@@ -10,9 +10,9 @@ interface Props {
   /** Label override. Default suits sign-in; signup may want "Sign up with Google". */
   label?: string;
   /**
-   * Optional className override on the outer button. The default styles match
-   * the Stitch design system (full-width, white card with neutral border,
-   * lifts on hover with a green-tinted shadow).
+   * Optional className override on the outer button. The default styles are
+   * Dark Electric (full-width, dark surface-2 card with electric border,
+   * lifts on hover with a cyan-tinted glow).
    */
   className?: string;
 }
@@ -63,13 +63,13 @@ export function GoogleButton({
         aria-label={label}
         className={
           className ??
-          "group flex w-full items-center justify-center gap-3 rounded-lg border border-neutral-300/50 bg-white px-4 py-3.5 text-sm font-medium text-brand-black shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-green hover:shadow-[0_4px_12px_rgba(27,77,62,0.08)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+          "group flex w-full items-center justify-center gap-3 rounded-lg border border-electric-border bg-electric-surface-2 px-4 py-3.5 text-sm font-medium text-electric-text shadow-sm transition-all hover:-translate-y-0.5 hover:border-electric-cyan hover:shadow-[0_4px_12px_rgba(0,212,255,0.15)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
         }
       >
         <GoogleLogo />
         <span>{pending ? "Redirecting…" : label}</span>
       </button>
-      {error ? <p className="text-xs text-red-600">{error}</p> : null}
+      {error ? <p className="text-xs text-red-300">{error}</p> : null}
     </div>
   );
 }
@@ -111,11 +111,11 @@ function GoogleLogo() {
 export function OrDivider({ label = "or" }: { label?: string }) {
   return (
     <div className="relative flex items-center" aria-hidden="true">
-      <div className="flex-1 border-t border-neutral-300/40" />
-      <span className="px-3 text-[10px] font-bold uppercase tracking-widest text-neutral-600">
+      <div className="flex-1 border-t border-electric-border" />
+      <span className="px-3 text-[10px] font-bold uppercase tracking-widest text-electric-text-muted">
         {label}
       </span>
-      <div className="flex-1 border-t border-neutral-300/40" />
+      <div className="flex-1 border-t border-electric-border" />
     </div>
   );
 }
