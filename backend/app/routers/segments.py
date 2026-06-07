@@ -19,7 +19,7 @@ from app.services import segment_service
 router = APIRouter(tags=["segments"])
 
 
-def _to_out(row: dict[str, Any]) -> SegmentOut:
+def _to_out(row: dict[str, Any], *, member_count: int | None = None) -> SegmentOut:
     """Re-validate the stored JSONB criteria so the API only ever serialises
     well-formed payloads, even if a row was written by an older code
     version with a slightly different shape."""
@@ -38,6 +38,7 @@ def _to_out(row: dict[str, Any]) -> SegmentOut:
         criteria=criteria,
         created_at=row["created_at"],
         updated_at=row["updated_at"],
+        member_count=member_count,
     )
 
 
@@ -65,8 +66,10 @@ def list_segments(
 ) -> SegmentListResponse:
     """Read-only — uses get_current_tenant_id so expired-trial owners can
     still see their saved segments (mirrors the campaigns list contract)."""
-    rows = segment_service.list_for_tenant(tenant_id)
-    return SegmentListResponse(items=[_to_out(r) for r in rows])
+    pairs = segment_service.list_for_tenant_with_counts(tenant_id)
+    return SegmentListResponse(
+        items=[_to_out(row, member_count=count) for row, count in pairs]
+    )
 
 
 @router.post("/segments", response_model=SegmentOut)

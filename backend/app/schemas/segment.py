@@ -93,6 +93,10 @@ class SegmentOut(BaseModel):
     criteria: SegmentCriteria
     created_at: str
     updated_at: str
+    # Current number of customers matching the segment. Populated only by the
+    # list endpoint (the Intelligence cards); None on create/update/get, which
+    # don't evaluate the criteria.
+    member_count: int | None = None
 
 
 class SegmentListResponse(BaseModel):

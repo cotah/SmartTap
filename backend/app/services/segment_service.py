@@ -60,6 +60,27 @@ def list_for_tenant(tenant_id: str) -> list[Row]:
     return segments.list_for_tenant(tenant_id)
 
 
+def list_for_tenant_with_counts(
+    tenant_id: str, *, now: datetime | None = None
+) -> list[tuple[Row, int]]:
+    """List segments plus each one's current match count, in list order.
+
+    Powers the Intelligence cards' 'X customers' badge. Runs one count query
+    per segment (limit=1 — we only need the total), reusing the same criteria
+    engine as the preview so the number matches what the preview would show.
+    Segments are few and unpaginated, so N small counts is acceptable.
+    """
+    rows = segments.list_for_tenant(tenant_id)
+    result: list[tuple[Row, int]] = []
+    for row in rows:
+        criteria = _criteria_from_row(row)
+        total, _, _ = _run_query(
+            tenant_id=tenant_id, criteria=criteria, limit=1, now=now
+        )
+        result.append((row, total))
+    return result
+
+
 def get_owned(tenant_id: str, segment_id: str) -> Row:
     """Fetch + assert tenant ownership. Raises NotFoundError on missing OR
     cross-tenant so external callers can't probe for segment existence."""

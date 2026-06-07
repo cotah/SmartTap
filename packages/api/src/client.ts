@@ -297,6 +297,8 @@ export interface Segment {
   criteria: SegmentCriteria;
   created_at: string;
   updated_at: string;
+  // Current match count — set by the list endpoint, null on create/update/get.
+  member_count?: number | null;
 }
 
 export interface SegmentCreateInput {

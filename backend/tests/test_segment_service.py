@@ -28,6 +28,7 @@ from app.services.segment_service import (
     delete_segment,
     evaluate,
     evaluate_unsaved,
+    list_for_tenant_with_counts,
     update_segment,
 )
 
@@ -401,3 +402,39 @@ def test_evaluate_ignores_unknown_keys_in_stored_criteria(
     evaluate(tenant_id="t-1", segment_id="seg-x")
     call = customers_q.calls[0]
     assert call["visits_min"] == 5
+
+
+# ---------------------------------------------------------------------------
+# list_for_tenant_with_counts — member counts for the Intelligence cards (Fase E)
+# ---------------------------------------------------------------------------
+
+
+def test_list_for_tenant_with_counts_attaches_each_segments_size(
+    db: FakeSegmentsDB, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Each segment in the list gets its own match total, in list order, so a
+    card's 'X customers' always reflects that segment's criteria."""
+    create_segment(
+        tenant_id="t-1", name="Regulars", criteria=SegmentCriteria(visits_min=5)
+    )
+    create_segment(
+        tenant_id="t-1", name="New", criteria=SegmentCriteria(created_after_days=7)
+    )
+
+    totals = iter([12, 3])
+    monkeypatch.setattr(
+        segment_service.customers,
+        "find_by_criteria",
+        lambda **_: ([], next(totals)),
+    )
+
+    pairs = list_for_tenant_with_counts("t-1")
+
+    assert [row["name"] for row, _ in pairs] == ["Regulars", "New"]
+    assert [count for _, count in pairs] == [12, 3]
+
+
+def test_list_for_tenant_with_counts_empty_when_no_segments(
+    db: FakeSegmentsDB,
+) -> None:
+    assert list_for_tenant_with_counts("t-1") == []
