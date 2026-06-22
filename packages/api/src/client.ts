@@ -440,6 +440,14 @@ export interface ReviewStats {
   distribution: RatingBucket[]; // ordered 5★ → 1★
 }
 
+export interface GoogleStatus {
+  connected: boolean;
+  account_name?: string | null;
+  account_id?: string | null;
+  location_id?: string | null;
+  connected_at?: string | null;
+}
+
 export interface ApiClient {
   tap: (tagUuid: string, body: TapEvent) => Promise<TapResponse>;
   identifyCustomer: (body: CustomerIdentify) => Promise<IdentifyResponse>;
@@ -488,6 +496,7 @@ export interface ApiClient {
   publishReview: (id: string) => Promise<Review>;
   dismissReview: (id: string) => Promise<Review>;
   getGoogleConnectUrl: () => Promise<{ url: string }>;
+  getGoogleStatus: () => Promise<GoogleStatus>;
 }
 
 export function createApiClient(opts: ApiClientOptions): ApiClient {
@@ -740,5 +749,6 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
     dismissReview: (id) =>
       request<Review>(`/v1/reviews/${id}/dismiss`, { method: "POST" }),
     getGoogleConnectUrl: () => request<{ url: string }>(`/v1/google/connect`),
+    getGoogleStatus: () => request<GoogleStatus>(`/v1/google/status`),
   };
 }

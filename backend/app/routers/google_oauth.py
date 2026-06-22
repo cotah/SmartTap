@@ -15,7 +15,7 @@ the tenant without a session (the callback has no auth header).
 
 import hashlib
 import hmac
-from typing import Annotated
+from typing import Annotated, Any
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -57,6 +57,25 @@ def google_connect(
         raise HTTPException(status_code=503, detail="Google integration not configured")
     url = google_client.build_consent_url(_sign_state(tenant_id))
     return {"url": url}
+
+
+@router.get("/google/status")
+def google_status(
+    tenant_id: Annotated[str, Depends(get_current_tenant_id)],
+) -> dict[str, Any]:
+    """Whether this tenant has a live Google Business connection, for the
+    dashboard to render the connected/disconnected state. Never returns the
+    refresh token — only the safe metadata the UI needs."""
+    conn = google_connections.get_by_tenant(tenant_id)
+    if conn is None:
+        return {"connected": False}
+    return {
+        "connected": True,
+        "account_name": conn.get("account_name"),
+        "account_id": conn.get("account_id"),
+        "location_id": conn.get("location_id"),
+        "connected_at": conn.get("connected_at"),
+    }
 
 
 @router.get("/google/callback")

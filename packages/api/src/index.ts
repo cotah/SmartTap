@@ -51,4 +51,5 @@ export type {
   ReviewStatus,
   RatingBucket,
   ReviewStats,
+  GoogleStatus,
 } from "./client";

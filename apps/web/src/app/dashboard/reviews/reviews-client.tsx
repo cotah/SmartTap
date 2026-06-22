@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 
-import type { Review } from "@/lib/api";
+import type { GoogleStatus, Review } from "@/lib/api";
 
 import {
   connectGoogleAction,
@@ -10,7 +10,13 @@ import {
   publishReviewAction,
 } from "./actions";
 
-export function ReviewsClient({ reviews }: { reviews: Review[] }) {
+export function ReviewsClient({
+  reviews,
+  googleStatus,
+}: {
+  reviews: Review[];
+  googleStatus: GoogleStatus;
+}) {
   // Local copy so published/dismissed reviews disappear immediately; the
   // server action also revalidates the route for the next navigation.
   const [items, setItems] = useState<Review[]>(reviews);
@@ -35,26 +41,30 @@ export function ReviewsClient({ reviews }: { reviews: Review[] }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2 rounded-2xl border border-electric-border bg-electric-surface p-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <p className="font-display text-lg">Connect Google Business</p>
-          <p className="text-sm text-electric-text-muted">
-            Authorise SmartTap to read your reviews and post your approved
-            replies.
-          </p>
-          {connectError ? (
-            <p className="mt-1 text-sm text-red-300">{connectError}</p>
-          ) : null}
+      {googleStatus.connected ? (
+        <ConnectedCard accountName={googleStatus.account_name} />
+      ) : (
+        <div className="flex flex-col gap-2 rounded-2xl border border-electric-border bg-electric-surface p-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="font-display text-lg">Connect Google Business</p>
+            <p className="text-sm text-electric-text-muted">
+              Authorise SmartTap to read your reviews and post your approved
+              replies.
+            </p>
+            {connectError ? (
+              <p className="mt-1 text-sm text-red-300">{connectError}</p>
+            ) : null}
+          </div>
+          <button
+            type="button"
+            onClick={handleConnect}
+            disabled={connecting}
+            className="shrink-0 rounded-full bg-electric-cyan px-5 py-2.5 text-sm font-semibold text-electric-bg disabled:opacity-60"
+          >
+            {connecting ? "Connecting…" : "Connect Google"}
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={handleConnect}
-          disabled={connecting}
-          className="shrink-0 rounded-full bg-electric-cyan px-5 py-2.5 text-sm font-semibold text-electric-bg disabled:opacity-60"
-        >
-          {connecting ? "Connecting…" : "Connect Google"}
-        </button>
-      </div>
+      )}
 
       {items.length === 0 ? (
         <EmptyState />
@@ -67,6 +77,25 @@ export function ReviewsClient({ reviews }: { reviews: Review[] }) {
           ))}
         </ul>
       )}
+    </div>
+  );
+}
+
+function ConnectedCard({ accountName }: { accountName?: string | null }) {
+  return (
+    <div className="flex flex-col gap-2 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 md:flex-row md:items-center md:justify-between">
+      <div>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-semibold text-emerald-300">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden />
+          Connected
+        </span>
+        <p className="mt-2 font-display text-lg">
+          {accountName ?? "Google Business connected"}
+        </p>
+        <p className="text-sm text-electric-text-muted">
+          SmartTap reads your reviews and posts replies you approve.
+        </p>
+      </div>
     </div>
   );
 }

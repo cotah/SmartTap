@@ -9,9 +9,10 @@ import { ReviewsClient } from "./reviews-client";
 export default async function ReviewsPage() {
   await getDashboardContext();
   const api = getAuthApiClient();
-  const [{ items }, stats] = await Promise.all([
+  const [{ items }, stats, googleStatus] = await Promise.all([
     api.listReviews("pending"),
     api.getReviewStats(),
+    api.getGoogleStatus(),
   ]);
 
   return (
@@ -34,7 +35,7 @@ export default async function ReviewsPage() {
 
       <ReviewSummary stats={stats} />
 
-      <ReviewsClient reviews={items} />
+      <ReviewsClient reviews={items} googleStatus={googleStatus} />
     </main>
   );
 }

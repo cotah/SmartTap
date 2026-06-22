@@ -80,3 +80,38 @@ def test_callback_oauth_error_redirects_error() -> None:
     )
     assert resp.status_code == 302
     assert "connected=0" in resp.headers["location"]
+
+
+# ---------------------------------------------------------------------------
+# /google/status — the connection-state contract the dashboard renders from
+# (the bug was that no such endpoint existed, so the UI never knew it was
+# connected). Called directly to bypass the auth dependency.
+# ---------------------------------------------------------------------------
+
+
+def test_status_disconnected_when_no_connection(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(google_oauth.google_connections, "get_by_tenant", lambda _tid: None)
+
+    assert google_oauth.google_status(tenant_id="t-1") == {"connected": False}
+
+
+def test_status_connected_returns_safe_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
+    conn: dict[str, Any] = {
+        "tenant_id": "t-1",
+        "refresh_token": "SECRET-should-not-leak",
+        "account_name": "Joe's Barbers",
+        "account_id": "123",
+        "location_id": "456",
+        "connected_at": "2026-06-22T08:11:13+00:00",
+    }
+    monkeypatch.setattr(google_oauth.google_connections, "get_by_tenant", lambda _tid: conn)
+
+    result = google_oauth.google_status(tenant_id="t-1")
+
+    assert result["connected"] is True
+    assert result["account_name"] == "Joe's Barbers"
+    assert result["account_id"] == "123"
+    assert result["location_id"] == "456"
+    # The refresh token must never reach the dashboard.
+    assert "refresh_token" not in result
+    assert "SECRET-should-not-leak" not in str(result)

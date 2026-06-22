@@ -65,4 +65,5 @@ export type {
   ReviewStatus,
   RatingBucket,
   ReviewStats,
+  GoogleStatus,
 } from "@smarttap/api";
