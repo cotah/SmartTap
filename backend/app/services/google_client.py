@@ -37,7 +37,11 @@ _STAR_MAP = {"ONE": 1, "TWO": 2, "THREE": 3, "FOUR": 4, "FIVE": 5}
 
 def is_configured() -> bool:
     s = get_settings()
-    return bool(s.google_client_id and s.google_client_secret and s.google_oauth_redirect)
+    return bool(
+        s.google_business_client_id
+        and s.google_business_client_secret
+        and s.google_oauth_redirect
+    )
 
 
 def build_consent_url(state: str) -> str:
@@ -46,7 +50,7 @@ def build_consent_url(state: str) -> str:
     prompt=consent ensures we get a refresh token."""
     s = get_settings()
     params = {
-        "client_id": s.google_client_id,
+        "client_id": s.google_business_client_id,
         "redirect_uri": s.google_oauth_redirect,
         "response_type": "code",
         "scope": _SCOPE,
@@ -65,8 +69,8 @@ def exchange_code(code: str) -> dict[str, Any]:
         _TOKEN_URL,
         data={
             "code": code,
-            "client_id": s.google_client_id,
-            "client_secret": s.google_client_secret,
+            "client_id": s.google_business_client_id,
+            "client_secret": s.google_business_client_secret,
             "redirect_uri": s.google_oauth_redirect,
             "grant_type": "authorization_code",
         },
@@ -82,8 +86,8 @@ def _access_token(refresh_token: str) -> str | None:
         _TOKEN_URL,
         data={
             "refresh_token": refresh_token,
-            "client_id": s.google_client_id,
-            "client_secret": s.google_client_secret,
+            "client_id": s.google_business_client_id,
+            "client_secret": s.google_business_client_secret,
             "grant_type": "refresh_token",
         },
         timeout=_HTTP_TIMEOUT,

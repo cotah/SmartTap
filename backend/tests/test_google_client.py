@@ -10,8 +10,8 @@ from app.services import google_client
 
 
 class _Settings:
-    google_client_id = ""
-    google_client_secret = ""
+    google_business_client_id = ""
+    google_business_client_secret = ""
     google_oauth_redirect = ""
 
 
@@ -28,12 +28,12 @@ def test_not_configured_without_creds(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_configured_with_creds(monkeypatch: pytest.MonkeyPatch) -> None:
-    _patch(monkeypatch, google_client_id="id", google_client_secret="sec", google_oauth_redirect="https://x/cb")
+    _patch(monkeypatch, google_business_client_id="id", google_business_client_secret="sec", google_oauth_redirect="https://x/cb")
     assert google_client.is_configured() is True
 
 
 def test_consent_url_has_required_params(monkeypatch: pytest.MonkeyPatch) -> None:
-    _patch(monkeypatch, google_client_id="cid", google_client_secret="sec", google_oauth_redirect="https://api.x/cb")
+    _patch(monkeypatch, google_business_client_id="cid", google_business_client_secret="sec", google_oauth_redirect="https://api.x/cb")
     url = google_client.build_consent_url("t-1.sig")
     assert url.startswith("https://accounts.google.com/o/oauth2/v2/auth?")
     assert "client_id=cid" in url
@@ -54,7 +54,7 @@ def test_publish_reply_noop_without_creds(monkeypatch: pytest.MonkeyPatch) -> No
 
 
 def test_list_new_reviews_noop_when_connection_incomplete(monkeypatch: pytest.MonkeyPatch) -> None:
-    _patch(monkeypatch, google_client_id="cid", google_client_secret="sec", google_oauth_redirect="https://x/cb")
+    _patch(monkeypatch, google_business_client_id="cid", google_business_client_secret="sec", google_oauth_redirect="https://x/cb")
     # configured, but no account/location -> still no-op
     assert google_client.list_new_reviews({"refresh_token": "rt"}) == []
 

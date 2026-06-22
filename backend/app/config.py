@@ -51,11 +51,19 @@ class Settings(BaseSettings):
     anthropic_api_key: str = Field(default="")
     anthropic_model: str = Field(default="claude-sonnet-4-6")
 
-    # S5 Feature 3 — Google Business Profile (reviews). Empty values keep the
-    # integration disabled (client no-ops) so dev/CI run without a Google app.
-    # The Business Profile API is access-gated; build-to-activate.
+    # Google login OAuth client. Reserved: backend login is currently handled by
+    # Supabase Auth (its own client, configured in the Supabase dashboard), so
+    # nothing in the backend reads these today. Kept separate from the Business
+    # Profile client below so the two OAuth clients never get crossed.
     google_client_id: str = Field(default="")
     google_client_secret: str = Field(default="")
+
+    # S5 Feature 3 — Google Business Profile (reviews). Its OWN dedicated OAuth
+    # client (approved 2026-06), distinct from the login client above. Empty
+    # values keep the integration disabled (client no-ops) so dev/CI run without
+    # a Google app. The connect flow in google_client.py reads ONLY these.
+    google_business_client_id: str = Field(default="")  # env GOOGLE_BUSINESS_CLIENT_ID
+    google_business_client_secret: str = Field(default="")  # env GOOGLE_BUSINESS_CLIENT_SECRET
     google_oauth_redirect: str = Field(default="")  # e.g. https://api.smarttap.ie/v1/google/callback
     # Symmetric key for pgcrypto encryption of tenant_google_connections.refresh_token
     # at rest. Held only here (never in the DB). Required before connecting Google.
