@@ -48,6 +48,11 @@ def test_callback_success_stores_connection_and_redirects(
         google_oauth.google_client, "exchange_code", lambda code: {"refresh_token": "RT-123"}
     )
     monkeypatch.setattr(
+        google_oauth.google_client,
+        "fetch_account_and_location",
+        lambda _rt: {"account_id": "123", "account_name": "Joe's Barbers", "location_id": "789"},
+    )
+    monkeypatch.setattr(
         google_oauth.google_connections,
         "upsert",
         lambda **kw: captured.update(kw) or {"id": "c1", **kw},
@@ -62,6 +67,10 @@ def test_callback_success_stores_connection_and_redirects(
     assert "connected=1" in resp.headers["location"]
     assert captured["tenant_id"] == "tenant-123"
     assert captured["refresh_token"] == "RT-123"
+    # The resolved account metadata is persisted alongside the token.
+    assert captured["account_id"] == "123"
+    assert captured["account_name"] == "Joe's Barbers"
+    assert captured["location_id"] == "789"
 
 
 def test_callback_bad_state_redirects_error(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -115,3 +124,15 @@ def test_status_connected_returns_safe_metadata(monkeypatch: pytest.MonkeyPatch)
     # The refresh token must never reach the dashboard.
     assert "refresh_token" not in result
     assert "SECRET-should-not-leak" not in str(result)
+
+
+def test_disconnect_deletes_connection(monkeypatch: pytest.MonkeyPatch) -> None:
+    deleted: list[str] = []
+    monkeypatch.setattr(
+        google_oauth.google_connections, "delete", lambda tid: deleted.append(tid)
+    )
+
+    result = google_oauth.google_disconnect(tenant_id="t-1")
+
+    assert result == {"ok": True}
+    assert deleted == ["t-1"]

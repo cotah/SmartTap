@@ -41,6 +41,7 @@ def upsert(
     refresh_token: str,
     account_id: str | None = None,
     location_id: str | None = None,
+    account_name: str | None = None,
 ) -> Row:
     """Create or replace a tenant's connection, encrypting the refresh token.
     Raises if the encryption key isn't configured — we must never persist a
@@ -56,10 +57,24 @@ def upsert(
             "p_refresh_token": refresh_token,
             "p_account_id": account_id,
             "p_location_id": location_id,
+            "p_account_name": account_name,
             "p_key": key,
         },
     ).execute()
-    return {"tenant_id": tenant_id, "account_id": account_id, "location_id": location_id}
+    return {
+        "tenant_id": tenant_id,
+        "account_id": account_id,
+        "location_id": location_id,
+        "account_name": account_name,
+    }
+
+
+def delete(tenant_id: str) -> None:
+    """Remove a tenant's Google connection (the dashboard 'Disconnect' action).
+    Service-role delete — no decryption involved, so it doesn't go through the
+    pgcrypto RPCs. Idempotent: deleting a non-existent row is a no-op."""
+    client = get_supabase_admin()
+    client.table("tenant_google_connections").delete().eq("tenant_id", tenant_id).execute()
 
 
 def list_connected() -> list[Row]:

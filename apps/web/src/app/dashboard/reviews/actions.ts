@@ -90,3 +90,20 @@ export async function connectGoogleAction(): Promise<ConnectResult> {
     return { ok: false, message: "Could not start Google connection. Try again." };
   }
 }
+
+export type DisconnectResult = { ok: true } | { ok: false; message: string };
+
+/** Remove the tenant's Google connection, then refresh the reviews page. */
+export async function disconnectGoogleAction(): Promise<DisconnectResult> {
+  try {
+    const api = getAuthApiClient();
+    await api.disconnectGoogle();
+    revalidatePath("/dashboard/reviews");
+    return { ok: true };
+  } catch (err) {
+    if (err instanceof ApiError) {
+      return { ok: false, message: err.message || "Could not disconnect Google." };
+    }
+    return { ok: false, message: "Could not disconnect Google. Try again." };
+  }
+}

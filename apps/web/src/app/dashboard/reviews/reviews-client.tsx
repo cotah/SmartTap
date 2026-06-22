@@ -1,11 +1,13 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import type { GoogleStatus, Review } from "@/lib/api";
 
 import {
   connectGoogleAction,
+  disconnectGoogleAction,
   dismissReviewAction,
   publishReviewAction,
 } from "./actions";
@@ -42,7 +44,10 @@ export function ReviewsClient({
   return (
     <div className="space-y-6">
       {googleStatus.connected ? (
-        <ConnectedCard accountName={googleStatus.account_name} />
+        <ConnectedCard
+          accountName={googleStatus.account_name}
+          connectedAt={googleStatus.connected_at}
+        />
       ) : (
         <div className="flex flex-col gap-2 rounded-2xl border border-electric-border bg-electric-surface p-4 md:flex-row md:items-center md:justify-between">
           <div>
@@ -81,9 +86,39 @@ export function ReviewsClient({
   );
 }
 
-function ConnectedCard({ accountName }: { accountName?: string | null }) {
+function ConnectedCard({
+  accountName,
+  connectedAt,
+}: {
+  accountName?: string | null;
+  connectedAt?: string | null;
+}) {
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  function handleDisconnect() {
+    setError(null);
+    startTransition(async () => {
+      const res = await disconnectGoogleAction();
+      if (res.ok) {
+        router.refresh();
+      } else {
+        setError(res.message);
+      }
+    });
+  }
+
+  const since = connectedAt
+    ? new Date(connectedAt).toLocaleDateString(undefined, {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : null;
+
   return (
-    <div className="flex flex-col gap-2 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 md:flex-row md:items-center md:justify-between">
+    <div className="flex flex-col gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 md:flex-row md:items-center md:justify-between">
       <div>
         <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-semibold text-emerald-300">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden />
@@ -93,9 +128,19 @@ function ConnectedCard({ accountName }: { accountName?: string | null }) {
           {accountName ?? "Google Business connected"}
         </p>
         <p className="text-sm text-electric-text-muted">
-          SmartTap reads your reviews and posts replies you approve.
+          SmartTap reads your reviews and posts replies you approve
+          {since ? ` · since ${since}` : ""}.
         </p>
+        {error ? <p className="mt-1 text-sm text-red-300">{error}</p> : null}
       </div>
+      <button
+        type="button"
+        onClick={handleDisconnect}
+        disabled={pending}
+        className="shrink-0 rounded-full border border-electric-border px-5 py-2.5 text-sm font-semibold text-electric-text-muted disabled:opacity-60"
+      >
+        {pending ? "Disconnecting…" : "Disconnect"}
+      </button>
     </div>
   );
 }

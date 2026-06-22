@@ -29,6 +29,9 @@ _AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 _TOKEN_URL = "https://oauth2.googleapis.com/token"  # noqa: S105 — URL, not a secret
 _SCOPE = "https://www.googleapis.com/auth/business.manage"
 _MYBUSINESS_BASE = "https://mybusiness.googleapis.com/v4"
+# Account name + location id live on newer APIs than the v4 reviews endpoint.
+_ACCOUNTS_URL = "https://mybusinessaccountmanagement.googleapis.com/v1/accounts"
+_LOCATIONS_BASE = "https://mybusinessbusinessinformation.googleapis.com/v1"
 _HTTP_TIMEOUT = 15.0
 
 # Google returns star ratings as an enum, not an integer.
@@ -95,6 +98,66 @@ def _access_token(refresh_token: str) -> str | None:
     resp.raise_for_status()
     token = resp.json().get("access_token")
     return str(token) if token else None
+
+
+def fetch_account_and_location(refresh_token: str) -> dict[str, str | None]:
+    """Resolve the first Google Business account + location for a freshly
+    connected tenant.
+
+    Two things depend on this: the dashboard shows the account name on the
+    "Connected" badge, and the v4 reviews endpoint is keyed by account_id +
+    location_id — without them `list_new_reviews` can't pull anything.
+
+    Best-effort and never raises: any failure (API not enabled, no accounts,
+    schema drift) returns all-None so the OAuth callback still saves the
+    connection. We pick the FIRST account and FIRST location — fine for the
+    single-location ICP; multi-location picking is a later enhancement and is
+    logged here so we can see when it matters.
+    """
+    out: dict[str, str | None] = {
+        "account_id": None,
+        "account_name": None,
+        "location_id": None,
+    }
+    if not is_configured():
+        return out
+    try:
+        token = _access_token(refresh_token)
+        if not token:
+            return out
+        headers = {"Authorization": f"Bearer {token}"}
+
+        acc_resp = httpx.get(_ACCOUNTS_URL, headers=headers, timeout=_HTTP_TIMEOUT)
+        acc_resp.raise_for_status()
+        accounts = acc_resp.json().get("accounts", []) or []
+        if not accounts:
+            return out
+        if len(accounts) > 1:
+            log.info("google_multiple_accounts", count=len(accounts))
+
+        account = accounts[0]
+        # name is "accounts/123456" → keep the trailing id.
+        out["account_id"] = str(account.get("name", "")).split("/")[-1] or None
+        out["account_name"] = account.get("accountName")
+
+        if out["account_id"]:
+            loc_url = f"{_LOCATIONS_BASE}/accounts/{out['account_id']}/locations"
+            loc_resp = httpx.get(
+                loc_url,
+                headers=headers,
+                params={"readMask": "name,title"},
+                timeout=_HTTP_TIMEOUT,
+            )
+            loc_resp.raise_for_status()
+            locations = loc_resp.json().get("locations", []) or []
+            if len(locations) > 1:
+                log.info("google_multiple_locations", count=len(locations))
+            if locations:
+                # name is "locations/789" → keep the trailing id.
+                out["location_id"] = str(locations[0].get("name", "")).split("/")[-1] or None
+    except Exception as exc:
+        log.warning("google_fetch_account_failed", error=str(exc))
+    return out
 
 
 def _normalise_review(raw: dict[str, Any]) -> dict[str, Any] | None:

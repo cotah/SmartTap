@@ -78,6 +78,17 @@ def google_status(
     }
 
 
+@router.post("/google/disconnect")
+def google_disconnect(
+    tenant_id: Annotated[str, Depends(get_current_tenant_id)],
+) -> dict[str, bool]:
+    """Remove this tenant's Google Business connection. Idempotent — disconnecting
+    when not connected still returns ok so the UI can treat it as success."""
+    google_connections.delete(tenant_id)
+    log.info("google_disconnected", tenant_id=tenant_id)
+    return {"ok": True}
+
+
 @router.get("/google/callback")
 def google_callback(
     code: str | None = Query(default=None),
@@ -105,7 +116,17 @@ def google_callback(
         refresh_token = tokens.get("refresh_token")
         if not refresh_token:
             raise ValueError("no refresh_token in token response")
-        google_connections.upsert(tenant_id=tenant_id, refresh_token=str(refresh_token))
+        # Resolve the account name + ids so the dashboard can show which account
+        # is linked and the reviews cron has the account/location to query.
+        # Best-effort: returns all-None on failure, the connection still saves.
+        meta = google_client.fetch_account_and_location(str(refresh_token))
+        google_connections.upsert(
+            tenant_id=tenant_id,
+            refresh_token=str(refresh_token),
+            account_id=meta.get("account_id"),
+            location_id=meta.get("location_id"),
+            account_name=meta.get("account_name"),
+        )
     except Exception as exc:
         log.exception("google_callback_exchange_failed", error=str(exc))
         return RedirectResponse(url=dest_err, status_code=302)

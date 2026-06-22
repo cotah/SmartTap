@@ -497,6 +497,7 @@ export interface ApiClient {
   dismissReview: (id: string) => Promise<Review>;
   getGoogleConnectUrl: () => Promise<{ url: string }>;
   getGoogleStatus: () => Promise<GoogleStatus>;
+  disconnectGoogle: () => Promise<{ ok: boolean }>;
 }
 
 export function createApiClient(opts: ApiClientOptions): ApiClient {
@@ -750,5 +751,7 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
       request<Review>(`/v1/reviews/${id}/dismiss`, { method: "POST" }),
     getGoogleConnectUrl: () => request<{ url: string }>(`/v1/google/connect`),
     getGoogleStatus: () => request<GoogleStatus>(`/v1/google/status`),
+    disconnectGoogle: () =>
+      request<{ ok: boolean }>(`/v1/google/disconnect`, { method: "POST" }),
   };
 }
