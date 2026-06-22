@@ -155,8 +155,19 @@ def fetch_account_and_location(refresh_token: str) -> dict[str, str | None]:
             if locations:
                 # name is "locations/789" → keep the trailing id.
                 out["location_id"] = str(locations[0].get("name", "")).split("/")[-1] or None
+    except httpx.HTTPStatusError as exc:
+        # raise_for_status()'s message omits Google's response body — and that
+        # body is exactly where the real reason lives (quota=0, PERMISSION_DENIED,
+        # insufficient scope). Log status + body before swallowing so a 100%-error
+        # integration is debuggable instead of silently degrading to NULLs.
+        log.warning(
+            "google_fetch_account_failed",
+            url=str(exc.request.url),
+            status=exc.response.status_code,
+            body=exc.response.text[:1000],
+        )
     except Exception as exc:
-        log.warning("google_fetch_account_failed", error=str(exc))
+        log.warning("google_fetch_account_error", error=str(exc))
     return out
 
 

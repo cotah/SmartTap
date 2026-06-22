@@ -189,3 +189,37 @@ def test_fetch_account_and_location_swallows_errors(
     out = google_client.fetch_account_and_location("rt")
     # Best-effort: never raises, returns all-None so the connection still saves.
     assert out == {"account_id": None, "account_name": None, "location_id": None}
+
+
+def test_fetch_account_and_location_handles_http_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An HTTP error (e.g. 403 quota) is caught via the dedicated branch and
+    still degrades to all-None — the new branch reads exc.response without
+    blowing up."""
+    _patch(
+        monkeypatch,
+        google_business_client_id="cid",
+        google_business_client_secret="sec",
+        google_oauth_redirect="https://x/cb",
+    )
+    monkeypatch.setattr(google_client, "_access_token", lambda _rt: "tok")
+
+    def fake_get(url: str, **_kw: object) -> _Resp:
+        req = google_client.httpx.Request("GET", url)
+        resp = google_client.httpx.Response(
+            403,
+            request=req,
+            json={
+                "error": {
+                    "code": 403,
+                    "message": "Quota exceeded",
+                    "status": "RESOURCE_EXHAUSTED",
+                }
+            },
+        )
+        raise google_client.httpx.HTTPStatusError("403", request=req, response=resp)
+
+    monkeypatch.setattr(google_client.httpx, "get", fake_get)
+    out = google_client.fetch_account_and_location("rt")
+    assert out == {"account_id": None, "account_name": None, "location_id": None}
