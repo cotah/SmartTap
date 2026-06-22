@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, BackgroundTasks, Request
 
 from app.schemas.tap import (
     ActiveCampaign,
@@ -9,6 +9,7 @@ from app.schemas.tap import (
     TapResponse,
     TenantPublic,
 )
+from app.services import visit_thankyou_service
 from app.services.stamp_engine import compute_reward_state, multiplier_for_campaign
 from app.services.tap_service import TapContext, process_tap
 
@@ -25,7 +26,12 @@ def _client_ip(request: Request) -> str | None:
 
 
 @router.post("/taps/{tag_uuid}", response_model=TapResponse)
-def register_tap(tag_uuid: str, body: TapEventIn, request: Request) -> TapResponse:
+def register_tap(
+    tag_uuid: str,
+    body: TapEventIn,
+    request: Request,
+    background_tasks: BackgroundTasks,
+) -> TapResponse:
     ctx = TapContext(
         tag_uuid=tag_uuid,
         device_type=body.device_type,
@@ -36,6 +42,19 @@ def register_tap(tag_uuid: str, body: TapEventIn, request: Request) -> TapRespon
     )
 
     result = process_tap(ctx)
+
+    # Fire the post-visit thank-you AFTER the response is flushed, so the tap
+    # page never waits on Resend. Only when this tap actually earned a stamp
+    # for an identified customer — the service still enforces consent, cooldown
+    # and the kill-switch, but gating here avoids scheduling a no-op task on the
+    # common anonymous/no-stamp taps.
+    if result.stamp_awarded and result.customer is not None:
+        background_tasks.add_task(
+            visit_thankyou_service.maybe_send,
+            tenant=result.tenant,
+            customer=result.customer,
+            stamp_awarded=True,
+        )
 
     state = compute_reward_state(result.stamps_current, result.tenant["stamps_for_reward"])
 

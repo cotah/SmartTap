@@ -595,6 +595,122 @@ def review_nudge_email(
     )
 
 
+def visit_thankyou_email(
+    *,
+    tenant: dict[str, Any],
+    customer: dict[str, Any],
+    review_url: str | None,
+    magic_link_url: str,
+    opt_out_url: str,
+) -> RenderedEmail:
+    """Sent on behalf of the merchant the moment a tap earns a stamp.
+
+    The warm, immediate "thanks for visiting" — it shows the customer their
+    stamp progress and (when the merchant has a Google review URL) nudges a
+    review, gently. White-label like reactivation/review_nudge: the "From" is
+    hello@smarttap.ie but the voice is the local business, and the footer
+    attributes SmartTap so it's not deceptive.
+
+    `review_url` is optional: a Loyalty-only tenant may have none. When it's
+    absent the CTA falls back to the customer's stamp card (magic link) so the
+    email always has a clear next step — the path decided with Henrique."""
+    business = (tenant.get("name") or "us").strip()
+    customer_name = (customer.get("name") or "").strip()
+    greeting = (
+        f"Hey {_escape(customer_name.split(' ')[0])}," if customer_name else "Hey there,"
+    )
+
+    current = int(customer.get("current_stamps") or 0)
+    threshold = int(tenant.get("stamps_for_reward") or 0)
+    reward = (tenant.get("reward_description") or "your reward").strip()
+    remaining = max(0, threshold - current)
+
+    # Three progress states: reward just completed, mid-card, or no loyalty
+    # programme configured (Review-only tenant) — then we simply thank them.
+    if threshold > 0 and remaining == 0:
+        progress_html = (
+            '<p style="margin:0 0 14px 0;">You\'ve completed your card — your reward '
+            f'<strong>{_escape(reward)}</strong> is ready to claim on your next visit.</p>'
+        )
+        progress_text = (
+            f"You've completed your card — your reward {reward} is ready to claim "
+            "on your next visit.\n"
+        )
+    elif threshold > 0:
+        progress_html = (
+            '<p style="margin:0 0 14px 0;">You now have '
+            f'<strong>{current}/{threshold}</strong> stamps — just '
+            f'<strong>{remaining}</strong> more for <strong>{_escape(reward)}</strong>.</p>'
+        )
+        progress_text = (
+            f"You now have {current}/{threshold} stamps — just {remaining} more "
+            f"for {reward}.\n"
+        )
+    else:
+        progress_html = ""
+        progress_text = ""
+
+    # The review nudge is deliberately soft and only shown when there's a URL to
+    # send them to. Omitted entirely for Loyalty-only tenants.
+    review_html = (
+        '<p style="margin:0 0 14px 0;">Loved your visit? A quick Google review means '
+        "the world to a small local business — it takes under a minute.</p>"
+        if review_url
+        else ""
+    )
+
+    body_html = (
+        _h1(f"Thanks for visiting {_escape(business)}")
+        + f'<p style="margin:0 0 14px 0;">{greeting}</p>'
+        + '<p style="margin:0 0 14px 0;">Thanks for stopping by '
+        f'<strong>{_escape(business)}</strong> today.</p>'
+        + progress_html
+        + review_html
+    )
+
+    # CTA: review when we can, otherwise the customer's own stamp card.
+    cta = (
+        ("Leave a review", review_url)
+        if review_url
+        else ("Show my stamps", magic_link_url)
+    )
+    cta_line = (
+        f"Leave a review: {review_url}\n"
+        if review_url
+        else f"Show my stamps: {magic_link_url}\n"
+    )
+
+    text = (
+        f"Thanks for visiting {business}\n\n"
+        f"Thanks for stopping by {business} today.\n"
+        + progress_text
+        + (
+            "Loved your visit? A quick Google review means the world to a small "
+            "local business — it takes under a minute.\n\n"
+            if review_url
+            else "\n"
+        )
+        + cta_line
+        + f"\nDon't email me again: {opt_out_url}\n"
+    )
+
+    return RenderedEmail(
+        subject=f"Thanks for visiting {business}",
+        html=_merchant_doc(
+            preheader=(
+                f"You now have {current}/{threshold} stamps at {business}."
+                if threshold > 0
+                else f"Thanks for visiting {business}."
+            ),
+            business=business,
+            body_html=body_html,
+            cta=cta,
+            opt_out_url=opt_out_url,
+        ),
+        text=text,
+    )
+
+
 # Re-exported to discourage import sprawl across the email_service.
 __all__ = [
     "SITE_URL",
@@ -605,6 +721,7 @@ __all__ = [
     "reactivation_email",
     "review_nudge_email",
     "subscription_canceled_email",
+    "visit_thankyou_email",
     "welcome_email",
     "whatsapp_otp_email",
 ]

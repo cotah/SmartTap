@@ -73,6 +73,13 @@ class Settings(BaseSettings):
     # never has to depend on frontend env files.
     site_url: str = Field(default="https://smarttap.ie")
 
+    # Global kill-switch for the automatic post-visit thank-you email (fires in
+    # real time when a tap earns a stamp). Defaults ON; set THANKYOU_ENABLED=
+    # false to silence it for every tenant at once — the safe lever if the first
+    # real pilot surfaces a problem. Still gated by Resend being configured and
+    # per-customer GDPR consent, so this is a master switch on top of those.
+    thankyou_enabled: bool = Field(default=True)
+
     @property
     def cors_origins_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]

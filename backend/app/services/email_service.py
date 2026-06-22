@@ -288,6 +288,53 @@ def send_review_nudge(
     return True
 
 
+def send_visit_thankyou(
+    *,
+    tenant: dict[str, Any],
+    customer: dict[str, Any],
+    review_url: str | None,
+    magic_link_url: str,
+    opt_out_url: str,
+) -> bool:
+    """Sent in real time (via FastAPI BackgroundTasks) right after a tap earns
+    a stamp — the warm "thanks for visiting" with stamp progress and a soft
+    review nudge.
+
+    Like reactivation/review_nudge the recipient is the END CUSTOMER, and the
+    caller (visit_thankyou_service) is trusted to have already enforced the
+    policy: thankyou_enabled, GDPR consent, email present, and the 6h cooldown.
+    Returns True when a send was attempted (or no-op'd cleanly in dev), False
+    when the customer had no email so the caller can skip recording cooldown.
+
+    Single send seam, same as review_nudge: when the WhatsApp template is
+    Meta-approved, a channel branch slots in here without touching the policy
+    in visit_thankyou_service."""
+    to = (customer.get("email") or "").strip() or None
+    if not to:
+        log.info(
+            "visit_thankyou_skip_no_email",
+            tenant_id=tenant.get("id"),
+            customer_id=customer.get("id"),
+        )
+        return False
+
+    rendered = templates.visit_thankyou_email(
+        tenant=tenant,
+        customer=customer,
+        review_url=review_url,
+        magic_link_url=magic_link_url,
+        opt_out_url=opt_out_url,
+    )
+    _safe_send(
+        to=to,
+        rendered=rendered,
+        tenant_id=tenant.get("id"),
+        event_name="visit_thankyou",
+        tags=[{"name": "tenant_id", "value": str(tenant.get("id") or "unknown")}],
+    )
+    return True
+
+
 def send_whatsapp_otp(*, to: str, code: str) -> None:
     """Email the owner a one-time code to link their WhatsApp number to the bot
     (S5 Feature 1). Recipient is the tenant owner's account email, resolved by

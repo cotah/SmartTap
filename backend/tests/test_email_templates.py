@@ -343,6 +343,149 @@ def test_reactivation_footer_is_customer_facing_not_merchant() -> None:
 
 
 # ---------------------------------------------------------------------------
+# visit thank-you — sent in real time on behalf of the merchant when a tap
+# earns a stamp
+# ---------------------------------------------------------------------------
+
+
+def test_visit_thankyou_subject_uses_business_name() -> None:
+    rendered = templates.visit_thankyou_email(
+        tenant=_tenant(name="ACME Barber", stamps_for_reward=10, reward_description="a free cut"),
+        customer=_customer(),
+        review_url="https://g.page/r/acme",
+        magic_link_url="https://smarttap.ie/m/tok_abc12345",
+        opt_out_url="https://smarttap.ie/u/tok_abc12345",
+    )
+    assert rendered.subject == "Thanks for visiting ACME Barber"
+
+
+def test_visit_thankyou_html_and_text_non_empty() -> None:
+    rendered = templates.visit_thankyou_email(
+        tenant=_tenant(name="ACME Barber", stamps_for_reward=10, reward_description="a free cut"),
+        customer=_customer(),
+        review_url="https://g.page/r/acme",
+        magic_link_url="https://smarttap.ie/m/t1",
+        opt_out_url="https://smarttap.ie/u/t1",
+    )
+    assert rendered.html.strip().startswith("<!doctype html>")
+    assert rendered.text
+    assert "ACME Barber" in rendered.html
+    assert "ACME Barber" in rendered.text
+
+
+def test_visit_thankyou_shows_stamp_progress() -> None:
+    """4 current / 10 threshold → '4/10' and '6 more'."""
+    rendered = templates.visit_thankyou_email(
+        tenant=_tenant(stamps_for_reward=10, reward_description="a free coffee"),
+        customer=_customer(current_stamps=4),
+        review_url="https://g.page/r/acme",
+        magic_link_url="https://smarttap.ie/m/t1",
+        opt_out_url="https://smarttap.ie/u/t1",
+    )
+    assert "4/10" in rendered.html
+    assert "6" in rendered.html
+    assert "free coffee" in rendered.html
+    assert "4/10" in rendered.text
+    assert "6 more" in rendered.text
+
+
+def test_visit_thankyou_reward_ready_when_card_complete() -> None:
+    """current == threshold → celebrate the completed card, not a 0-more line."""
+    rendered = templates.visit_thankyou_email(
+        tenant=_tenant(stamps_for_reward=10, reward_description="a free coffee"),
+        customer=_customer(current_stamps=10),
+        review_url="https://g.page/r/acme",
+        magic_link_url="https://smarttap.ie/m/t1",
+        opt_out_url="https://smarttap.ie/u/t1",
+    )
+    assert "ready to claim" in rendered.html.lower()
+    assert "free coffee" in rendered.html
+    # Must not show the "just 0 more" awkwardness.
+    assert "0 more" not in rendered.text
+
+
+def test_visit_thankyou_review_cta_when_review_url_present() -> None:
+    rendered = templates.visit_thankyou_email(
+        tenant=_tenant(stamps_for_reward=10, reward_description="a free cut"),
+        customer=_customer(),
+        review_url="https://g.page/r/acme",
+        magic_link_url="https://smarttap.ie/m/t1",
+        opt_out_url="https://smarttap.ie/u/tok_abc12345",
+    )
+    assert 'href="https://g.page/r/acme"' in rendered.html
+    assert "https://g.page/r/acme" in rendered.text
+    # Opt-out always present in footer + text.
+    assert 'href="https://smarttap.ie/u/tok_abc12345"' in rendered.html
+    assert "https://smarttap.ie/u/tok_abc12345" in rendered.text
+
+
+def test_visit_thankyou_falls_back_to_stamp_card_when_no_review_url() -> None:
+    """Loyalty-only tenant (no Google review URL) → CTA is the stamp card, and
+    no review nudge line appears."""
+    rendered = templates.visit_thankyou_email(
+        tenant=_tenant(stamps_for_reward=10, reward_description="a free cut"),
+        customer=_customer(),
+        review_url=None,
+        magic_link_url="https://smarttap.ie/m/tok_abc12345",
+        opt_out_url="https://smarttap.ie/u/t1",
+    )
+    assert 'href="https://smarttap.ie/m/tok_abc12345"' in rendered.html
+    assert "Show my stamps" in rendered.html
+    assert "https://smarttap.ie/m/tok_abc12345" in rendered.text
+    # No review pitch when there's nowhere to send them.
+    assert "google review" not in rendered.html.lower()
+
+
+def test_visit_thankyou_thanks_without_progress_when_no_loyalty() -> None:
+    """Review-only tenant (stamps_for_reward == 0) → still a warm thank-you, no
+    stamp-count line."""
+    rendered = templates.visit_thankyou_email(
+        tenant=_tenant(stamps_for_reward=0, reward_description=None),
+        customer=_customer(current_stamps=0),
+        review_url="https://g.page/r/acme",
+        magic_link_url="https://smarttap.ie/m/t1",
+        opt_out_url="https://smarttap.ie/u/t1",
+    )
+    assert "Thanks for stopping by" in rendered.html
+    assert "stamps" not in rendered.html.lower() or "/0" not in rendered.html
+
+
+def test_visit_thankyou_uses_first_name_in_greeting() -> None:
+    rendered = templates.visit_thankyou_email(
+        tenant=_tenant(stamps_for_reward=10, reward_description="a free cut"),
+        customer=_customer(name="Alex Murphy"),
+        review_url="https://g.page/r/acme",
+        magic_link_url="https://smarttap.ie/m/t1",
+        opt_out_url="https://smarttap.ie/u/t1",
+    )
+    assert "Hey Alex," in rendered.html
+
+
+def test_visit_thankyou_escapes_business_name() -> None:
+    rendered = templates.visit_thankyou_email(
+        tenant=_tenant(name="<script>evil()</script>", stamps_for_reward=10),
+        customer=_customer(),
+        review_url="https://g.page/r/acme",
+        magic_link_url="https://smarttap.ie/m/t1",
+        opt_out_url="https://smarttap.ie/u/t1",
+    )
+    assert "<script>" not in rendered.html
+    assert "&lt;script&gt;" in rendered.html
+
+
+def test_visit_thankyou_footer_is_customer_facing() -> None:
+    rendered = templates.visit_thankyou_email(
+        tenant=_tenant(name="ACME Barber", stamps_for_reward=10),
+        customer=_customer(),
+        review_url="https://g.page/r/acme",
+        magic_link_url="https://smarttap.ie/m/t1",
+        opt_out_url="https://smarttap.ie/u/t1",
+    )
+    assert "signed up as the owner" not in rendered.html
+    assert "opted in at ACME Barber" in rendered.html
+
+
+# ---------------------------------------------------------------------------
 # whatsapp OTP (S5 Feature 1) — owner-facing verification code
 # ---------------------------------------------------------------------------
 

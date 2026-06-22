@@ -182,6 +182,18 @@ def mark_review_nudge_sent(customer_id: str, sent_at: datetime) -> None:
     ).eq("id", customer_id).execute()
 
 
+def mark_thankyou_sent(customer_id: str, sent_at: datetime) -> None:
+    """Cooldown marker for the real-time post-visit thank-you email. Same
+    mark-before-send contract as the cron flows (`mark_reactivation_sent`,
+    `mark_review_nudge_sent`): written before the email is acknowledged so a
+    crash in the background task costs a customer one cycle, never a duplicate.
+    Separate column — independent of the reactivation/review-nudge cooldowns."""
+    client = get_supabase_admin()
+    client.table("customers").update(
+        {"last_thankyou_sent_at": sent_at.isoformat()}
+    ).eq("id", customer_id).execute()
+
+
 def revoke_consent_via_magic_token(magic_link_token: str) -> Row | None:
     """One-click GDPR opt-out from an email link. Idempotent: hitting the URL
     twice after a successful opt-out still returns the row and stays at
