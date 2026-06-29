@@ -9,105 +9,92 @@
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0A0A0F;color:#e8e8f0;line-height:1.6}
 a{color:#00D4FF;text-decoration:none}
 img{max-width:100%;display:block}
-.container{max-width:960px;margin:0 auto;padding:0 20px}
-header{padding:18px 0;border-bottom:1px solid #1a1a2e}
-header .container{display:flex;align-items:center;justify-content:space-between}
+.wrap{max-width:1000px;margin:0 auto;padding:0 20px}
+nav{padding:18px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #1a1a2e;max-width:1000px;margin:0 auto}
 .logo{font-size:1.4rem;font-weight:700;color:#00D4FF;letter-spacing:-0.5px}
-nav a{color:#b0b0c0;font-size:.9rem;margin-left:20px}
-nav a:hover{color:#00D4FF}
-.hero{padding:64px 0 48px}
-.hero .container{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
-.hero h1{font-size:2.4rem;font-weight:800;line-height:1.2;margin-bottom:16px;color:#fff}
+.nav-cta{background:#00D4FF;color:#0A0A0F;padding:8px 20px;border-radius:6px;font-weight:600;font-size:.9rem}
+.nav-cta:hover{background:#00bce0}
+/* Hero */
+.hero{padding:60px 20px 50px;text-align:center;max-width:1000px;margin:0 auto}
+.hero h1{font-size:2.6rem;font-weight:800;line-height:1.2;margin-bottom:18px;letter-spacing:-1px}
 .hero h1 span{color:#00D4FF}
-.hero p{color:#9090a8;font-size:1.05rem;margin-bottom:28px}
-.btn{display:inline-block;background:#00D4FF;color:#0A0A0F;padding:14px 32px;border-radius:8px;font-weight:700;font-size:1rem}
-.btn:hover{background:#00bde6}
-.hero-img{border-radius:12px;overflow:hidden;border:1px solid #1e1e32}
-.hero-img img{width:100%;height:auto}
-.features{padding:64px 0;border-top:1px solid #1a1a2e}
-.features h2{text-align:center;font-size:1.8rem;font-weight:700;color:#fff;margin-bottom:8px}
-.features .sub{text-align:center;color:#9090a8;margin-bottom:40px}
-.feat-img{border-radius:12px;overflow:hidden;border:1px solid #1e1e32;margin-bottom:40px}
-.feat-img img{width:100%;height:auto}
-.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
-.feat-card{background:#12121e;border:1px solid #1e1e32;border-radius:10px;padding:24px}
-.feat-card .icon{font-size:1.8rem;margin-bottom:12px}
-.feat-card h3{font-size:1rem;font-weight:700;color:#fff;margin-bottom:8px}
-.feat-card p{color:#8080a0;font-size:.9rem}
-.pricing{padding:64px 0;border-top:1px solid #1a1a2e}
-.pricing h2{text-align:center;font-size:1.8rem;font-weight:700;color:#fff;margin-bottom:8px}
-.pricing .sub{text-align:center;color:#9090a8;margin-bottom:40px}
-.price-card{max-width:400px;margin:0 auto;background:#12121e;border:2px solid #00D4FF;border-radius:14px;padding:40px;text-align:center}
-.price-card .amount{font-size:3rem;font-weight:800;color:#00D4FF}
-.price-card .amount span{font-size:1.2rem;font-weight:400;color:#9090a8}
-.price-card .label{color:#9090a8;margin-bottom:24px;font-size:.95rem}
-.price-card ul{list-style:none;text-align:left;margin-bottom:28px}
-.price-card ul li{padding:7px 0;border-bottom:1px solid #1e1e32;color:#c0c0d8;font-size:.93rem}
+.hero p{font-size:1.1rem;color:#a0a0b8;max-width:560px;margin:0 auto 32px}
+.btn{display:inline-block;background:#00D4FF;color:#0A0A0F;padding:14px 36px;border-radius:8px;font-weight:700;font-size:1rem}
+.btn:hover{background:#00bce0}
+.hero-img{margin:44px auto 0;border-radius:12px;overflow:hidden;border:1px solid #1e1e30;max-width:860px}
+.hero-img img{width:100%}
+/* Features */
+.features{padding:70px 20px;max-width:1000px;margin:0 auto}
+.section-label{font-size:.78rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#00D4FF;margin-bottom:12px}
+.features h2{font-size:2rem;font-weight:800;margin-bottom:14px;letter-spacing:-0.5px}
+.features .sub{color:#a0a0b8;max-width:500px;margin-bottom:44px;font-size:1rem}
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;margin-bottom:50px}
+.feat-card{background:#10101a;border:1px solid #1e1e30;border-radius:10px;padding:28px 24px}
+.feat-card .icon{font-size:1.8rem;margin-bottom:14px}
+.feat-card h3{font-size:1.05rem;font-weight:700;margin-bottom:8px;color:#f0f0fa}
+.feat-card p{font-size:.92rem;color:#8888a8}
+.feat-img{border-radius:12px;overflow:hidden;border:1px solid #1e1e30}
+.feat-img img{width:100%}
+/* Pricing */
+.pricing{padding:70px 20px;text-align:center;max-width:1000px;margin:0 auto}
+.pricing h2{font-size:2rem;font-weight:800;margin-bottom:10px;letter-spacing:-0.5px}
+.pricing .sub{color:#a0a0b8;margin-bottom:40px;font-size:1rem}
+.price-card{background:#10101a;border:2px solid #00D4FF;border-radius:14px;padding:44px 32px;max-width:400px;margin:0 auto}
+.price-card .amount{font-size:3.4rem;font-weight:800;color:#00D4FF;line-height:1}
+.price-card .amount span{font-size:1.2rem;font-weight:500;color:#a0a0b8;vertical-align:super;margin-right:4px}
+.price-card .period{color:#a0a0b8;font-size:.95rem;margin-bottom:28px;margin-top:6px}
+.price-card ul{list-style:none;text-align:left;margin-bottom:32px}
+.price-card ul li{padding:8px 0;border-bottom:1px solid #1a1a2e;font-size:.95rem;color:#c8c8e0}
+.price-card ul li:last-child{border-bottom:none}
 .price-card ul li::before{content:"✓ ";color:#00D4FF;font-weight:700}
-.price-card .btn{width:100%;text-align:center;display:block}
-footer{padding:28px 0;border-top:1px solid #1a1a2e;text-align:center;color:#5050708;font-size:.88rem}
-footer span{color:#606078}
+.price-card .btn{display:block;text-align:center}
+/* Footer */
+footer{border-top:1px solid #1a1a2e;padding:28px 20px;text-align:center;color:#555570;font-size:.88rem}
 footer a{color:#00D4FF}
-@media(max-width:680px){
-.hero .container{grid-template-columns:1fr}
-.feat-grid{grid-template-columns:1fr}
-.hero h1{font-size:1.8rem}
+@media(max-width:600px){
+.hero h1{font-size:1.9rem}
+.price-card .amount{font-size:2.8rem}
 }
 </style>
 </head>
 <body>
+
 <header>
-<div class="container">
-<div class="logo">SmartTap</div>
 <nav>
-<a href="#features">Features</a>
-<a href="#pricing">Pricing</a>
-<a href="mailto:hello@smarttap.ie">Contact</a>
+<div class="logo">SmartTap</div>
+<a class="nav-cta" href="https://smarttap.ie">Get Started</a>
 </nav>
-</div>
 </header>
 
 <section class="hero">
-<div class="container">
-<div>
-<h1>NFC Loyalty &amp; <span>Google Reviews</span> for Dublin Businesses</h1>
-<p>Tap, earn, review. Give your customers a seamless loyalty experience and grow your Google reputation automatically.</p>
-<a href="#pricing" class="btn">Get Started – €49/mo</a>
-</div>
+<div class="wrap">
+<p class="section-label">NFC Loyalty for Dublin</p>
+<h1>Tap to Reward.<br><span>Tap to Review.</span></h1>
+<p>SmartTap gives Dublin small businesses a plug-and-play NFC loyalty system that automatically boosts your Google Reviews and brings customers back.</p>
+<a class="btn" href="https://smarttap.ie">Start for €49/month</a>
 <div class="hero-img">
-<img src="https://qmemsvkeiygdwxyzadrc.supabase.co/storage/v1/object/public/agency-assets/hero-1782706217923.png" alt="SmartTap NFC loyalty in action">
+<img src="https://qmemsvkeiygdwxyzadrc.supabase.co/storage/v1/object/public/agency-assets/hero-1782706217923.png" alt="SmartTap NFC loyalty dashboard for Dublin businesses">
 </div>
 </div>
 </section>
 
-<section class="features" id="features">
-<div class="container">
-<h2>Everything Your Business Needs</h2>
-<p class="sub">One tap does it all – loyalty stamps, rewards and Google reviews collected effortlessly.</p>
-<div class="feat-img">
-<img src="https://qmemsvkeiygdwxyzadrc.supabase.co/storage/v1/object/public/agency-assets/features-1782706217923.png" alt="SmartTap features overview">
-</div>
+<section class="features">
+<div class="wrap">
+<p class="section-label">Features</p>
+<h2>Everything you need to grow</h2>
+<p class="sub">One tap from your customer is all it takes to earn loyalty points and leave a Google Review.</p>
 <div class="feat-grid">
 <div class="feat-card">
 <div class="icon">📲</div>
 <h3>NFC Tap Loyalty</h3>
-<p>Customers tap their phone on your SmartTap device to collect stamps and redeem rewards instantly. No app required.</p>
+<p>Customers tap your branded NFC card or sticker to instantly collect loyalty stamps — no app download needed.</p>
 </div>
 <div class="feat-card">
 <div class="icon">⭐</div>
-<h3>Auto Google Reviews</h3>
-<p>After each visit, customers are prompted to leave a Google review. Grow your rating on autopilot and stand out locally.</p>
+<h3>Automatic Google Reviews</h3>
+<p>Every tap prompts a Google Review request, steadily building your star rating and local search visibility.</p>
 </div>
 <div class="feat-card">
 <div class="icon">📊</div>
 <h3>Simple Dashboard</h3>
-<p>Track visits, rewards and review growth from one clean dashboard designed for busy Dublin business owners.</p>
-</div>
-</div>
-</div>
-</section>
-
-<section class="pricing" id="pricing">
-<div class="container">
-<h2>Simple, Flat Pricing</h2>
-<p class="sub">No hidden fees. No contracts. Cancel any time.
+<p
