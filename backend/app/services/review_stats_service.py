@@ -15,7 +15,7 @@ STARS = (5, 4, 3, 2, 1)
 @dataclass(frozen=True)
 class RatingSummary:
     total: int  # all reviews, including any without a numeric rating
-    rated_count: int  # reviews with a valid 1–5 star rating
+    rated_count: int  # reviews with a valid 1-5 star rating
     average: float | None  # mean over rated reviews, None when none are rated
     distribution: list[tuple[int, int]]  # [(5, n), (4, n), (3, n), (2, n), (1, n)]
 

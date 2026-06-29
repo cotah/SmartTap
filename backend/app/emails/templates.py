@@ -351,7 +351,7 @@ def payment_succeeded_email(
                 ("Status", "Active"),
             ]
         )
-        + f'<p style="margin:16px 0 0 0;">You can change plan, download invoices or update your card any time from the billing portal.</p>'
+        + '<p style="margin:16px 0 0 0;">You can change plan, download invoices or update your card any time from the billing portal.</p>'
     )
     text = (
         "Your SmartTap subscription is active\n\n"
@@ -441,7 +441,7 @@ def monthly_report_email(
         _h1(f"Your {_escape(period_label)} report")
         + f'<p style="margin:0 0 14px 0;">{_greeting(tenant)}</p>'
         + f'<p style="margin:0 0 14px 0;">Your monthly SmartTap report for <strong>{_escape(business)}</strong> is attached as a PDF. Inside you\'ll find new customers, taps, stamps and rewards for {_escape(period_label)}, with comparisons to the previous month.</p>'
-        + f'<p style="margin:0 0 14px 0;">Open the dashboard for today\'s live numbers and to schedule campaigns for the coming month.</p>'
+        + '<p style="margin:0 0 14px 0;">Open the dashboard for today\'s live numbers and to schedule campaigns for the coming month.</p>'
     )
     text = (
         f"Your {period_label} SmartTap report\n\n"

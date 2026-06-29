@@ -39,7 +39,7 @@ def _hash_code(tenant_id: str, phone: str, code: str) -> str:
     """Salt the hash with tenant+phone so identical codes for different
     customers never share a hash (and a leaked hash isn't a global rainbow
     target). Short-lived + attempt-limited, so sha256 is sufficient here."""
-    return hashlib.sha256(f"{tenant_id}:{phone}:{code}".encode("utf-8")).hexdigest()
+    return hashlib.sha256(f"{tenant_id}:{phone}:{code}".encode()).hexdigest()
 
 
 def request_code(*, tenant_id: str, phone: str, now: datetime | None = None) -> None:
