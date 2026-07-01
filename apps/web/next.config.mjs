@@ -15,7 +15,7 @@ const nextConfig = {
         ],
       },
       {
-        source: "/test-landing.html",
+        source: "/test/test-landing.html",
         headers: [
           {
             key: "Content-Security-Policy",
