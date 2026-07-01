@@ -44,7 +44,8 @@ Webhook → Setup Config
 - **GitHub API usa PUT, não POST**, tanto pra criar quanto pra atualizar arquivo. Pra atualizar precisa do `sha` do arquivo atual (busca via GET antes). Pra criar, sha é omitido.
 - **Arquivo fica em `apps/web/public/test/test-landing.html`** — precisa estar dentro de `public/` pro Next.js servir como estático. Um arquivo na raiz do repo NUNCA é servido.
 - **CSP do Next.js** (`apps/web/next.config.mjs`) tem uma regra específica pra `/test/test-landing.html` liberando `unsafe-inline` e `unsafe-eval`. Não é isso que causa página em branco geralmente — quase sempre é HTML truncado (ver abaixo).
-- **max_tokens do Claude Build HTML: 8500.** Menos que isso corta o HTML no meio (geralmente no CSS ou no footer). Sempre que adicionar mais seções ou mais instruções no prompt, testar se o HTML termina com `</html>` de verdade.
+- **max_tokens do Claude Build HTML: 9000.** Menos que isso corta o HTML no meio (geralmente no CSS ou no footer). Sempre que adicionar mais seções ou mais instruções no prompt, testar se o HTML termina com `</html>` de verdade. (Histórico: começou em 3000 → 6000 → 8500 → 9000 conforme o prompt foi crescendo com mais instruções.)
+- **Bug do menu duplicado (resolvido 01/07/2026):** o Claude às vezes gerava um segundo elemento `<nav>` no rodapé com os mesmos links do menu principal, e por herdar `position: fixed` sem querer, esse menu do rodapé "vazava" e aparecia no topo da página por cima do menu real. Corrigido adicionando no prompt uma regra explícita: apenas o nav do header pode usar `position: fixed`, e o footer deve usar `<div>` em vez de `<nav>`, em fluxo estático normal.
 - **Teste de integridade do HTML publicado:**
   ```powershell
   curl -s "https://www.smarttap.ie/test/test-landing.html?v=$RANDOM" -H "Cache-Control: no-cache" -o landing.html
@@ -58,6 +59,10 @@ Webhook → Setup Config
 Adicionado suporte a scroll animations via [AOS](https://michalsnik.github.io/aos/) (biblioteca leve, ~14KB). O prompt do `Claude Build HTML` instrui o Claude a incluir os `<link>` e `<script>` do AOS e aplicar `data-aos="fade-up"` nas seções.
 
 **Lição aprendida:** escrever HTML com aspas duplas escapadas dentro de um JSON body quebra facilmente (erro de parsing). Prompt reescrito descrevendo os placeholders em texto simples (ex: "LINK_AOS_CSS becomes a link tag pointing to...") em vez de HTML literal escapado — funcionou de forma confiável.
+
+### Hero em tela cheia (full-bleed)
+
+A imagem do hero cobre a seção inteira como background (via `<img>` posicionado absoluto com `object-fit: cover`, com um overlay gradiente escuro por cima pra manter o texto legível), em vez de aparecer numa caixinha ao lado do texto. Instrução específica no prompt garante altura mínima de `90vh` e camadas (`z-index`) corretas entre imagem, overlay e conteúdo.
 
 ---
 
@@ -95,6 +100,15 @@ Isso também viabiliza um modelo comercial de "X revisões incluídas no plano" 
 
 ### Fase futura — Creative Strategy Agency
 Agente "gerador/otimizador de ideias" — fecha o gap entre pesquisa de mercado (Research Agent) e execução (Copy/Creative/Landing). Recebe uma ideia vaga de produto/segmento, pesquisa, gera ângulos de posicionamento, valida, e entrega um brief pros outros agentes executarem.
+
+### Fase futura — Legal Agent
+Agente jurídico — revisa termos de uso, política de privacidade, contratos, e qualquer texto legal gerado ou usado pelos outros agentes (ex: termos que aparecem numa landing page, contrato de assinatura, disclaimers). Objetivo: garantir que nada saia com falha jurídica antes de ir ao ar — especialmente importante quando o produto começar a ser vendido de verdade pra clientes reais (GDPR, termos de cancelamento, etc, considerando operação na Irlanda/UE).
+
+### Fase futura — Naming / Virality Agent
+Agente que gera nomes virais e memoráveis para produtos, campanhas, features, ou até variações de teste A/B de nome. Pode também sugerir taglines curtas e ganchos (hooks) para uso em social media e ads. Entra bem no início do funil, antes ou junto do Research Agent, quando um novo produto/ideia está sendo validado.
+
+### Itens em aberto (adicionar aqui sempre que lembrar de algo novo)
+- (espaço reservado — Henrique vai completando conforme for lembrando de peças que faltam)
 
 ---
 
