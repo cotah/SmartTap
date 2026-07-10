@@ -4,344 +4,322 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SmartTap – One Tap. Reviews Go Up. Regulars Come Back.</title>
+<meta name="description" content="SmartTap helps Dublin small businesses get more Google reviews and bring regulars back with one simple NFC tap. €49/month.">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--primary:#00D4FF;--bg:#0A0A0F;--text:#e8e8f0;--card:#13131a;--border:#1e1e2e;--radius:12px}
 html{scroll-behavior:smooth}
-body{background:#07070e;color:#e8e8f0;font-family:'Inter',system-ui,sans-serif;line-height:1.6;overflow-x:hidden}
+body{background:var(--bg);color:var(--text);font-family:system-ui,sans-serif;line-height:1.6;overflow-x:hidden}
 a{color:inherit;text-decoration:none}
 img{max-width:100%;display:block}
 
-/* GLOW ORBS */
-body::before{content:'';position:fixed;top:-200px;left:-200px;width:600px;height:600px;background:radial-gradient(circle,rgba(0,212,255,0.07) 0%,transparent 70%);pointer-events:none;z-index:0}
-body::after{content:'';position:fixed;bottom:-200px;right:-200px;width:500px;height:500px;background:radial-gradient(circle,rgba(108,0,255,0.06) 0%,transparent 70%);pointer-events:none;z-index:0}
-
 /* NAV */
-nav#main-nav{position:fixed;top:0;left:0;width:100%;z-index:1000;background:rgba(7,7,14,0.85);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-bottom:1px solid rgba(0,212,255,0.1);padding:0 5%}
+nav#main-nav{position:fixed;top:0;left:0;width:100%;z-index:1000;background:rgba(10,10,15,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 5%}
 .nav-inner{display:flex;align-items:center;justify-content:space-between;height:64px;max-width:1200px;margin:0 auto}
-.nav-logo{font-size:1.4rem;font-weight:900;background:linear-gradient(90deg,#00D4FF,#7B61FF);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-0.5px}
-.nav-links{display:flex;align-items:center;gap:2rem;list-style:none}
-.nav-links a{font-size:.95rem;color:#e8e8f0;opacity:.75;transition:opacity .2s,color .2s;font-weight:500}
-.nav-links a:hover{opacity:1;color:#00D4FF}
-.btn-primary{background:linear-gradient(135deg,#00D4FF 0%,#0099cc 100%);color:#07070e;padding:.55rem 1.4rem;border-radius:8px;font-weight:800;font-size:.9rem;transition:all .25s;border:none;cursor:pointer;display:inline-block;box-shadow:0 0 20px rgba(0,212,255,0.25)}
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,212,255,.45)}
-.btn-outline{background:transparent;color:#00D4FF;padding:.55rem 1.4rem;border-radius:8px;font-weight:700;font-size:.9rem;border:1.5px solid rgba(0,212,255,0.5);cursor:pointer;display:inline-block;transition:all .25s}
-.btn-outline:hover{background:rgba(0,212,255,.1);border-color:#00D4FF;transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,212,255,.2)}
-.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px}
-.hamburger span{display:block;width:24px;height:2px;background:#e8e8f0;transition:all .3s}
-.mobile-menu{display:none;flex-direction:column;gap:1.2rem;padding:1.2rem 5%;background:rgba(7,7,14,.98);border-bottom:1px solid rgba(0,212,255,.1)}
-.mobile-menu a{font-size:1rem;color:#e8e8f0;opacity:.85}
+.nav-logo{font-size:1.3rem;font-weight:700;color:var(--primary);letter-spacing:-0.5px}
+.nav-links{display:flex;align-items:center;gap:2rem}
+.nav-links a{font-size:.95rem;color:var(--text);opacity:.8;transition:opacity .2s}
+.nav-links a:hover{opacity:1;color:var(--primary)}
+.btn-nav{background:var(--primary);color:#0A0A0F;font-weight:700;padding:.5rem 1.2rem;border-radius:8px;font-size:.9rem;transition:transform .2s,box-shadow .2s}
+.btn-nav:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,212,255,.35);opacity:1;color:#0A0A0F}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px}
+.hamburger span{display:block;width:24px;height:2px;background:var(--text);border-radius:2px;transition:.3s}
+.mobile-menu{display:none;flex-direction:column;gap:1rem;padding:1.2rem 5%;background:rgba(10,10,15,.97);border-bottom:1px solid var(--border)}
+.mobile-menu a{font-size:1rem;opacity:.85}
 .mobile-menu.open{display:flex}
 
 /* HERO */
-#hero{position:relative;min-height:90vh;display:flex;align-items:center;overflow:hidden;padding-top:64px}
-.hero-bg{position:absolute;inset:0;z-index:0}
-.hero-bg img{width:100%;height:100%;object-fit:cover;object-position:center}
-.hero-overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(7,7,14,0.92) 0%,rgba(7,7,14,0.6) 60%,rgba(7,7,14,0.3) 100%);z-index:1}
+#hero{position:relative;min-height:90vh;display:flex;align-items:center;overflow:hidden;margin-top:64px}
+.hero-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(10,10,15,0.88) 0%,rgba(10,10,15,0.52) 100%);z-index:1}
 .hero-content{position:relative;z-index:2;max-width:1200px;margin:0 auto;padding:5rem 5%;width:100%}
-.hero-badge{display:inline-flex;align-items:center;gap:.4rem;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);color:#00D4FF;font-size:.76rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;padding:.4rem 1rem;border-radius:20px;margin-bottom:1.6rem;box-shadow:0 0 20px rgba(0,212,255,0.08)}
-.hero-badge::before{content:'🇮🇪';font-size:.9rem}
-.hero-content h1{font-size:clamp(2.4rem,5vw,4rem);font-weight:900;line-height:1.08;max-width:700px;margin-bottom:1.3rem;letter-spacing:-1.5px}
-.hero-content h1 span{background:linear-gradient(90deg,#00D4FF,#7B61FF);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.hero-content p{font-size:1.15rem;color:#9090b0;max-width:520px;margin-bottom:2.2rem;line-height:1.7}
-.hero-btns{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:3.5rem}
-.hero-stats{display:flex;gap:2.5rem;flex-wrap:wrap}
-.stat{border-left:2px solid rgba(0,212,255,0.5);padding-left:1rem;position:relative}
-.stat::after{content:'';position:absolute;left:-1px;top:0;height:100%;width:2px;background:linear-gradient(180deg,#00D4FF,#7B61FF);border-radius:2px}
-.stat strong{display:block;font-size:1.9rem;font-weight:900;background:linear-gradient(90deg,#00D4FF,#7B61FF);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1}
-.stat span{font-size:.82rem;color:#7070a0;margin-top:.25rem;display:block;font-weight:500}
+.hero-badge{display:inline-block;background:rgba(0,212,255,.12);border:1px solid rgba(0,212,255,.3);color:var(--primary);font-size:.8rem;font-weight:600;padding:.3rem .8rem;border-radius:20px;margin-bottom:1.2rem;letter-spacing:.5px}
+.hero-content h1{font-size:clamp(2.2rem,5vw,3.8rem);font-weight:800;line-height:1.15;max-width:680px;margin-bottom:1.2rem;color:#fff}
+.hero-content h1 span{color:var(--primary)}
+.hero-content p{font-size:clamp(1rem,2vw,1.2rem);max-width:540px;opacity:.85;margin-bottom:2rem}
+.hero-ctas{display:flex;flex-wrap:wrap;gap:1rem;margin-bottom:3rem}
+.btn-primary{background:var(--primary);color:#0A0A0F;font-weight:700;padding:.85rem 1.8rem;border-radius:10px;font-size:1rem;transition:transform .2s,box-shadow .2s;cursor:pointer;border:none}
+.btn-primary:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,212,255,.4)}
+.btn-ghost{background:transparent;color:var(--text);font-weight:600;padding:.85rem 1.8rem;border-radius:10px;font-size:1rem;border:1px solid rgba(232,232,240,.25);transition:border-color .2s,color .2s}
+.btn-ghost:hover{border-color:var(--primary);color:var(--primary)}
+.hero-stats{display:flex;flex-wrap:wrap;gap:2.5rem}
+.stat{display:flex;flex-direction:column}
+.stat strong{font-size:1.8rem;font-weight:800;color:var(--primary)}
+.stat span{font-size:.85rem;opacity:.7}
 
 /* SECTIONS */
-section{padding:5.5rem 5%;position:relative}
-.section-inner{max-width:1200px;margin:0 auto}
-.section-tag{font-size:.76rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#00D4FF;margin-bottom:.8rem;display:inline-flex;align-items:center;gap:.5rem}
-.section-tag::before{content:'';display:inline-block;width:20px;height:2px;background:linear-gradient(90deg,#00D4FF,#7B61FF);border-radius:2px}
-.section-title{font-size:clamp(1.8rem,3.5vw,2.7rem);font-weight:900;margin-bottom:.8rem;letter-spacing:-.7px;line-height:1.15}
-.section-sub{color:#7878a0;font-size:1rem;max-width:520px;margin-bottom:3rem;line-height:1.7}
+section{padding:5rem 5%;max-width:1200px;margin:0 auto}
+.section-label{font-size:.8rem;font-weight:700;letter-spacing:1.5px;color:var(--primary);text-transform:uppercase;margin-bottom:.6rem}
+.section-title{font-size:clamp(1.6rem,3.5vw,2.4rem);font-weight:800;margin-bottom:.8rem;color:#fff}
+.section-sub{opacity:.75;max-width:540px;margin-bottom:3rem}
 
 /* PROBLEM */
-#problem{background:linear-gradient(180deg,#0a0a14 0%,#0d0d18 100%)}
-.cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem}
-.card{background:linear-gradient(145deg,#141422,#111120);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:2rem;transition:all .3s ease;position:relative;overflow:hidden}
-.card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,212,255,0.03),transparent);opacity:0;transition:opacity .3s}
-.card:hover{border-color:rgba(0,212,255,.25);transform:translateY(-6px);box-shadow:0 20px 40px rgba(0,0,0,.5),0 0 30px rgba(0,212,255,.06)}
-.card:hover::before{opacity:1}
-.card-icon{font-size:2.2rem;margin-bottom:1.2rem;display:inline-block}
-.card h3{font-size:1.1rem;font-weight:800;margin-bottom:.6rem;letter-spacing:-.3px}
-.card p{font-size:.9rem;color:#7878a0;line-height:1.65}
+#problem{max-width:1200px}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:2rem;transition:border-color .3s,transform .3s}
+.card:hover{border-color:var(--primary);transform:translateY(-4px)}
+.card-icon{font-size:2rem;margin-bottom:1rem}
+.card h3{font-size:1.1rem;font-weight:700;color:#fff;margin-bottom:.6rem}
+.card p{opacity:.75;font-size:.95rem}
 
 /* SOLUTION */
-#solution{background:#07070e}
-.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.5rem}
-.step{background:linear-gradient(145deg,#141422,#111120);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:2rem;transition:all .3s ease;position:relative;overflow:hidden}
-.step:hover{border-color:rgba(0,212,255,.25);transform:translateY(-6px);box-shadow:0 20px 40px rgba(0,0,0,.5),0 0 30px rgba(0,212,255,.06)}
-.step-num{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,rgba(0,212,255,.15),rgba(123,97,255,.1));border:2px solid rgba(0,212,255,0.6);color:#00D4FF;font-weight:900;font-size:1.1rem;display:flex;align-items:center;justify-content:center;margin-bottom:1.3rem;box-shadow:0 0 16px rgba(0,212,255,.15)}
-.step h3{font-size:1.05rem;font-weight:800;margin-bottom:.5rem;letter-spacing:-.2px}
-.step p{font-size:.9rem;color:#7878a0;line-height:1.65}
+#solution{background:rgba(0,212,255,.03);border-top:1px solid var(--border);border-bottom:1px solid var(--border);max-width:100%;padding:5rem 5%}
+.solution-inner{max-width:1200px;margin:0 auto}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:2rem;margin-top:3rem}
+.step{display:flex;gap:1.2rem;align-items:flex-start}
+.step-num{min-width:42px;height:42px;background:var(--primary);color:#0A0A0F;font-weight:800;font-size:1rem;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.step-body h3{font-size:1.05rem;font-weight:700;color:#fff;margin-bottom:.4rem}
+.step-body p{opacity:.75;font-size:.9rem}
 
 /* FEATURES */
-#features{background:linear-gradient(180deg,#0a0a14 0%,#0d0d18 100%)}
-.features-wrap{display:grid;grid-template-columns:1fr 1fr;gap:3.5rem;align-items:center}
-.features-img{border-radius:18px;overflow:hidden;border:1px solid rgba(0,212,255,.15);box-shadow:0 0 60px rgba(0,212,255,.07),0 30px 60px rgba(0,0,0,.5)}
-.features-img img{width:100%;height:auto;display:block}
-.feature-cards{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
-.feat-card{background:linear-gradient(145deg,#141422,#111120);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:1.5rem;transition:all .25s ease;position:relative;overflow:hidden}
-.feat-card:hover{border-color:rgba(0,212,255,.25);transform:translateY(-4px);box-shadow:0 12px 30px rgba(0,0,0,.4),0 0 20px rgba(0,212,255,.05)}
-.feat-card .icon{font-size:1.7rem;margin-bottom:.7rem;display:inline-block}
-.feat-card h4{font-size:.95rem;font-weight:800;margin-bottom:.4rem;letter-spacing:-.2px}
-.feat-card p{font-size:.82rem;color:#7878a0;line-height:1.6}
+#features{max-width:1200px}
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem}
+.feature-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.8rem;transition:border-color .3s,transform .3s}
+.feature-card:hover{border-color:var(--primary);transform:translateY(-4px)}
+.feature-icon{font-size:1.8rem;margin-bottom:1rem}
+.feature-card h3{font-size:1rem;font-weight:700;color:#fff;margin-bottom:.5rem}
+.feature-card p{opacity:.72;font-size:.9rem}
+.features-img{width:100%;border-radius:var(--radius);margin-top:3rem;border:1px solid var(--border)}
 
 /* PRICING */
-#pricing{background:#07070e;text-align:center}
-.pricing-card{max-width:480px;margin:0 auto;background:linear-gradient(145deg,#141422,#0f0f1e);border:1.5px solid rgba(0,212,255,.35);border-radius:20px;padding:3rem 2.5rem;box-shadow:0 0 80px rgba(0,212,255,.09),0 30px 60px rgba(0,0,0,.5),inset 0 1px 0 rgba(0,212,255,.1);position:relative;overflow:hidden}
-.pricing-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,212,255,.5),transparent)}
-.pricing-card::after{content:'';position:absolute;top:-80px;right:-80px;width:200px;height:200px;background:radial-gradient(circle,rgba(0,212,255,0.06),transparent 70%);pointer-events:none}
-.price-amount{font-size:4.2rem;font-weight:900;background:linear-gradient(90deg,#00D4FF,#7B61FF);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;margin:.5rem 0}
-.price-amount span{font-size:1.2rem;color:#7878a0;font-weight:400;-webkit-text-fill-color:#7878a0}
-.price-period{font-size:.88rem;color:#7878a0;margin-bottom:2rem;font-weight:500}
-.price-features{list-style:none;text-align:left;margin-bottom:2rem}
-.price-features li{padding:.6rem 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.95rem;display:flex;align-items:center;gap:.75rem;font-weight:500}
-.price-features li::before{content:"✓";background:linear-gradient(135deg,#00D4FF,#7B61FF);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-weight:900;font-size:1rem;flex-shrink:0}
-.pricing-note{margin-top:1.2rem;font-size:.82rem;color:#7878a0}
+#pricing{background:rgba(0,212,255,.03);border-top:1px solid var(--border);border-bottom:1px solid var(--border);max-width:100%;padding:5rem 5%}
+.pricing-inner{max-width:1200px;margin:0 auto}
+.pricing-card{background:var(--card);border:2px solid var(--primary);border-radius:16px;padding:3rem;max-width:520px;margin:0 auto;text-align:center}
+.pricing-badge{display:inline-block;background:rgba(0,212,255,.15);color:var(--primary);font-size:.8rem;font-weight:700;padding:.3rem .9rem;border-radius:20px;margin-bottom:1.2rem;letter-spacing:.5px}
+.pricing-card h3{font-size:1.4rem;font-weight:800;color:#fff;margin-bottom:.5rem}
+.price{font-size:3.5rem;font-weight:900;color:var(--primary);line-height:1;margin:1rem 0 .3rem}
+.price-period{font-size:1rem;opacity:.65;margin-bottom:1.8rem}
+.pricing-list{list-style:none;text-align:left;margin-bottom:2rem}
+.pricing-list li{padding:.5rem 0;border-bottom:1px solid var(--border);font-size:.95rem;display:flex;gap:.7rem;align-items:center}
+.pricing-list li:last-child{border-bottom:none}
+.pricing-list li::before{content:"✓";color:var(--primary);font-weight:700;flex-shrink:0}
+.pricing-microcopy{font-size:.82rem;opacity:.6;margin-top:.8rem}
 
 /* TESTIMONIAL */
-#testimonial{background:linear-gradient(180deg,#0a0a14 0%,#0d0d18 100%)}
-.testimonial-wrap{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center;max-width:960px;margin:0 auto}
-.testimonial-img{border-radius:18px;overflow:hidden;border:1px solid rgba(0,212,255,.15);box-shadow:0 0 40px rgba(0,212,255,.07),0 20px 40px rgba(0,0,0,.4)}
-.testimonial-img img{width:100%;height:auto;display:block}
-.testimonial-content{background:linear-gradient(145deg,#141422,#111120);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:2.5rem;position:relative}
-.testimonial-content::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,212,255,.3),transparent);border-radius:18px 18px 0 0}
-.testimonial-content blockquote{font-size:1.15rem;font-weight:500;line-height:1.7;color:#d0d0e8;margin-bottom:1.5rem;font-style:italic}
-.testimonial-content blockquote::before{content:"\201C";font-size:3.5rem;background:linear-gradient(135deg,#00D4FF,#7B61FF);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:0;vertical-align:-.6rem;margin-right:.2rem;font-style:normal}
-.author-name{font-weight:800;background:linear-gradient(90deg,#00D4FF,#7B61FF);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:1rem}
-.author-biz{font-size:.88rem;color:#7878a0;margin-top:.2rem}
-.stars{background:linear-gradient(90deg,#00D4FF,#7B61FF);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:1.1rem;margin-bottom:1rem;letter-spacing:2px}
+#testimonial{max-width:1200px}
+.testimonial-wrap{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center}
+.testimonial-img{width:100%;border-radius:var(--radius);object-fit:cover;max-height:420px}
+.testimonial-content blockquote{font-size:clamp(1.1rem,2.5vw,1.4rem);font-weight:600;color:#fff;line-height:1.55;margin-bottom:1.5rem;position:relative;padding-left:1.5rem}
+.testimonial-content blockquote::before{content:'"';position:absolute;left:0;top:-.1em;font-size:2rem;color:var(--primary);line-height:1}
+.testimonial-author{display:flex;flex-direction:column;gap:.2rem}
+.testimonial-author strong{font-weight:700;color:#fff}
+.testimonial-author span{font-size:.9rem;opacity:.65}
+.stars{color:var(--primary);font-size:1.1rem;margin-bottom:1rem}
 
 /* FOOTER */
-footer{background:#04040a;border-top:1px solid rgba(255,255,255,.05);padding:3rem 5%;position:relative}
-footer::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,212,255,.2),transparent)}
+footer{background:#050508;border-top:1px solid var(--border);padding:2.5rem 5%;margin-top:0}
 .footer-inner{max-width:1200px;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:1.5rem}
-.footer-logo{font-size:1.3rem;font-weight:900;background:linear-gradient(90deg,#00D4FF,#7B61FF);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.footer-tagline{font-size:.82rem;color:#7070a0;margin-top:.2rem}
-.footer-links{display:flex;gap:1.5rem;flex-wrap:wrap}
-.footer-links a{font-size:.88rem;color:#7070a0;transition:color .2s;font-weight:500}
-.footer-links a:hover{color:#00D4FF}
-.footer-copy{font-size:.78rem;color:#44445a;width:100%;text-align:center;margin-top:1rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,.04)}
+.footer-logo{font-size:1.1rem;font-weight:700;color:var(--primary)}
+.footer-links{display:flex;flex-wrap:wrap;gap:1.5rem}
+.footer-links a{font-size:.9rem;opacity:.65;transition:opacity .2s,color .2s}
+.footer-links a:hover{opacity:1;color:var(--primary)}
+.footer-copy{width:100%;text-align:center;font-size:.82rem;opacity:.45;padding-top:1rem;border-top:1px solid var(--border);margin-top:.5rem}
 
 /* RESPONSIVE */
-@media(max-width:900px){
-.features-wrap{grid-template-columns:1fr}
-.features-img{display:none}
-.testimonial-wrap{grid-template-columns:1fr}
-.testimonial-img{max-width:360px}
-}
-@media(max-width:640px){
+@media(max-width:768px){
 .nav-links{display:none}
 .hamburger{display:flex}
+.testimonial-wrap{grid-template-columns:1fr}
+.testimonial-img{max-height:280px}
 .hero-stats{gap:1.5rem}
-.feature-cards{grid-template-columns:1fr}
-.hero-btns{flex-direction:column}
-.hero-btns .btn-primary,.hero-btns .btn-outline{text-align:center}
+section{padding:3.5rem 5%}
+#solution,#pricing{padding:3.5rem 5%}
+}
+@media(max-width:480px){
+.hero-ctas{flex-direction:column}
+.btn-primary,.btn-ghost{text-align:center}
+.price{font-size:2.8rem}
 }
 </style>
 </head>
 <body>
-<!-- EDIT-AGENT: instrucao ambigua recebida, apenas ajustes minimos aplicados. Especifique a mudanca desejada para edicoes maiores. -->
 
 <nav id="main-nav">
   <div class="nav-inner">
     <div class="nav-logo">SmartTap</div>
-    <ul class="nav-links">
-      <li><a href="#features">Features</a></li>
-      <li><a href="#pricing">Pricing</a></li>
-      <li><a href="#contact">Contact</a></li>
-      <li><a class="btn-primary" href="#pricing">Get Started</a></li>
-    </ul>
-    <div class="hamburger" onclick="document.getElementById('mobile-menu').classList.toggle('open')" aria-label="Toggle menu">
-      <span></span><span></span><span></span>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#testimonial">Contact</a>
+      <a href="#pricing" class="btn-nav">Get Started</a>
     </div>
+    <button class="hamburger" aria-label="Menu" onclick="document.getElementById('mobile-menu').classList.toggle('open')">
+      <span></span><span></span><span></span>
+    </button>
   </div>
   <div class="mobile-menu" id="mobile-menu">
     <a href="#features" onclick="document.getElementById('mobile-menu').classList.remove('open')">Features</a>
     <a href="#pricing" onclick="document.getElementById('mobile-menu').classList.remove('open')">Pricing</a>
-    <a href="#contact" onclick="document.getElementById('mobile-menu').classList.remove('open')">Contact</a>
-    <a class="btn-primary" href="#pricing" style="text-align:center" onclick="document.getElementById('mobile-menu').classList.remove('open')">Get Started</a>
+    <a href="#testimonial" onclick="document.getElementById('mobile-menu').classList.remove('open')">Contact</a>
+    <a href="#pricing" class="btn-nav" style="text-align:center" onclick="document.getElementById('mobile-menu').classList.remove('open')">Get Started</a>
   </div>
 </nav>
 
-<section id="hero">
-  <div class="hero-bg">
-    <img src="https://bybocxguyoejfdhlszpo.supabase.co/storage/v1/object/public/agency-assets/hero-1783392250776.png" alt="SmartTap hero">
-  </div>
+<section id="hero" data-aos="fade-up">
+  <img class="hero-bg" src="https://bybocxguyoejfdhlszpo.supabase.co/storage/v1/object/public/agency-assets/hero-1783654383670.png" alt="SmartTap hero">
   <div class="hero-overlay"></div>
   <div class="hero-content">
-    <div class="hero-badge">Dublin's #1 Tap-to-Review Tool</div>
+    <div class="hero-badge">🇮🇪 Built for Dublin Businesses</div>
     <h1>One Tap. Reviews Go Up.<br><span>Regulars Come Back.</span></h1>
-    <p>SmartTap makes it effortless for your Dublin customers to leave 5-star reviews and keep coming back — all with a single tap on your counter.</p>
-    <div class="hero-btns">
-      <a class="btn-primary" href="#pricing">Get Started — €49/mo</a>
-      <a class="btn-outline" href="#features">See How It Works</a>
+    <p>SmartTap turns every customer interaction into a Google review and a returning visit — with a single NFC tap. No app needed.</p>
+    <div class="hero-ctas">
+      <a href="#pricing" class="btn-primary">Start for €49/month</a>
+      <a href="#solution" class="btn-ghost">See How It Works</a>
     </div>
     <div class="hero-stats">
-      <div class="stat">
-        <strong>3x</strong>
-        <span>More Google reviews</span>
-      </div>
-      <div class="stat">
-        <strong>40%</strong>
-        <span>Increase in return visits</span>
-      </div>
-      <div class="stat">
-        <strong>48h</strong>
-        <span>Setup time</span>
-      </div>
+      <div class="stat"><strong>3x</strong><span>More Google reviews</span></div>
+      <div class="stat"><strong>68%</strong><span>Repeat visit rate</span></div>
+      <div class="stat"><strong>&lt;5s</strong><span>Tap to review</span></div>
     </div>
   </div>
 </section>
 
 <section id="problem" data-aos="fade-up">
-  <div class="section-inner">
-    <div class="section-tag">The Problem</div>
-    <h2 class="section-title">Dublin Businesses Are Losing Out</h2>
-    <p class="section-sub">Every day without reviews is a day a competitor wins a customer that should be yours.</p>
-    <div class="cards-grid">
-      <div class="card" data-aos="fade-up" data-aos-delay="0">
-        <div class="card-icon">😔</div>
-        <h3>Happy Customers Stay Silent</h3>
-        <p>Your best regulars love you but never leave a review. Asking in person feels awkward — so it just doesn't happen.</p>
-      </div>
-      <div class="card" data-aos="fade-up" data-aos-delay="100">
-        <div class="card-icon">📉</div>
-        <h3>Competitors Outrank You Online</h3>
-        <p>Cafes and restaurants with more Google reviews show up first. Without reviews, new customers scroll straight past you.</p>
-      </div>
-      <div class="card" data-aos="fade-up" data-aos-delay="200">
-        <div class="card-icon">🔄</div>
-        <h3>No System to Bring People Back</h3>
-        <p>You have no easy way to reward loyalty or remind satisfied customers to return — so repeat business is left to chance.</p>
-      </div>
+  <div class="section-label">The Problem</div>
+  <h2 class="section-title">Dublin businesses are losing customers silently</h2>
+  <p class="section-sub">Great service doesn't automatically become growth. These three problems are holding your business back.</p>
+  <div class="cards-grid">
+    <div class="card" data-aos="fade-up" data-aos-delay="0">
+      <div class="card-icon">😶</div>
+      <h3>Happy customers don't review</h3>
+      <p>95% of satisfied customers leave without leaving a Google review. Your rating stagnates while competitors pull ahead.</p>
+    </div>
+    <div class="card" data-aos="fade-up" data-aos-delay="100">
+      <div class="card-icon">👻</div>
+      <h3>Regulars drift away</h3>
+      <p>Without a simple way to stay connected, loyal customers forget you exist and end up at the place down the road.</p>
+    </div>
+    <div class="card" data-aos="fade-up" data-aos-delay="200">
+      <div class="card-icon">💸</div>
+      <h3>Paid ads eat your margin</h3>
+      <p>Constantly paying to acquire new customers while ignoring the ones you already have is the most expensive mistake in local business.</p>
     </div>
   </div>
 </section>
 
-<section id="solution" data-aos="fade-up">
-  <div class="section-inner">
-    <div class="section-tag">How It Works</div>
-    <h2 class="section-title">Three Steps to More Reviews</h2>
-    <p class="section-sub">SmartTap is designed for busy business owners. No tech skills. No fuss. Just results.</p>
+<div id="solution" data-aos="fade-up">
+<section style="padding:0;max-width:100%">
+<div style="background:rgba(0,212,255,.03);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:5rem 5%">
+  <div class="solution-inner">
+    <div class="section-label">How It Works</div>
+    <h2 class="section-title">Three steps to more reviews and returning customers</h2>
+    <p class="section-sub">SmartTap is simple enough for any team member to run. No training, no tech headaches.</p>
     <div class="steps">
       <div class="step" data-aos="fade-up" data-aos-delay="0">
         <div class="step-num">1</div>
-        <h3>Place Your SmartTap Device</h3>
-        <p>A sleek NFC-enabled tap point sits on your counter. We ship it to you pre-configured and ready to go in 48 hours.</p>
+        <div class="step-body">
+          <h3>Place your SmartTap device</h3>
+          <p>Put the branded NFC card or stand on your counter, table, or checkout. It's ready instantly — no setup required.</p>
+        </div>
       </div>
-      <div class="step" data-aos="fade-up" data-aos-delay="100">
+      <div class="step" data-aos="fade-up" data-aos-delay="120">
         <div class="step-num">2</div>
-        <h3>Customer Taps. Review Loads.</h3>
-        <p>One tap with any smartphone opens your Google review page instantly — no app, no login, no friction whatsoever.</p>
+        <div class="step-body">
+          <h3>Customer taps, review opens</h3>
+          <p>One tap on any smartphone opens your Google review page in under 5 seconds. No app, no account, no friction.</p>
+        </div>
       </div>
-      <div class="step" data-aos="fade-up" data-aos-delay="200">
+      <div class="step" data-aos="fade-up" data-aos-delay="240">
         <div class="step-num">3</div>
-        <h3>Watch Reviews & Loyalty Grow</h3>
-        <p>Your star rating climbs, new customers find you online, and your loyalty programme keeps regulars walking back in.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="features" data-aos="fade-up">
-  <div class="section-inner">
-    <div class="features-wrap">
-      <div class="features-img">
-        <img src="https://bybocxguyoejfdhlszpo.supabase.co/storage/v1/object/public/agency-assets/features-1783392250776.png" alt="SmartTap features">
-      </div>
-      <div>
-        <div class="section-tag">Features</div>
-        <h2 class="section-title">Everything Your Business Needs</h2>
-        <p class="section-sub">Built specifically for Dublin's cafes, restaurants, barbershops, and retail stores.</p>
-        <div class="feature-cards">
-          <div class="feat-card" data-aos="fade-up" data-aos-delay="0">
-            <div class="icon">⚡</div>
-            <h4>Instant NFC Reviews</h4>
-            <p>One tap sends customers straight to your Google review page. Zero friction, maximum conversions.</p>
-          </div>
-          <div class="feat-card" data-aos="fade-up" data-aos-delay="80">
-            <div class="icon">🏆</div>
-            <h4>Built-in Loyalty</h4>
-            <p>Reward repeat customers automatically. Keep them coming back week after week.</p>
-          </div>
-          <div class="feat-card" data-aos="fade-up" data-aos-delay="160">
-            <div class="icon">📊</div>
-            <h4>Live Dashboard</h4>
-            <p>Track review growth, tap activity, and customer returns from one simple dashboard.</p>
-          </div>
-          <div class="feat-card" data-aos="fade-up" data-aos-delay="240">
-            <div class="icon">🛠️</div>
-            <h4>Done-For-You Setup</h4>
-            <p>We handle everything. Your device arrives configured and you're live within 48 hours.</p>
-          </div>
+        <div class="step-body">
+          <h3>Regulars get a reason to return</h3>
+          <p>Follow-up offers and loyalty prompts are sent automatically, keeping your best customers coming back every week.</p>
         </div>
       </div>
     </div>
   </div>
+</div>
 </section>
+</div>
 
-<section id="pricing" data-aos="fade-up">
-  <div class="section-inner">
-    <div class="section-tag" style="text-align:center;display:flex;justify-content:center">Pricing</div>
-    <h2 class="section-title" style="text-align:center">Simple. Flat. No Surprises.</h2>
-    <p class="section-sub" style="text-align:center;margin:0 auto 2.5rem">One plan. Everything included. Cancel anytime.</p>
-    <div class="pricing-card">
-      <div style="font-size:.85rem;color:#7878a0;text-transform:uppercase;letter-spacing:2px;font-weight:700">SmartTap Pro</div>
-      <div class="price-amount">€49<span>/mo</span></div>
-      <div class="price-period">Per location · Billed monthly · No contracts</div>
-      <ul class="price-features">
-        <li>NFC SmartTap device (shipped free)</li>
-        <li>Unlimited Google review taps</li>
-        <li>Built-in customer loyalty programme</li>
-        <li>Live analytics dashboard</li>
-        <li>Full setup &amp; onboarding support</li>
-        <li>Works with any smartphone</li>
-        <li>Cancel anytime, no questions asked</li>
-      </ul>
-      <a class="btn-primary" href="https://smarttap.ie" style="display:block;text-align:center;padding:.85rem;font-size:1rem;border-radius:10px">Get Started Today</a>
-      <p class="pricing-note">🇮🇪 Built for Dublin businesses. Visit <strong>smarttap.ie</strong> to get yours.</p>
+<section id="features" data-aos="fade-up">
+  <div class="section-label">Features</div>
+  <h2 class="section-title">Everything a local business actually needs</h2>
+  <p class="section-sub">No bloated dashboards. No wasted tools. Just what gets results for cafes, restaurants, barbershops and retail.</p>
+  <div class="features-grid">
+    <div class="feature-card" data-aos="fade-up" data-aos-delay="0">
+      <div class="feature-icon">📲</div>
+      <h3>Instant NFC Review Tap</h3>
+      <p>Works on all modern iPhones and Android phones. Your Google review page opens in one tap — no app download ever.</p>
+    </div>
+    <div class="feature-card" data-aos="fade-up" data-aos-delay="80">
+      <div class="feature-icon">🔄</div>
+      <h3>Automated Return Campaigns</h3>
+      <p>Automatically send personalised offers to past customers via WhatsApp or SMS to bring them back in the door.</p>
+    </div>
+    <div class="feature-card" data-aos="fade-up" data-aos-delay="160">
+      <div class="feature-icon">📊</div>
+      <h3>Live Review Dashboard</h3>
+      <p>See your review count, star rating trend and customer return rate in one clean dashboard updated in real time.</p>
+    </div>
+    <div class="feature-card" data-aos="fade-up" data-aos-delay="240">
+      <div class="feature-icon">🎨</div>
+      <h3>Branded for Your Business</h3>
+      <p>Your SmartTap device is printed with your logo and colours. It looks like part of your space, not a tech gadget.</p>
     </div>
   </div>
+  <img class="features-img" src="https://bybocxguyoejfdhlszpo.supabase.co/storage/v1/object/public/agency-assets/features-1783654383670.png" alt="SmartTap features in action" data-aos="fade-up">
 </section>
+
+<div id="pricing" data-aos="fade-up">
+<section style="padding:0;max-width:100%">
+<div style="background:rgba(0,212,255,.03);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:5rem 5%">
+  <div class="pricing-inner">
+    <div style="text-align:center;margin-bottom:2.5rem">
+      <div class="section-label" style="display:block">Pricing</div>
+      <h2 class="section-title" style="margin:0 auto .6rem">Simple, honest pricing</h2>
+      <p class="section-sub" style="margin:0 auto">One plan. Everything included. No hidden fees, no lock-in contracts.</p>
+    </div>
+    <div class="pricing-card" data-aos="fade-up">
+      <div class="pricing-badge">Most Popular · Dublin SMBs</div>
+      <h3>SmartTap Monthly</h3>
+      <div class="price">€49</div>
+      <div class="price-period">per month, cancel anytime</div>
+      <ul class="pricing-list">
+        <li>NFC SmartTap device (branded with your logo)</li>
+        <li>Unlimited Google Review taps</li>
+        <li>Automated return customer campaigns</li>
+        <li>Live review and retention dashboard</li>
+        <li>WhatsApp &amp; SMS follow-up sequences</li>
+        <li>Dedicated Dublin-based support</li>
+        <li>Free replacement if device is lost or damaged</li>
+      </ul>
+      <a href="https://smarttap.ie" class="btn-primary" style="display:block;width:100%;text-align:center">Start Getting Reviews Today</a>
+      <p class="pricing-microcopy">No app needed · No setup fee · Works on day one</p>
+    </div>
+  </div>
+</div>
+</section>
+</div>
 
 <section id="testimonial" data-aos="fade-up">
-  <div class="section-inner">
-    <div class="section-tag" style="text-align:center;display:flex;justify-content:center">What Customers Say</div>
-    <h2 class="section-title" style="text-align:center">Dublin Businesses Love SmartTap</h2>
-    <div class="testimonial-wrap" style="margin-top:2.5rem">
-      <div class="testimonial-img">
-        <img src="https://bybocxguyoejfdhlszpo.supabase.co/storage/v1/object/public/agency-assets/testimonial-1783392250776.png" alt="SmartTap customer testimonial">
-      </div>
-      <div class="testimonial-content">
-        <div class="stars">★★★★★</div>
-        <blockquote>We went from 12 Google reviews to over 90 in just six weeks. Customers tap it every single day without being asked. Our café is now the top result on Google Maps for our area — SmartTap completely changed how new people find us.</blockquote>
-        <div class="author-name">Ciara Brennan</div>
-        <div class="author-biz">Owner, The Morning Cup Café — Ranelagh, Dublin</div>
+  <div class="section-label">Social Proof</div>
+  <h2 class="section-title">Dublin businesses already seeing results</h2>
+  <div class="testimonial-wrap" style="margin-top:2.5rem">
+    <img class="testimonial-img" src="https://bybocxguyoejfdhlszpo.supabase.co/storage/v1/object/public/agency-assets/testimonial-1783654383670.png" alt="SmartTap customer testimonial" data-aos="fade-up">
+    <div class="testimonial-content" data-aos="fade-up" data-aos-delay="100">
+      <div class="stars">★★★★★</div>
+      <blockquote>We went from 47 Google reviews to 190 in eight weeks. Our Saturday bookings are now full three weeks in advance. SmartTap paid for itself in the first fortnight — I genuinely wish we'd had this two years ago.</blockquote>
+      <div class="testimonial-author">
+        <strong>Ciara Brennan</strong>
+        <span>Owner, The Copper Press Café · Rathmines, Dublin</span>
       </div>
     </div>
   </div>
 </section>
 
-<footer id="contact">
+<footer>
   <div class="footer-inner">
-    <div>
-      <div class="footer-logo">SmartTap</div>
-      <div class="footer-tagline">One Tap. Reviews Go Up. Regulars Come Back.</div>
-    </div>
+    <div class="footer-logo">SmartTap</div>
     <div class="footer-links">
       <a href="#features">Features</a>
       <a href="#pricing">Pricing</a>
+      <a href="#testimonial">Reviews</a>
+      <a href="https://smarttap.ie">Website</a>
       <a href="mailto:hello@smarttap.ie">hello@smarttap.ie</a>
-      <a href="https://smarttap.ie">smarttap.ie</a>
     </div>
-    <div class="footer-copy">© 2025 SmartTap. All rights reserved. Dublin, Ireland.</div>
+    <div class="footer-copy">© 2025 SmartTap. All rights reserved. Serving Dublin small businesses. · <a href="https://smarttap.ie" style="color:var(--primary)">smarttap.ie</a></div>
   </div>
 </footer>
 
