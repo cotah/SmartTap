@@ -7,17 +7,38 @@ const RESTAURANT_NAME = "Panda Restaurant";
 const RESTAURANT_TAGLINE = "Sushi · Burger";
 
 // Link de avaliação do Google (abre direto a caixa de escrever review).
-// Place ID confirmado do Panda Restaurant, Bond St, Dublin.
 const REVIEW_URL =
   "https://search.google.com/local/writereview?placeid=ChIJW6fecH8NZ0gR6NSvIcYW0AE";
 
 const MENU_PAGES = 10; // nº de imagens em /public/menus/panda/
+
+// URL pública desta página (usada no preview de link do WhatsApp).
+const PAGE_URL = "https://www.smarttap.ie/menu/panda";
+const OG_IMAGE = "/menus/panda/og.jpg"; // card mostrado no WhatsApp
 // ============================================================
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.smarttap.ie"),
   title: `${RESTAURANT_NAME} — Menu`,
-  description: `${RESTAURANT_NAME} · ${RESTAURANT_TAGLINE}`,
+  description: `${RESTAURANT_NAME} · ${RESTAURANT_TAGLINE} — View our menu.`,
   robots: { index: false }, // menu não precisa aparecer no Google
+  openGraph: {
+    type: "website",
+    url: PAGE_URL,
+    siteName: RESTAURANT_NAME,
+    title: `${RESTAURANT_NAME} — Menu`,
+    description: `${RESTAURANT_TAGLINE} · Coopers Court, Bond Street, Dublin`,
+    locale: "en_IE",
+    images: [
+      { url: OG_IMAGE, width: 1200, height: 630, alt: `${RESTAURANT_NAME} menu` },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${RESTAURANT_NAME} — Menu`,
+    description: `${RESTAURANT_TAGLINE} · Dublin`,
+    images: [OG_IMAGE],
+  },
 };
 
 export default function PandaMenuPage() {
