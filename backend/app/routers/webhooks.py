@@ -6,7 +6,14 @@ from fastapi import APIRouter, Header, HTTPException, Request, Response
 from fastapi.responses import PlainTextResponse
 
 from app.config import get_settings
-from app.services import webhook_service, whatsapp_bot_service, whatsapp_client
+from app.services import (
+    instagram_dm_service,
+    meta_client,
+    webhook_service,
+    whatsapp_bot_service,
+    whatsapp_client,
+)
+from app.services.instagram_dm_service import InstagramEvent
 
 router = APIRouter(tags=["webhooks"])
 log = structlog.get_logger(__name__)
@@ -109,6 +116,98 @@ async def whatsapp_webhook(
             whatsapp_client.send_text(to=from_number, body=reply)
 
     return Response(status_code=200)
+
+
+@router.get("/webhooks/instagram")
+async def instagram_webhook_verify(request: Request) -> Response:
+    """Meta webhook verification handshake for the Instagram DM assistant.
+    Same hub.challenge dance as the WhatsApp webhook, but checked against this
+    Meta app's META_VERIFY_TOKEN."""
+    params = request.query_params
+    mode = params.get("hub.mode")
+    token = params.get("hub.verify_token")
+    challenge = params.get("hub.challenge", "")
+
+    if mode == "subscribe" and meta_client.verify_token_matches(token):
+        return PlainTextResponse(content=challenge, status_code=200)
+    log.warning("instagram_webhook_verify_failed")
+    raise HTTPException(status_code=403, detail="Verification failed")
+
+
+@router.post("/webhooks/instagram")
+async def instagram_webhook(
+    request: Request,
+    x_hub_signature_256: str | None = Header(default=None, alias="X-Hub-Signature-256"),
+) -> Response:
+    """Inbound Instagram DMs + story mentions from the Meta Graph API.
+
+    Same discipline as the WhatsApp webhook: validate X-Hub-Signature-256
+    (HMAC of the RAW body, this app's META_APP_SECRET), dispatch each event to
+    the DM service, and never 5xx on a bot error — Meta would retry and the
+    customer would get duplicate replies.
+    """
+    raw = await request.body()
+    if not meta_client.validate_signature(raw_body=raw, signature=x_hub_signature_256):
+        log.warning("instagram_webhook_invalid_signature")
+        raise HTTPException(status_code=403, detail="Invalid signature")
+
+    try:
+        payload = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON") from None
+
+    for event in _extract_instagram_events(payload):
+        try:
+            instagram_dm_service.handle_event(event)
+        except Exception as exc:  # belt and braces — the service already catches
+            log.exception("instagram_event_failed", error=str(exc))
+
+    return Response(status_code=200)
+
+
+def _extract_instagram_events(payload: dict[str, Any]) -> list[InstagramEvent]:
+    """Pull InstagramEvents out of a Meta Instagram webhook payload.
+
+    Shape: entry[].id = IG business account id, entry[].messaging[] with
+    sender.id + message.{text, is_echo, attachments[]}. A story mention
+    arrives as an attachment of type "story_mention" on the SAME messages
+    webhook. Echoes of our own outbound replies carry is_echo=true and are
+    skipped (anti-loop). Defensive against missing keys — a malformed payload
+    yields no events rather than raising.
+    """
+    out: list[InstagramEvent] = []
+    if not isinstance(payload, dict):
+        return out
+    for entry in payload.get("entry", []) or []:
+        if not isinstance(entry, dict):
+            continue
+        ig_account_id = entry.get("id")
+        if not isinstance(ig_account_id, str):
+            continue
+        for item in entry.get("messaging", []) or []:
+            if not isinstance(item, dict):
+                continue
+            message = item.get("message") or {}
+            if not isinstance(message, dict) or message.get("is_echo"):
+                continue
+            sender_id = (item.get("sender") or {}).get("id")
+            if not isinstance(sender_id, str) or sender_id == ig_account_id:
+                continue  # no sender, or our own account — skip
+            text = message.get("text")
+            attachments = message.get("attachments") or []
+            is_story_mention = any(
+                isinstance(a, dict) and a.get("type") == "story_mention"
+                for a in attachments
+            )
+            out.append(
+                InstagramEvent(
+                    ig_account_id=ig_account_id,
+                    sender_id=sender_id,
+                    text=text if isinstance(text, str) else None,
+                    is_story_mention=is_story_mention,
+                )
+            )
+    return out
 
 
 def _extract_text_messages(payload: dict[str, Any]) -> list[tuple[str, str]]:
