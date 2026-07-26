@@ -198,6 +198,48 @@ def _insights_block(report: MonthlyReport, styles: dict[str, ParagraphStyle]) ->
     return tbl
 
 
+def _reputation_block(report: MonthlyReport, styles: dict[str, ParagraphStyle]) -> Table:
+    """Reviews + Instagram assistant lines. Always renders — a month with
+    zero reviews should still show the goose egg (same philosophy as the
+    campaigns table), and a dash for the average when nothing was rated."""
+    rep = report.reputation
+    avg_label = f"<b>{rep.avg_rating:.1f} / 5</b>" if rep.avg_rating is not None else "—"
+    rows = [
+        [
+            Paragraph("Google reviews received", styles["body"]),
+            Paragraph(f"<b>{rep.reviews_received:,}</b>", styles["body"]),
+        ],
+        [
+            Paragraph("Review replies published", styles["body"]),
+            Paragraph(f"<b>{rep.reviews_responded:,}</b>", styles["body"]),
+        ],
+        [
+            Paragraph("Average rating this month", styles["body"]),
+            Paragraph(avg_label, styles["body"]),
+        ],
+        [
+            Paragraph("Instagram DMs answered", styles["body"]),
+            Paragraph(f"<b>{rep.instagram_dms_answered:,}</b>", styles["body"]),
+        ],
+        [
+            Paragraph("Story mentions answered", styles["body"]),
+            Paragraph(f"<b>{rep.instagram_mentions_answered:,}</b>", styles["body"]),
+        ],
+    ]
+    tbl = Table(rows, colWidths=[50 * mm, 120 * mm])
+    tbl.setStyle(
+        TableStyle(
+            [
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                ("TOPPADDING", (0, 0), (-1, -1), 6),
+                ("LINEBELOW", (0, 0), (-1, -2), 0.3, LIGHT_GREY),
+            ]
+        )
+    )
+    return tbl
+
+
 def _campaigns_block(report: MonthlyReport, styles: dict[str, ParagraphStyle]) -> Table:
     """Table of campaigns that overlapped the period. Renders even when
     empty so the merchant gets a clear 'no campaigns this month' signal."""
@@ -299,6 +341,9 @@ def render_monthly_report(report: MonthlyReport) -> bytes:
         Spacer(1, 8 * mm),
         Paragraph("Insights", styles["h2"]),
         _insights_block(report, styles),
+        Spacer(1, 8 * mm),
+        Paragraph("Reviews &amp; Instagram", styles["h2"]),
+        _reputation_block(report, styles),
         Spacer(1, 8 * mm),
         Paragraph("Campaigns this period", styles["h2"]),
         _campaigns_block(report, styles),

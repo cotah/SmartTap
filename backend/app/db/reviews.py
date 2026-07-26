@@ -8,6 +8,8 @@ relying on catching the constraint error.
 from datetime import datetime
 from typing import Any, cast
 
+from postgrest import CountMethod
+
 from app.services.supabase_client import get_supabase_admin
 
 Row = dict[str, Any]
@@ -96,6 +98,57 @@ def list_all_ratings(tenant_id: str, *, limit: int = 5000) -> list[int | None]:
         client.table("reviews")
         .select("rating")
         .eq("tenant_id", tenant_id)
+        .limit(limit)
+        .execute()
+    )
+    rows = cast(list[Row], res.data or [])
+    return [r.get("rating") for r in rows]
+
+
+def count_received_in_range(tenant_id: str, *, start: datetime, end: datetime) -> int:
+    """Reviews the business RECEIVED in [start, end), keyed on the Google-side
+    creation time (`created_at_google`), not our ingestion time — a cron that
+    catches up on a backlog shouldn't inflate the current month."""
+    client = get_supabase_admin()
+    res = (
+        client.table("reviews")
+        .select("id", count=CountMethod.exact)
+        .eq("tenant_id", tenant_id)
+        .gte("created_at_google", start.isoformat())
+        .lt("created_at_google", end.isoformat())
+        .execute()
+    )
+    return int(res.count or 0)
+
+
+def count_published_in_range(tenant_id: str, *, start: datetime, end: datetime) -> int:
+    """Replies PUBLISHED in [start, end) — a review received in April but
+    answered in May counts toward May's 'responded' number."""
+    client = get_supabase_admin()
+    res = (
+        client.table("reviews")
+        .select("id", count=CountMethod.exact)
+        .eq("tenant_id", tenant_id)
+        .eq("status", "published")
+        .gte("published_at", start.isoformat())
+        .lt("published_at", end.isoformat())
+        .execute()
+    )
+    return int(res.count or 0)
+
+
+def list_ratings_in_range(
+    tenant_id: str, *, start: datetime, end: datetime, limit: int = 5000
+) -> list[int | None]:
+    """Ratings of reviews received in [start, end) for the monthly average.
+    Same runaway-rail cap rationale as `list_all_ratings`."""
+    client = get_supabase_admin()
+    res = (
+        client.table("reviews")
+        .select("rating")
+        .eq("tenant_id", tenant_id)
+        .gte("created_at_google", start.isoformat())
+        .lt("created_at_google", end.isoformat())
         .limit(limit)
         .execute()
     )

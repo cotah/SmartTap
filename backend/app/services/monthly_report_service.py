@@ -28,7 +28,17 @@ from zoneinfo import ZoneInfo
 
 import structlog
 
-from app.db import campaigns, customers, nfc_tags, rewards, stamps, taps, tenants
+from app.db import (
+    campaigns,
+    customers,
+    instagram_interactions,
+    nfc_tags,
+    reviews,
+    rewards,
+    stamps,
+    taps,
+    tenants,
+)
 from app.errors import NotFoundError
 
 log = structlog.get_logger(__name__)
@@ -53,6 +63,25 @@ class PeriodStats:
     stamps_awarded: int = 0
     rewards_redeemed: int = 0
     reviews_clicked: int = 0
+
+
+@dataclass(frozen=True)
+class ReputationStats:
+    """Reviews + Instagram assistant numbers for the CURRENT period only.
+
+    Kept separate from PeriodStats because these lines render in their own
+    'Reputation' PDF section without month-over-month deltas — mixing them
+    into the frozen KPI dataclass would force every caller to carry a
+    previous-period copy nobody displays.
+    """
+
+    reviews_received: int = 0
+    reviews_responded: int = 0
+    # Average rating of reviews received in the period; None when the month
+    # had no rated reviews (the PDF renders a dash, mirroring delta_pct).
+    avg_rating: float | None = None
+    instagram_dms_answered: int = 0
+    instagram_mentions_answered: int = 0
 
 
 @dataclass(frozen=True)
@@ -87,6 +116,7 @@ class MonthlyReport:
     peak_hour: tuple[int, int] | None = None  # (0-23 local hour, taps)
     top_tag: TagSummary | None = None
     campaigns: list[CampaignSummary] = field(default_factory=list)
+    reputation: ReputationStats = field(default_factory=ReputationStats)
 
 
 # ---------------------------------------------------------------------------
@@ -219,6 +249,38 @@ def _format_tag_label(row: dict[str, Any]) -> str:
     return fmt
 
 
+def _reputation_stats(
+    tenant_id: str, *, start: datetime, end: datetime
+) -> ReputationStats:
+    """Reviews + Instagram assistant counters for one period.
+
+    'Received' keys on the Google-side timestamp, 'responded' on our publish
+    time, so the two can legitimately diverge in a catch-up month. Instagram
+    counters only include `answered` rows — failed sends aren't service the
+    merchant received.
+    """
+    ratings = [
+        r for r in reviews.list_ratings_in_range(tenant_id, start=start, end=end)
+        if isinstance(r, int)
+    ]
+    avg_rating = (sum(ratings) / len(ratings)) if ratings else None
+    return ReputationStats(
+        reviews_received=reviews.count_received_in_range(tenant_id, start=start, end=end),
+        reviews_responded=reviews.count_published_in_range(tenant_id, start=start, end=end),
+        avg_rating=avg_rating,
+        instagram_dms_answered=instagram_interactions.count_in_range(
+            tenant_id, start=start, end=end, interaction_type="dm", status="answered"
+        ),
+        instagram_mentions_answered=instagram_interactions.count_in_range(
+            tenant_id,
+            start=start,
+            end=end,
+            interaction_type="story_mention",
+            status="answered",
+        ),
+    )
+
+
 def _campaigns_in_period(
     tenant_id: str, *, start: datetime, end: datetime
 ) -> list[CampaignSummary]:
@@ -291,6 +353,7 @@ def compute(
     previous = _period_stats(tenant_id, start=prev_start, end=prev_end)
     best_weekday, peak_hour, top_tag = _insights(tenant_id, start=start, end=end)
     campaign_summaries = _campaigns_in_period(tenant_id, start=start, end=end)
+    reputation = _reputation_stats(tenant_id, start=start, end=end)
 
     log.info(
         "monthly_report_computed",
@@ -312,6 +375,7 @@ def compute(
         peak_hour=peak_hour,
         top_tag=top_tag,
         campaigns=campaign_summaries,
+        reputation=reputation,
     )
 
 

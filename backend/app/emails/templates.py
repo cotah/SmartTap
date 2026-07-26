@@ -440,13 +440,13 @@ def monthly_report_email(
     body_html = (
         _h1(f"Your {_escape(period_label)} report")
         + f'<p style="margin:0 0 14px 0;">{_greeting(tenant)}</p>'
-        + f'<p style="margin:0 0 14px 0;">Your monthly SmartTap report for <strong>{_escape(business)}</strong> is attached as a PDF. Inside you\'ll find new customers, taps, stamps and rewards for {_escape(period_label)}, with comparisons to the previous month.</p>'
+        + f'<p style="margin:0 0 14px 0;">Your monthly SmartTap report for <strong>{_escape(business)}</strong> is attached as a PDF. Inside you\'ll find new customers, taps, stamps and rewards for {_escape(period_label)}, with comparisons to the previous month — plus your Google reviews, average rating and Instagram DMs answered.</p>'
         + '<p style="margin:0 0 14px 0;">Open the dashboard for today\'s live numbers and to schedule campaigns for the coming month.</p>'
     )
     text = (
         f"Your {period_label} SmartTap report\n\n"
         "Hi there,\n\n"
-        f"Your monthly report for {business} is attached as a PDF — new customers, taps, stamps and rewards for {period_label}.\n\n"
+        f"Your monthly report for {business} is attached as a PDF — new customers, taps, stamps and rewards for {period_label}, plus your Google reviews and Instagram DMs answered.\n\n"
         f"Open the dashboard: {SITE_URL}/dashboard"
     )
     return RenderedEmail(
