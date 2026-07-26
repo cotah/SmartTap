@@ -393,6 +393,10 @@ export interface TenantSelf {
   is_active: boolean;
   is_founding_member: boolean;
   trial_ends_at: string | null;
+  // AI assistant context (Instagram DM assistant).
+  opening_hours: string | null;
+  menu_info: string | null;
+  brand_voice: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -448,6 +452,13 @@ export interface GoogleStatus {
   connected_at?: string | null;
 }
 
+export interface InstagramStatus {
+  connected: boolean;
+  instagram_business_account_id?: string | null;
+  facebook_page_id?: string | null;
+  connected_at?: string | null;
+}
+
 export interface ApiClient {
   tap: (tagUuid: string, body: TapEvent) => Promise<TapResponse>;
   identifyCustomer: (body: CustomerIdentify) => Promise<IdentifyResponse>;
@@ -498,6 +509,9 @@ export interface ApiClient {
   getGoogleConnectUrl: () => Promise<{ url: string }>;
   getGoogleStatus: () => Promise<GoogleStatus>;
   disconnectGoogle: () => Promise<{ ok: boolean }>;
+  getInstagramConnectUrl: () => Promise<{ url: string }>;
+  getInstagramStatus: () => Promise<InstagramStatus>;
+  disconnectInstagram: () => Promise<{ ok: boolean }>;
 }
 
 export function createApiClient(opts: ApiClientOptions): ApiClient {
@@ -753,5 +767,9 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
     getGoogleStatus: () => request<GoogleStatus>(`/v1/google/status`),
     disconnectGoogle: () =>
       request<{ ok: boolean }>(`/v1/google/disconnect`, { method: "POST" }),
+    getInstagramConnectUrl: () => request<{ url: string }>(`/v1/instagram/connect`),
+    getInstagramStatus: () => request<InstagramStatus>(`/v1/instagram/status`),
+    disconnectInstagram: () =>
+      request<{ ok: boolean }>(`/v1/instagram/disconnect`, { method: "POST" }),
   };
 }

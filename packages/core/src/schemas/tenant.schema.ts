@@ -25,6 +25,11 @@ export const tenantSettingsUpdateSchema = z.object({
   google_place_id: z.string().nullable().optional(),
   google_review_url: z.string().url().nullable().optional(),
   google_business_url: z.string().url().nullable().optional(),
+  // AI assistant context (Instagram DM assistant). Empty string clears the
+  // field server-side; null/undefined leaves it unchanged.
+  opening_hours: z.string().max(1000).nullable().optional(),
+  menu_info: z.string().max(4000).nullable().optional(),
+  brand_voice: z.string().max(1000).nullable().optional(),
 });
 
 export const rewardConfigSchema = z.object({

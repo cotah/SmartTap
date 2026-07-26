@@ -52,4 +52,5 @@ export type {
   RatingBucket,
   ReviewStats,
   GoogleStatus,
+  InstagramStatus,
 } from "./client";

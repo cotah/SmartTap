@@ -14,6 +14,10 @@ class TenantSettingsUpdateIn(BaseModel):
     google_place_id: str | None = None
     google_review_url: str | None = None
     google_business_url: str | None = None
+    # Instagram DM assistant context — free text the AI weaves into replies.
+    opening_hours: str | None = Field(default=None, max_length=1000)
+    menu_info: str | None = Field(default=None, max_length=4000)
+    brand_voice: str | None = Field(default=None, max_length=1000)
 
 
 class RewardConfigIn(BaseModel):
@@ -37,6 +41,9 @@ class TenantSelf(BaseModel):
     google_place_id: str | None
     google_review_url: str | None
     google_business_url: str | None
+    opening_hours: str | None
+    menu_info: str | None
+    brand_voice: str | None
     stamps_for_reward: int = Field(ge=0)
     reward_description: str | None
     reward_expires_days: int = Field(ge=0)

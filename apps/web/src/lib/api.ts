@@ -66,4 +66,5 @@ export type {
   RatingBucket,
   ReviewStats,
   GoogleStatus,
+  InstagramStatus,
 } from "@smarttap/api";

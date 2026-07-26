@@ -1,12 +1,29 @@
 import { getAuthApiClient } from "@/lib/api";
 import { getDashboardContext } from "@/lib/dashboard-data";
 
+import { InstagramCard } from "./instagram-card";
 import { SettingsForm } from "./settings-form";
 
-export default async function SettingsPage() {
+interface PageProps {
+  searchParams: Promise<{ instagram_connected?: string }>;
+}
+
+export default async function SettingsPage({ searchParams }: PageProps) {
   await getDashboardContext();
   const api = getAuthApiClient();
-  const { tenant } = await api.getTenant();
+  const [{ tenant }, instagramStatus, sp] = await Promise.all([
+    api.getTenant(),
+    api.getInstagramStatus(),
+    searchParams,
+  ]);
+
+  // Set by the Meta OAuth callback redirect (?instagram_connected=1/0).
+  const callbackResult =
+    sp.instagram_connected === "1"
+      ? ("success" as const)
+      : sp.instagram_connected === "0"
+        ? ("error" as const)
+        : null;
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
@@ -20,6 +37,8 @@ export default async function SettingsPage() {
         </p>
       </header>
 
+      <InstagramCard status={instagramStatus} callbackResult={callbackResult} />
+
       <SettingsForm
         initial={{
           name: tenant.name,
@@ -29,6 +48,9 @@ export default async function SettingsPage() {
           google_review_url: tenant.google_review_url ?? "",
           google_business_url: tenant.google_business_url ?? "",
           google_place_id: tenant.google_place_id ?? "",
+          opening_hours: tenant.opening_hours ?? "",
+          menu_info: tenant.menu_info ?? "",
+          brand_voice: tenant.brand_voice ?? "",
         }}
       />
     </div>

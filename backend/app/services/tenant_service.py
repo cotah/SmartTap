@@ -63,6 +63,9 @@ class TenantSettings:
     google_place_id: str | None
     google_review_url: str | None
     google_business_url: str | None
+    opening_hours: str | None = None
+    menu_info: str | None = None
+    brand_voice: str | None = None
 
 
 def update_settings(tenant_id: str, settings: TenantSettings) -> Row:
@@ -85,6 +88,9 @@ def update_settings(tenant_id: str, settings: TenantSettings) -> Row:
         "google_place_id",
         "google_review_url",
         "google_business_url",
+        "opening_hours",
+        "menu_info",
+        "brand_voice",
     ):
         value = getattr(settings, field_name)
         if value is None:

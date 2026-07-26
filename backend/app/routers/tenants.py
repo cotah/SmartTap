@@ -26,6 +26,9 @@ def _to_self(row: dict[str, Any]) -> TenantSelf:
         google_place_id=row.get("google_place_id"),
         google_review_url=row.get("google_review_url"),
         google_business_url=row.get("google_business_url"),
+        opening_hours=row.get("opening_hours"),
+        menu_info=row.get("menu_info"),
+        brand_voice=row.get("brand_voice"),
         stamps_for_reward=int(row.get("stamps_for_reward") or 0),
         reward_description=row.get("reward_description"),
         reward_expires_days=int(row.get("reward_expires_days") or 0),
@@ -79,6 +82,9 @@ def update_settings_endpoint(
             google_place_id=body.google_place_id,
             google_review_url=body.google_review_url,
             google_business_url=body.google_business_url,
+            opening_hours=body.opening_hours,
+            menu_info=body.menu_info,
+            brand_voice=body.brand_voice,
         ),
     )
     return TenantSelfResponse(tenant=_to_self(updated))

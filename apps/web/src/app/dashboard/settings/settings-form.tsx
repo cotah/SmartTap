@@ -1,6 +1,13 @@
 "use client";
 
-import { Globe, Link as LinkIcon, type LucideIcon, MapPin, Store } from "lucide-react";
+import {
+  Bot,
+  Globe,
+  Link as LinkIcon,
+  type LucideIcon,
+  MapPin,
+  Store,
+} from "lucide-react";
 import { type FormEvent, useState, useTransition } from "react";
 
 import { saveSettingsAction } from "./actions";
@@ -13,6 +20,9 @@ export interface SettingsFormInitial {
   google_review_url: string;
   google_business_url: string;
   google_place_id: string;
+  opening_hours: string;
+  menu_info: string;
+  brand_voice: string;
 }
 
 interface Props {
@@ -40,6 +50,9 @@ export function SettingsForm({ initial }: Props) {
       google_review_url: String(fd.get("google_review_url") ?? ""),
       google_business_url: String(fd.get("google_business_url") ?? ""),
       google_place_id: String(fd.get("google_place_id") ?? ""),
+      opening_hours: String(fd.get("opening_hours") ?? ""),
+      menu_info: String(fd.get("menu_info") ?? ""),
+      brand_voice: String(fd.get("brand_voice") ?? ""),
     };
     setBanner(null);
     setErrors({});
@@ -148,6 +161,57 @@ export function SettingsForm({ initial }: Props) {
         </Field>
       </Section>
 
+      <Section
+        title="AI assistant context"
+        subtitle="The Instagram assistant uses these details to answer your customers. All optional — leave empty to skip."
+        icon={Bot}
+      >
+        <Field
+          label="Opening hours"
+          hint="e.g. Mon–Fri 9:00–18:00, Sat 10:00–16:00, closed Sundays."
+          error={errors.opening_hours}
+        >
+          <textarea
+            name="opening_hours"
+            defaultValue={initial.opening_hours}
+            maxLength={1000}
+            rows={3}
+            placeholder="Mon–Fri 9:00–18:00…"
+            className={TEXTAREA_CLASS}
+          />
+        </Field>
+
+        <Field
+          label="Menu / services info"
+          hint="Your services, prices, or menu — whatever customers usually ask about."
+          error={errors.menu_info}
+        >
+          <textarea
+            name="menu_info"
+            defaultValue={initial.menu_info}
+            maxLength={4000}
+            rows={5}
+            placeholder="Haircut €25, beard trim €15…"
+            className={TEXTAREA_CLASS}
+          />
+        </Field>
+
+        <Field
+          label="Brand voice"
+          hint="How the assistant should sound, e.g. friendly and casual, short answers, a bit of humour."
+          error={errors.brand_voice}
+        >
+          <textarea
+            name="brand_voice"
+            defaultValue={initial.brand_voice}
+            maxLength={1000}
+            rows={3}
+            placeholder="Friendly, casual, keep replies short…"
+            className={TEXTAREA_CLASS}
+          />
+        </Field>
+      </Section>
+
       {banner ? (
         <div
           role="status"
@@ -176,6 +240,9 @@ export function SettingsForm({ initial }: Props) {
 
 const INPUT_CLASS =
   "block w-full rounded-lg border border-electric-border bg-electric-surface-2 px-4 py-3 text-base text-electric-text shadow-[inset_0_2px_4px_rgba(0,0,0,0.04)] outline-none transition-colors placeholder:text-electric-text-muted focus:border-electric-cyan focus:ring-2 focus:ring-electric-cyan/30";
+
+const TEXTAREA_CLASS =
+  "block w-full resize-y rounded-lg border border-electric-border bg-electric-surface-2 px-4 py-3 text-base text-electric-text shadow-[inset_0_2px_4px_rgba(0,0,0,0.04)] outline-none transition-colors placeholder:text-electric-text-muted focus:border-electric-cyan focus:ring-2 focus:ring-electric-cyan/30";
 
 const INPUT_CLASS_WITH_ICON =
   "block w-full rounded-lg border border-electric-border bg-electric-surface-2 py-3 pl-11 pr-4 text-base text-electric-text shadow-[inset_0_2px_4px_rgba(0,0,0,0.04)] outline-none transition-colors placeholder:text-electric-text-muted focus:border-electric-cyan focus:ring-2 focus:ring-electric-cyan/30";
