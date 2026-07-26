@@ -69,6 +69,19 @@ class Settings(BaseSettings):
     # at rest. Held only here (never in the DB). Required before connecting Google.
     google_token_enc_key: str = Field(default="")
 
+    # Instagram DM Assistant — Meta app (Facebook Login + Instagram Messaging).
+    # Distinct from the WhatsApp envs above (different Meta app/product). Empty
+    # values keep the integration disabled (client no-ops, like resend) so
+    # dev/CI run without a Meta app.
+    meta_app_id: str = Field(default="")
+    meta_app_secret: str = Field(default="")  # validates X-Hub-Signature-256 + token exchange
+    meta_verify_token: str = Field(default="")  # our secret for the GET handshake
+    meta_oauth_redirect: str = Field(default="")  # e.g. https://api.smarttap.ie/v1/instagram/callback
+    # Symmetric key for pgcrypto encryption of tenant_meta_connections.page_access_token
+    # at rest. Held only here (never in the DB). Required before connecting Instagram.
+    meta_token_enc_key: str = Field(default="")
+    meta_api_version: str = Field(default="v21.0")
+
     sentry_dsn: str = Field(default="")
 
     # Shared secret for the daily cron HTTP trigger. Empty disables the cron

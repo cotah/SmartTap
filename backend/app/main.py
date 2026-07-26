@@ -16,6 +16,7 @@ from app.routers import (
     dashboard,
     google_oauth,
     health,
+    instagram_oauth,
     me,
     nfc_tags,
     onboarding,
@@ -96,6 +97,7 @@ def create_app() -> FastAPI:
     app.include_router(nfc_tags.router, prefix="/v1")
     app.include_router(reviews.router, prefix="/v1")
     app.include_router(google_oauth.router, prefix="/v1")
+    app.include_router(instagram_oauth.router, prefix="/v1")
 
     return app
 
