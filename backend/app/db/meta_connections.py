@@ -53,10 +53,13 @@ def upsert(
     instagram_business_account_id: str,
     facebook_page_id: str,
     page_access_token: str,
+    page_name: str | None = None,
+    ig_username: str | None = None,
 ) -> Row:
     """Create or replace a tenant's connection, encrypting the page token.
     Raises if the encryption key isn't configured — we must never persist a
-    token in plaintext."""
+    token in plaintext. page_name/ig_username are display-only (migration
+    017) so the dashboard can show WHICH account is connected."""
     key = _key()
     if not key:
         raise RuntimeError("META_TOKEN_ENC_KEY not configured; refusing to store token")
@@ -69,6 +72,8 @@ def upsert(
             "p_facebook_page_id": facebook_page_id,
             "p_page_access_token": page_access_token,
             "p_key": key,
+            "p_page_name": page_name,
+            "p_ig_username": ig_username,
         },
     ).execute()
     return {
