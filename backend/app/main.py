@@ -41,6 +41,9 @@ def _configure_logging(level: str) -> None:
         processors=[
             structlog.processors.add_log_level,
             structlog.processors.TimeStamper(fmt="iso"),
+            # Railway's log viewer displays the `message` field of JSON log
+            # lines — structlog's default `event` key renders as a blank line.
+            structlog.processors.EventRenamer("message"),
             structlog.processors.JSONRenderer(),
         ],
     )
