@@ -7,8 +7,8 @@ run without a Meta app.
 Responsibilities:
     - build_consent_url / exchange_code: per-tenant Facebook Login OAuth,
       exchanged straight to a long-lived user token
-    - resolve_page_connection: find the tenant's Facebook Page with a linked
-      Instagram business account + its page access token
+    - list_page_connections: all the tenant's Facebook Pages with a linked
+      Instagram business account + their page access tokens
     - send_dm: reply to an Instagram user via the Page's messaging endpoint
     - validate_signature / verify_token_matches: webhook authenticity (same
       X-Hub-Signature-256 scheme as the WhatsApp webhook, different app secret)
@@ -105,21 +105,19 @@ def exchange_code(code: str) -> str | None:
         return None
 
 
-def resolve_page_connection(user_token: str) -> dict[str, str] | None:
-    """Resolve the first Facebook Page with a linked Instagram business
-    account from /me/accounts. Returns {facebook_page_id,
-    instagram_business_account_id, page_access_token} or None.
-
-    We pick the FIRST qualifying page — fine for the single-location ICP;
-    multi-page picking is a later enhancement and is logged so we can see
-    when it matters.
+def list_page_connections(user_token: str) -> list[dict[str, str | None]] | None:
+    """All Facebook Pages with a linked Instagram business account from
+    /me/accounts, so the callback can connect directly (one page) or let the
+    owner pick (several). Returns a list of {facebook_page_id, page_name,
+    instagram_business_account_id, ig_username, page_access_token}, [] when
+    none qualify, or None when the Graph call itself fails.
     """
     s = get_settings()
     try:
         resp = httpx.get(
             f"{_GRAPH_BASE}/{s.meta_api_version}/me/accounts",
             params={
-                "fields": "id,name,access_token,instagram_business_account",
+                "fields": "id,name,access_token,instagram_business_account{id,username}",
                 "access_token": user_token,
             },
             timeout=_HTTP_TIMEOUT,
@@ -140,16 +138,32 @@ def resolve_page_connection(user_token: str) -> dict[str, str] | None:
     ]
     if not qualifying:
         log.warning("meta_no_instagram_page", pages_seen=len(pages))
-        return None
+        return []
     if len(qualifying) > 1:
-        log.info("meta_multiple_instagram_pages", count=len(qualifying))
+        # Metadata only — tokens must never reach the logs.
+        log.info(
+            "meta_multiple_instagram_pages",
+            pages=[
+                {
+                    "page_id": str(p["id"]),
+                    "name": p.get("name"),
+                    "ig_id": str(p["instagram_business_account"]["id"]),
+                    "ig_username": p["instagram_business_account"].get("username"),
+                }
+                for p in qualifying
+            ],
+        )
 
-    page = qualifying[0]
-    return {
-        "facebook_page_id": str(page["id"]),
-        "instagram_business_account_id": str(page["instagram_business_account"]["id"]),
-        "page_access_token": str(page["access_token"]),
-    }
+    return [
+        {
+            "facebook_page_id": str(p["id"]),
+            "page_name": p.get("name"),
+            "instagram_business_account_id": str(p["instagram_business_account"]["id"]),
+            "ig_username": p["instagram_business_account"].get("username"),
+            "page_access_token": str(p["access_token"]),
+        }
+        for p in qualifying
+    ]
 
 
 def send_dm(
