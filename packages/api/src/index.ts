@@ -53,4 +53,5 @@ export type {
   ReviewStats,
   GoogleStatus,
   InstagramStatus,
+  InstagramPage,
 } from "./client";

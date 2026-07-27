@@ -113,6 +113,33 @@ export async function connectInstagramAction(): Promise<ConnectResult> {
   }
 }
 
+export type SelectPageResult = { ok: true } | { ok: false; message: string };
+
+/**
+ * Page Picker — finalise the pending connection by choosing one Facebook
+ * Page. The backend re-resolves the page via the stored user token, so we
+ * only ever send the page id (never tokens).
+ */
+export async function selectInstagramPageAction(
+  facebookPageId: string,
+): Promise<SelectPageResult> {
+  try {
+    const api = getAuthApiClient();
+    await api.selectInstagramPage(facebookPageId);
+    revalidatePath("/dashboard/settings");
+    return { ok: true };
+  } catch (err) {
+    if (err instanceof ApiError) {
+      const message =
+        err.status === 404
+          ? "This selection expired. Please connect Instagram again."
+          : err.message || "Could not connect the selected page.";
+      return { ok: false, message };
+    }
+    return { ok: false, message: "Could not connect the selected page. Try again." };
+  }
+}
+
 /** Remove the tenant's Instagram connection, then refresh the settings page. */
 export async function disconnectInstagramAction(): Promise<DisconnectResult> {
   try {

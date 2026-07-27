@@ -5,7 +5,7 @@ import { InstagramCard } from "./instagram-card";
 import { SettingsForm } from "./settings-form";
 
 interface PageProps {
-  searchParams: Promise<{ instagram_connected?: string }>;
+  searchParams: Promise<{ instagram_connected?: string; instagram_select?: string }>;
 }
 
 export default async function SettingsPage({ searchParams }: PageProps) {
@@ -25,6 +25,13 @@ export default async function SettingsPage({ searchParams }: PageProps) {
         ? ("error" as const)
         : null;
 
+  // ?instagram_select=1 — the OAuth callback found more than one eligible
+  // Facebook Page and parked a pending connection. Fetch the candidates
+  // server-side so the card can render the picker. An empty list means the
+  // pending selection expired (10 min TTL) — the card asks to reconnect.
+  const pendingPages =
+    sp.instagram_select === "1" ? (await api.getInstagramPages()).pages : null;
+
   return (
     <div className="mx-auto max-w-3xl space-y-8">
       <header>
@@ -37,7 +44,11 @@ export default async function SettingsPage({ searchParams }: PageProps) {
         </p>
       </header>
 
-      <InstagramCard status={instagramStatus} callbackResult={callbackResult} />
+      <InstagramCard
+        status={instagramStatus}
+        callbackResult={callbackResult}
+        pendingPages={pendingPages}
+      />
 
       <SettingsForm
         initial={{
