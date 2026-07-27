@@ -123,6 +123,14 @@ def instagram_callback(
             facebook_page_id=page["facebook_page_id"],
             page_access_token=page["page_access_token"],
         )
+        # Without this subscription Meta never delivers DMs to our webhook.
+        # Treat a failed subscribe as a failed connect — reconnecting reruns
+        # the whole flow and both upsert and subscribe are idempotent.
+        if not meta_client.subscribe_page_to_app(
+            page_id=page["facebook_page_id"],
+            page_access_token=page["page_access_token"],
+        ):
+            raise ValueError("page webhook subscription failed")
     except Exception as exc:
         log.exception("instagram_callback_exchange_failed", error=str(exc))
         return RedirectResponse(url=dest_err, status_code=302)

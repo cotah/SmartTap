@@ -184,6 +184,42 @@ def send_dm(
     return True
 
 
+def subscribe_page_to_app(*, page_id: str, page_access_token: str) -> bool:
+    """Subscribe the Facebook Page to this app's webhook (field `messages`).
+    Without this, Meta never delivers inbound DMs to /v1/webhooks/instagram.
+    Returns True on success, False on any failure — the callback treats a
+    failed subscribe as a failed connect (reconnecting is idempotent).
+
+    The token goes in the POST body (`data=`), never the URL, so it can't
+    leak through request logging."""
+    s = get_settings()
+    url = f"{_GRAPH_BASE}/{s.meta_api_version}/{page_id}/subscribed_apps"
+    try:
+        resp = httpx.post(
+            url,
+            data={
+                "subscribed_fields": "messages",
+                "access_token": page_access_token,
+            },
+            timeout=_HTTP_TIMEOUT,
+        )
+        resp.raise_for_status()
+        ok = bool(resp.json().get("success"))
+    except httpx.HTTPStatusError as exc:
+        log.warning(
+            "instagram_subscribe_failed",
+            status=exc.response.status_code,
+            body=exc.response.text[:500],
+        )
+        return False
+    except Exception as exc:
+        log.warning("instagram_subscribe_error", error=str(exc))
+        return False
+    if not ok:
+        log.warning("instagram_subscribe_not_confirmed", page_suffix=page_id[-4:])
+    return ok
+
+
 def validate_signature(*, raw_body: bytes, signature: str | None) -> bool:
     """Verify an inbound Instagram webhook came from Meta. Same
     X-Hub-Signature-256 scheme as the WhatsApp webhook, keyed on this app's
