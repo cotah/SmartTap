@@ -32,6 +32,11 @@ from app.routers import (
 
 def _configure_logging(level: str) -> None:
     logging.basicConfig(level=level)
+    # httpx/httpcore log full request URLs at INFO, and the Meta + Google
+    # clients carry client_secret / access_token in query params — never let
+    # those reach the logs.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
     structlog.configure(
         processors=[
             structlog.processors.add_log_level,
