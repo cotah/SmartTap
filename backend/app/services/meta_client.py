@@ -239,13 +239,20 @@ def validate_signature(*, raw_body: bytes, signature: str | None) -> bool:
     X-Hub-Signature-256 scheme as the WhatsApp webhook, keyed on this app's
     META_APP_SECRET. Fails closed when unconfigured."""
     s = get_settings()
-    if not s.meta_app_secret or not signature:
+    if not s.meta_app_secret:
+        log.warning("instagram_signature_rejected", reason="app_secret_unconfigured")
+        return False
+    if not signature:
+        log.warning("instagram_signature_rejected", reason="missing_signature_header")
         return False
     expected = hmac.new(
         s.meta_app_secret.encode("utf-8"), raw_body, hashlib.sha256
     ).hexdigest()
     provided = signature.removeprefix("sha256=").strip()
-    return hmac.compare_digest(expected, provided)
+    if not hmac.compare_digest(expected, provided):
+        log.warning("instagram_signature_rejected", reason="signature_mismatch")
+        return False
+    return True
 
 
 def verify_token_matches(token: str | None) -> bool:

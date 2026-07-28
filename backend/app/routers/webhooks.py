@@ -147,6 +147,14 @@ async def instagram_webhook(
     customer would get duplicate replies.
     """
     raw = await request.body()
+    # Log arrival BEFORE any validation — a webhook that 403s or extracts
+    # zero events must still leave a trace (Meta's manual "Send to server"
+    # test payloads exercise exactly those silent paths).
+    log.info(
+        "instagram_webhook_received",
+        has_signature=x_hub_signature_256 is not None,
+        body_bytes=len(raw),
+    )
     if not meta_client.validate_signature(raw_body=raw, signature=x_hub_signature_256):
         log.warning("instagram_webhook_invalid_signature")
         raise HTTPException(status_code=403, detail="Invalid signature")
@@ -156,7 +164,11 @@ async def instagram_webhook(
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid JSON") from None
 
-    for event in _extract_instagram_events(payload):
+    events = _extract_instagram_events(payload)
+    # count=0 with a 200 means the payload parsed but matched no DM/mention
+    # shape (echoes, statuses, or Meta test payloads) — not a delivery failure.
+    log.info("instagram_webhook_events", count=len(events))
+    for event in events:
         try:
             instagram_dm_service.handle_event(event)
         except Exception as exc:  # belt and braces — the service already catches
