@@ -27,7 +27,9 @@ class RewardConfigIn(BaseModel):
     stamp_rate_limit_minutes: int = Field(ge=0, le=1440)
 
 
-BusinessType = Literal["barbershop", "cafe", "pet_grooming", "salon", "tattoo", "other"]
+BusinessType = Literal[
+    "barbershop", "cafe", "pet_grooming", "salon", "tattoo", "restaurant", "other"
+]
 
 
 class TenantSelf(BaseModel):

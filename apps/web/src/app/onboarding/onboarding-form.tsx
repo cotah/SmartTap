@@ -14,6 +14,7 @@ const BUSINESS_TYPES: Array<{ value: string; label: string; sub: string }> = [
   { value: "pet_grooming", label: "Pet grooming", sub: "Dogs, cats" },
   { value: "salon", label: "Salon", sub: "Hair, beauty" },
   { value: "tattoo", label: "Tattoo studio", sub: "Ink work" },
+  { value: "restaurant", label: "Restaurant", sub: "Food, dining" },
   { value: "other", label: "Something else", sub: "We'll catch up" },
 ];
 
@@ -33,6 +34,7 @@ export function OnboardingForm({ initialName }: Props) {
         | "pet_grooming"
         | "salon"
         | "tattoo"
+        | "restaurant"
         | "other",
       google_review_url: String(fd.get("google_review_url") ?? "") || null,
       stamps_for_reward: Number(fd.get("stamps_for_reward")),

@@ -6,6 +6,7 @@ export type BusinessType =
   | "pet_grooming"
   | "salon"
   | "tattoo"
+  | "restaurant"
   | "other";
 
 export interface Tenant {

@@ -2,7 +2,9 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-BusinessType = Literal["barbershop", "cafe", "pet_grooming", "salon", "tattoo", "other"]
+BusinessType = Literal[
+    "barbershop", "cafe", "pet_grooming", "salon", "tattoo", "restaurant", "other"
+]
 
 
 class OnboardingCompleteIn(BaseModel):

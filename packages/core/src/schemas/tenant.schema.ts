@@ -6,6 +6,7 @@ export const businessTypeSchema = z.enum([
   "pet_grooming",
   "salon",
   "tattoo",
+  "restaurant",
   "other",
 ]);
 

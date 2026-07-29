@@ -16,6 +16,7 @@ const VALID_TYPES = new Set([
   "pet_grooming",
   "salon",
   "tattoo",
+  "restaurant",
   "other",
 ]);
 

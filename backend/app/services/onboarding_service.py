@@ -115,7 +115,7 @@ def _attach_stripe_customer(tenant: Row, email: str | None) -> Row:
 
 
 VALID_BUSINESS_TYPES = frozenset(
-    ["barbershop", "cafe", "pet_grooming", "salon", "tattoo", "other"]
+    ["barbershop", "cafe", "pet_grooming", "salon", "tattoo", "restaurant", "other"]
 )
 
 
