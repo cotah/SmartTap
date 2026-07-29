@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getAuthApiClient } from "@/lib/api";
 import { getDashboardContext } from "@/lib/dashboard-data";
 
+import { ManualReplyCard } from "./manual-reply-card";
 import { ReviewSummary } from "./review-summary";
 import { ReviewsClient } from "./reviews-client";
 
@@ -34,6 +35,8 @@ export default async function ReviewsPage() {
       </header>
 
       <ReviewSummary stats={stats} />
+
+      <ManualReplyCard />
 
       <ReviewsClient reviews={items} googleStatus={googleStatus} />
     </main>

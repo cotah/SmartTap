@@ -91,6 +91,67 @@ export async function connectGoogleAction(): Promise<ConnectResult> {
   }
 }
 
+export type GenerateReplyResult =
+  | { ok: true; draft: string }
+  | { ok: false; message: string };
+
+/** Draft a reply for a review the owner pasted in (manual fallback). */
+export async function generateManualReplyAction(input: {
+  comment: string;
+  rating: number;
+  author?: string | null;
+}): Promise<GenerateReplyResult> {
+  const comment = (input.comment ?? "").trim();
+  if (comment.length === 0) {
+    return { ok: false, message: "Paste the review text first." };
+  }
+  try {
+    const api = getAuthApiClient();
+    const { draft } = await api.generateReviewReply({
+      comment,
+      rating: input.rating,
+      author: input.author?.trim() || null,
+    });
+    return { ok: true, draft };
+  } catch (err) {
+    if (err instanceof ApiError) {
+      return { ok: false, message: err.message || "Could not generate a reply." };
+    }
+    return { ok: false, message: "Could not generate a reply. Try again." };
+  }
+}
+
+/** Store the pasted review + approved reply once the owner copies it. */
+export async function approveManualReplyAction(input: {
+  comment: string;
+  rating: number;
+  author?: string | null;
+  aiDraft?: string | null;
+  replyText: string;
+}): Promise<ReviewActionResult> {
+  const replyText = (input.replyText ?? "").trim();
+  if (replyText.length === 0) {
+    return { ok: false, message: "Reply can't be empty." };
+  }
+  try {
+    const api = getAuthApiClient();
+    const review = await api.createManualReview({
+      comment: input.comment.trim(),
+      rating: input.rating,
+      author: input.author?.trim() || null,
+      ai_draft: input.aiDraft ?? null,
+      reply_text: replyText,
+    });
+    revalidatePath("/dashboard/reviews");
+    return { ok: true, review };
+  } catch (err) {
+    if (err instanceof ApiError) {
+      return { ok: false, message: err.message || "Could not save the reply." };
+    }
+    return { ok: false, message: "Could not save the reply. Try again." };
+  }
+}
+
 export type DisconnectResult = { ok: true } | { ok: false; message: string };
 
 /** Remove the tenant's Google connection, then refresh the reviews page. */
