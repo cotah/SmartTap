@@ -13,6 +13,7 @@ interface Props {
   email: string | null;
   trialStatus: TrialStatus;
   trialEndsAt: string | null;
+  enabledModules: string[];
   children: React.ReactNode;
 }
 
@@ -33,6 +34,7 @@ export function DashboardShell({
   email,
   trialStatus,
   trialEndsAt,
+  enabledModules,
   children,
 }: Props) {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -42,6 +44,7 @@ export function DashboardShell({
       <SideNav
         mobileOpen={drawerOpen}
         onClose={() => setDrawerOpen(false)}
+        enabledModules={enabledModules}
       />
       {drawerOpen ? (
         <button

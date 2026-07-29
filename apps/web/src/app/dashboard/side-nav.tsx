@@ -21,16 +21,18 @@ interface NavLink {
   href: string;
   label: string;
   icon: LucideIcon;
+  // Link only shows when the tenant has this module enabled (migration 018).
+  module?: "loyalty" | "reviews";
 }
 
 const NAV_LINKS: NavLink[] = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { href: "/dashboard/customers", label: "Customers", icon: Users },
-  { href: "/dashboard/segments", label: "Segments", icon: Layers },
+  { href: "/dashboard/segments", label: "Segments", icon: Layers, module: "loyalty" },
   { href: "/dashboard/tags", label: "NFC tags", icon: Tag },
-  { href: "/dashboard/reward", label: "Reward", icon: Gift },
-  { href: "/dashboard/campaigns", label: "Campaigns", icon: Megaphone },
-  { href: "/dashboard/reviews", label: "Reviews", icon: Star },
+  { href: "/dashboard/reward", label: "Reward", icon: Gift, module: "loyalty" },
+  { href: "/dashboard/campaigns", label: "Campaigns", icon: Megaphone, module: "loyalty" },
+  { href: "/dashboard/reviews", label: "Reviews", icon: Star, module: "reviews" },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
   { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
 ];
@@ -38,9 +40,10 @@ const NAV_LINKS: NavLink[] = [
 interface Props {
   mobileOpen: boolean;
   onClose: () => void;
+  enabledModules: string[];
 }
 
-export function SideNav({ mobileOpen, onClose }: Props) {
+export function SideNav({ mobileOpen, onClose, enabledModules }: Props) {
   const pathname = usePathname();
 
   function isActive(href: string): boolean {
@@ -73,7 +76,9 @@ export function SideNav({ mobileOpen, onClose }: Props) {
       </div>
 
       <div className="flex-1 space-y-1 overflow-y-auto px-3 py-6">
-        {NAV_LINKS.map((link) => {
+        {NAV_LINKS.filter(
+          (link) => !link.module || enabledModules.includes(link.module),
+        ).map((link) => {
           const Icon = link.icon;
           const active = isActive(link.href);
           return (

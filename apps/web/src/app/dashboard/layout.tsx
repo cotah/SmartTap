@@ -15,6 +15,7 @@ export default async function DashboardLayout({
       email={ctx.email}
       trialStatus={ctx.tenant.trial_status}
       trialEndsAt={ctx.tenant.trial_ends_at}
+      enabledModules={ctx.tenant.enabled_modules ?? ["loyalty", "reviews"]}
     >
       {children}
     </DashboardShell>
