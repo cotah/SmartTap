@@ -112,7 +112,7 @@ export function ManualReplyCard({ tenants, activeTenantId }: Props) {
               setCopied(false);
               setError(null);
             }}
-            className="mt-1 w-full rounded-xl border border-electric-border bg-electric-surface p-2.5 text-sm focus:border-electric-cyan focus:outline-none md:max-w-xs"
+            className="mt-1 w-full rounded-xl border border-electric-border bg-electric-surface-2 p-2.5 text-sm text-electric-text focus:border-electric-cyan focus:outline-none md:max-w-xs"
           >
             {tenants.map((t) => (
               <option key={t.id} value={t.id}>
@@ -131,7 +131,7 @@ export function ManualReplyCard({ tenants, activeTenantId }: Props) {
         onChange={(e) => setComment(e.target.value)}
         rows={3}
         maxLength={4000}
-        className="mt-1 w-full rounded-xl border border-electric-border p-3 text-sm focus:border-electric-cyan focus:outline-none"
+        className="mt-1 w-full rounded-xl border border-electric-border bg-electric-surface-2 p-3 text-sm text-electric-text placeholder:text-electric-text-muted focus:border-electric-cyan focus:outline-none"
         placeholder="Paste the customer's review here…"
       />
 
@@ -168,7 +168,7 @@ export function ManualReplyCard({ tenants, activeTenantId }: Props) {
             value={author}
             onChange={(e) => setAuthor(e.target.value)}
             maxLength={200}
-            className="mt-1 w-full rounded-xl border border-electric-border p-2.5 text-sm focus:border-electric-cyan focus:outline-none"
+            className="mt-1 w-full rounded-xl border border-electric-border bg-electric-surface-2 p-2.5 text-sm text-electric-text placeholder:text-electric-text-muted focus:border-electric-cyan focus:outline-none"
             placeholder="e.g. Alex"
           />
         </div>
@@ -198,7 +198,7 @@ export function ManualReplyCard({ tenants, activeTenantId }: Props) {
             onChange={(e) => setReply(e.target.value)}
             rows={4}
             maxLength={4000}
-            className="mt-1 w-full rounded-xl border border-electric-border p-3 text-sm focus:border-electric-cyan focus:outline-none"
+            className="mt-1 w-full rounded-xl border border-electric-border bg-electric-surface-2 p-3 text-sm text-electric-text focus:border-electric-cyan focus:outline-none"
           />
           <div className="mt-3 flex items-center gap-2">
             <button
