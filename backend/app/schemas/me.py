@@ -25,6 +25,9 @@ class MeResponse(BaseModel):
     user_id: str
     email: str | None
     tenant: TenantSummary | None
+    # All memberships, in join order. `tenant` above is the active one
+    # (X-Tenant-Id header when valid, else the first membership).
+    tenants: list[TenantSummary] = []
 
 
 class BootstrapIn(BaseModel):

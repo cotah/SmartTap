@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Header
 
 from app.db import tenant_members, tenants
 from app.dependencies import CurrentUser, get_current_user
@@ -27,14 +27,24 @@ def _summary(tenant: dict) -> TenantSummary:  # type: ignore[type-arg]
 
 
 @router.get("/me", response_model=MeResponse)
-def get_me(user: Annotated[CurrentUser, Depends(get_current_user)]) -> MeResponse:
+def get_me(
+    user: Annotated[CurrentUser, Depends(get_current_user)],
+    x_tenant_id: Annotated[str | None, Header(alias="X-Tenant-Id")] = None,
+) -> MeResponse:
     members = tenant_members.list_for_user(user.user_id)
-    summary: TenantSummary | None = None
-    if members:
-        tenant = tenants.get_by_id(members[0]["tenant_id"])
+    summaries: list[TenantSummary] = []
+    for member in members:
+        tenant = tenants.get_by_id(member["tenant_id"])
         if tenant is not None:
-            summary = _summary(tenant)
-    return MeResponse(user_id=user.user_id, email=user.email, tenant=summary)
+            summaries.append(_summary(tenant))
+    # Active tenant: the X-Tenant-Id header when it names a membership,
+    # otherwise the first membership (legacy behavior).
+    summary: TenantSummary | None = None
+    if summaries:
+        summary = next((s for s in summaries if s.id == x_tenant_id), summaries[0])
+    return MeResponse(
+        user_id=user.user_id, email=user.email, tenant=summary, tenants=summaries
+    )
 
 
 @router.post("/me/bootstrap", response_model=BootstrapResponse)

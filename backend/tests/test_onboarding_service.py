@@ -276,7 +276,7 @@ def test_complete_onboarding_rejects_bad_business_type(
     monkeypatch.setattr(onboarding_service.tenants, "update", fail_update)
 
     with pytest.raises(ValueError):
-        complete_onboarding("t-1", _payload(business_type="restaurant"))
+        complete_onboarding("t-1", _payload(business_type="spaceship"))
 
 
 def test_complete_onboarding_raises_when_tenant_missing(

@@ -109,12 +109,23 @@ def get_current_user(
 
 def get_current_tenant_id(
     user: Annotated[CurrentUser, Depends(get_current_user)],
+    x_tenant_id: Annotated[str | None, Header(alias="X-Tenant-Id")] = None,
 ) -> str:
     rows = tenant_members.list_for_user(user.user_id)
     if not rows:
         raise HTTPException(
             status_code=403,
             detail="No tenant for this user. POST /v1/me/bootstrap first.",
+        )
+    if x_tenant_id:
+        # Explicit tenant selection (multi-tenant switcher). Only honor it if
+        # the user is actually a member of the requested tenant.
+        for row in rows:
+            if row["tenant_id"] == x_tenant_id:
+                return x_tenant_id
+        raise HTTPException(
+            status_code=403,
+            detail="Not a member of the requested tenant.",
         )
     first = rows[0]
     tenant_id = first["tenant_id"]
