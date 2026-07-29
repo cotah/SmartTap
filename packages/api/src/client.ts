@@ -12,6 +12,11 @@ import type {
 export interface ApiClientOptions {
   baseUrl: string;
   getToken?: () => Promise<string | null>;
+  // Active tenant for multi-tenant users. When it resolves to an id the
+  // client sends X-Tenant-Id and the backend scopes every call to that
+  // tenant (403 if the user is not a member). Null keeps legacy behavior
+  // (first membership).
+  getTenantId?: () => Promise<string | null>;
   fetchImpl?: typeof fetch;
 }
 
@@ -406,6 +411,7 @@ export interface MeResponse {
   user_id: string;
   email: string | null;
   tenant: TenantSummary | null;
+  tenants: TenantSummary[];
 }
 
 export interface BootstrapInput {
@@ -559,6 +565,10 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
       const token = await opts.getToken();
       if (token) headers["Authorization"] = `Bearer ${token}`;
     }
+    if (opts.getTenantId) {
+      const tenantId = await opts.getTenantId();
+      if (tenantId) headers["X-Tenant-Id"] = tenantId;
+    }
     const res = await fetchImpl(`${baseUrl}${path}`, { ...init, headers });
     const text = await res.text();
     const body = text ? (JSON.parse(text) as unknown) : null;
@@ -582,6 +592,10 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
       const token = await opts.getToken();
       if (token) headers["Authorization"] = `Bearer ${token}`;
     }
+    if (opts.getTenantId) {
+      const tenantId = await opts.getTenantId();
+      if (tenantId) headers["X-Tenant-Id"] = tenantId;
+    }
     const res = await fetchImpl(`${baseUrl}${path}`, { ...init, headers });
     const text = await res.text();
     if (!res.ok) {
@@ -604,6 +618,10 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
     if (opts.getToken) {
       const token = await opts.getToken();
       if (token) headers["Authorization"] = `Bearer ${token}`;
+    }
+    if (opts.getTenantId) {
+      const tenantId = await opts.getTenantId();
+      if (tenantId) headers["X-Tenant-Id"] = tenantId;
     }
     const res = await fetchImpl(`${baseUrl}${path}`, { ...init, headers });
     if (!res.ok) {

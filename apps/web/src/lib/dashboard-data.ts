@@ -11,6 +11,8 @@ export interface OnboardingContext {
   user_id: string;
   email: string | null;
   tenant: TenantSummary;
+  /** All memberships — drives the tenant switcher when there is more than one. */
+  tenants: TenantSummary[];
 }
 
 // Same shape as OnboardingContext; the difference is the runtime guarantee
@@ -38,12 +40,14 @@ export const getOnboardingContext = cache(async (): Promise<OnboardingContext> =
   }
 
   let tenant = me.tenant;
+  let tenants = me.tenants;
   if (tenant === null) {
     const result = await api.bootstrapMe({});
     tenant = result.tenant;
+    tenants = [result.tenant];
   }
 
-  return { user_id: me.user_id, email: me.email, tenant };
+  return { user_id: me.user_id, email: me.email, tenant, tenants };
 });
 
 export const getDashboardContext = cache(async (): Promise<DashboardContext> => {

@@ -1,18 +1,27 @@
 import "server-only";
 
+import { cookies } from "next/headers";
+
 import { ApiError, createApiClient, type ApiClient } from "@smarttap/api";
 
 import { getAccessToken } from "./auth";
 import { publicEnv } from "./env";
 
+/** Cookie holding the active tenant id for multi-tenant users. */
+export const ACTIVE_TENANT_COOKIE = "st-active-tenant";
+
 export function getApiClient(): ApiClient {
   return createApiClient({ baseUrl: publicEnv.NEXT_PUBLIC_API_URL });
 }
 
-export function getAuthApiClient(): ApiClient {
+export function getAuthApiClient(tenantIdOverride?: string): ApiClient {
   return createApiClient({
     baseUrl: publicEnv.NEXT_PUBLIC_API_URL,
     getToken: getAccessToken,
+    // Explicit override (e.g. per-restaurant actions) wins over the cookie
+    // set by the tenant switcher. Backend validates membership either way.
+    getTenantId: async () =>
+      tenantIdOverride ?? (await cookies()).get(ACTIVE_TENANT_COOKIE)?.value ?? null,
   });
 }
 
