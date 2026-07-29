@@ -37,10 +37,15 @@ class ReviewResponseRunResult:
     errors: list[str] = field(default_factory=list)
 
 
-def _reply_system_prompt(tenant: dict[str, Any]) -> str:
+FEW_SHOT_LIMIT = 4
+
+
+def _reply_system_prompt(
+    tenant: dict[str, Any], examples: list[dict[str, Any]] | None = None
+) -> str:
     name = (tenant.get("name") or "the business").strip()
     btype = (tenant.get("business_type") or "local business").strip()
-    return (
+    parts = [
         f"You write public replies to Google reviews on behalf of {name}, a "
         f"{btype} in Ireland, as the owner. Write ONLY the reply text — no "
         "preamble, no quotes. Keep it short (1-3 sentences), warm and genuine, "
@@ -49,7 +54,29 @@ def _reply_system_prompt(tenant: dict[str, Any]) -> str:
         "negative reviews, be empathetic and invite them to resolve it offline "
         "(e.g. contact the shop) WITHOUT admitting fault, blaming staff, or "
         "disclosing private details. Never invent facts or promotions."
-    )
+    ]
+    context_lines = [
+        f"{label}: {value.strip()}"
+        for label, value in (
+            ("Opening hours", tenant.get("opening_hours")),
+            ("Menu / services", tenant.get("menu_info")),
+            ("Brand voice", tenant.get("brand_voice")),
+        )
+        if isinstance(value, str) and value.strip()
+    ]
+    if context_lines:
+        parts.append("Business context:\n" + "\n".join(context_lines))
+    if examples:
+        blocks = [
+            f"Review ({ex.get('rating')}★): {(ex.get('comment') or '').strip()}\n"
+            f"Reply: {(ex.get('reply_text') or '').strip()}"
+            for ex in examples
+        ]
+        parts.append(
+            "Replies the owner approved before — match their tone and style:\n\n"
+            + "\n\n".join(blocks)
+        )
+    return "\n\n".join(parts)
 
 
 def _review_user_text(review: dict[str, Any]) -> str:
@@ -68,6 +95,56 @@ def generate_draft(tenant: dict[str, Any], review: dict[str, Any]) -> str | None
         system=_reply_system_prompt(tenant),
         user_text=_review_user_text(review),
     )
+
+
+def _pick_examples(
+    examples: list[dict[str, Any]], rating: int, limit: int = FEW_SHOT_LIMIT
+) -> list[dict[str, Any]]:
+    """Closest-rating first; ties keep the incoming (newest-first) order."""
+    return sorted(examples, key=lambda ex: abs((ex.get("rating") or 3) - rating))[:limit]
+
+
+def generate_manual_reply(
+    tenant_id: str, *, comment: str, rating: int, author: str | None
+) -> str:
+    """Draft a reply for a review the owner pasted into the dashboard.
+    Raises BusinessError when Anthropic isn't configured — unlike the cron,
+    there's nothing useful to store without a draft."""
+    if not anthropic_client.is_configured():
+        raise BusinessError("AI reply generation is not configured")
+    tenant = tenants.get_by_id(tenant_id) or {"id": tenant_id}
+    examples = _pick_examples(reviews.list_reply_examples(tenant_id), rating)
+    return anthropic_client.generate_text(
+        system=_reply_system_prompt(tenant, examples),
+        user_text=_review_user_text(
+            {"rating": rating, "author": author, "comment": comment}
+        ),
+    )
+
+
+def save_manual_review(
+    tenant_id: str,
+    *,
+    comment: str,
+    rating: int,
+    author: str | None,
+    ai_draft: str | None,
+    reply_text: str,
+) -> dict[str, Any]:
+    """Persist a pasted review + its approved reply (the owner copied it to
+    post on Google themselves). Feeds the few-shot loop."""
+    row = reviews.create(
+        tenant_id=tenant_id,
+        google_review_id=None,
+        author=author,
+        rating=rating,
+        comment=comment,
+        created_at_google=None,
+        ai_draft=ai_draft,
+        status="approved",
+        source="manual",
+    )
+    return reviews.update(row["id"], {"reply_text": reply_text})
 
 
 def _process_tenant(connection: dict[str, Any]) -> tuple[int, list[str]]:
