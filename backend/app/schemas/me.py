@@ -17,6 +17,8 @@ class TenantSummary(BaseModel):
     # Derived from plan + is_active + trial_ends_at; the frontend uses this to
     # decide between green / amber / red banners and which CTAs to surface.
     trial_status: TrialStatus = "active"
+    # Per-tenant module toggles (migration 018). Defaults keep old rows working.
+    enabled_modules: list[str] = ["loyalty", "reviews"]
 
 
 class MeResponse(BaseModel):

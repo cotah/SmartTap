@@ -37,4 +37,5 @@ def complete_onboarding_endpoint(
         is_active=tenant["is_active"],
         trial_ends_at=tenant.get("trial_ends_at"),
         onboarding_complete=bool(tenant.get("reward_description")),
+        enabled_modules=tenant.get("enabled_modules") or ["loyalty", "reviews"],
     )

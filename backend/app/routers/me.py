@@ -22,6 +22,7 @@ def _summary(tenant: dict) -> TenantSummary:  # type: ignore[type-arg]
         trial_ends_at=tenant.get("trial_ends_at"),
         onboarding_complete=bool(tenant.get("reward_description")),
         trial_status=compute_trial_status(tenant),
+        enabled_modules=tenant.get("enabled_modules") or ["loyalty", "reviews"],
     )
 
 
