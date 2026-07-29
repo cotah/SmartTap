@@ -13,6 +13,9 @@ from app.db import reviews as reviews_db
 from app.dependencies import get_current_tenant_id, require_active_tenant
 from app.errors import NotFoundError
 from app.schemas.review import (
+    ManualGenerateIn,
+    ManualGenerateOut,
+    ManualReviewCreateIn,
     RatingBucket,
     ReplyUpdateIn,
     ReviewListResponse,
@@ -37,6 +40,7 @@ def _to_out(row: dict[str, Any]) -> ReviewOut:
         status=row["status"],
         published_at=row.get("published_at"),
         created_at=row["created_at"],
+        source=row.get("source") or "google",
     )
 
 
@@ -88,6 +92,37 @@ def publish_review(
     """Publish the approved reply to Google. Uses reply_text, falling back to
     the AI draft. Raises (404/400) handled by the global error handlers."""
     row = review_response_service.publish_review(tenant_id=tenant_id, review_id=review_id)
+    return _to_out(row)
+
+
+@router.post("/reviews/generate", response_model=ManualGenerateOut)
+def generate_manual_reply(
+    body: ManualGenerateIn,
+    tenant_id: Annotated[str, Depends(require_active_tenant)],
+) -> ManualGenerateOut:
+    """Draft a reply for a pasted review (manual fallback while the Google
+    Business API quota is pending). Nothing is stored at this stage."""
+    draft = review_response_service.generate_manual_reply(
+        tenant_id, comment=body.comment, rating=body.rating, author=body.author
+    )
+    return ManualGenerateOut(draft=draft)
+
+
+@router.post("/reviews/manual", response_model=ReviewOut)
+def create_manual_review(
+    body: ManualReviewCreateIn,
+    tenant_id: Annotated[str, Depends(require_active_tenant)],
+) -> ReviewOut:
+    """Store the pasted review + approved reply (owner copied it to Google).
+    Feeds the few-shot examples for future drafts."""
+    row = review_response_service.save_manual_review(
+        tenant_id,
+        comment=body.comment,
+        rating=body.rating,
+        author=body.author,
+        ai_draft=body.ai_draft,
+        reply_text=body.reply_text,
+    )
     return _to_out(row)
 
 

@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 class ReviewOut(BaseModel):
     id: str
-    google_review_id: str
+    google_review_id: str | None
     author: str | None
     rating: int | None
     comment: str | None
@@ -15,6 +15,7 @@ class ReviewOut(BaseModel):
     status: str
     published_at: str | None
     created_at: str
+    source: str = "google"
 
 
 class ReviewListResponse(BaseModel):
@@ -36,4 +37,26 @@ class ReviewStats(BaseModel):
 class ReplyUpdateIn(BaseModel):
     """Owner-edited reply text before publishing."""
 
+    reply_text: str = Field(min_length=1, max_length=4000)
+
+
+class ManualGenerateIn(BaseModel):
+    """A review the owner pasted in, to draft a reply for."""
+
+    comment: str = Field(min_length=1, max_length=4000)
+    rating: int = Field(ge=1, le=5)
+    author: str | None = Field(default=None, max_length=200)
+
+
+class ManualGenerateOut(BaseModel):
+    draft: str
+
+
+class ManualReviewCreateIn(BaseModel):
+    """Approved manual reply — stored when the owner copies it."""
+
+    comment: str = Field(min_length=1, max_length=4000)
+    rating: int = Field(ge=1, le=5)
+    author: str | None = Field(default=None, max_length=200)
+    ai_draft: str | None = Field(default=None, max_length=4000)
     reply_text: str = Field(min_length=1, max_length=4000)
