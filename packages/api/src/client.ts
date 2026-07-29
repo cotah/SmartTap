@@ -181,6 +181,7 @@ export interface TenantSummary {
   trial_ends_at: string | null;
   onboarding_complete: boolean;
   trial_status: TrialStatus;
+  enabled_modules: string[];
 }
 
 export interface OnboardingComplete {
@@ -416,11 +417,16 @@ export interface BootstrapResponse {
   is_new: boolean;
 }
 
-export type ReviewStatus = "pending" | "published" | "dismissed" | "failed";
+export type ReviewStatus =
+  | "pending"
+  | "published"
+  | "dismissed"
+  | "failed"
+  | "approved";
 
 export interface Review {
   id: string;
-  google_review_id: string;
+  google_review_id: string | null;
   author: string | null;
   rating: number | null;
   comment: string | null;
@@ -430,6 +436,18 @@ export interface Review {
   status: ReviewStatus;
   published_at: string | null;
   created_at: string;
+  source: "google" | "manual";
+}
+
+export interface ManualGenerateInput {
+  comment: string;
+  rating: number;
+  author?: string | null;
+}
+
+export interface ManualReviewCreateInput extends ManualGenerateInput {
+  ai_draft?: string | null;
+  reply_text: string;
 }
 
 export interface RatingBucket {
@@ -516,6 +534,8 @@ export interface ApiClient {
   updateReviewReply: (id: string, replyText: string) => Promise<Review>;
   publishReview: (id: string) => Promise<Review>;
   dismissReview: (id: string) => Promise<Review>;
+  generateReviewReply: (body: ManualGenerateInput) => Promise<{ draft: string }>;
+  createManualReview: (body: ManualReviewCreateInput) => Promise<Review>;
   getGoogleConnectUrl: () => Promise<{ url: string }>;
   getGoogleStatus: () => Promise<GoogleStatus>;
   disconnectGoogle: () => Promise<{ ok: boolean }>;
@@ -775,6 +795,16 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
       request<Review>(`/v1/reviews/${id}/publish`, { method: "POST" }),
     dismissReview: (id) =>
       request<Review>(`/v1/reviews/${id}/dismiss`, { method: "POST" }),
+    generateReviewReply: (body) =>
+      request<{ draft: string }>(`/v1/reviews/generate`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    createManualReview: (body) =>
+      request<Review>(`/v1/reviews/manual`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
     getGoogleConnectUrl: () => request<{ url: string }>(`/v1/google/connect`),
     getGoogleStatus: () => request<GoogleStatus>(`/v1/google/status`),
     disconnectGoogle: () =>
