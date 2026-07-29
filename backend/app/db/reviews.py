@@ -1,8 +1,8 @@
 """DB access for Google reviews + their AI drafts (S5 Feature 3).
 
 Pure CRUD. Dedupe is enforced by the UNIQUE (tenant_id, google_review_id)
-constraint; `exists` lets the cron skip reviews it already stored without
-relying on catching the constraint error.
+constraint (partial index after migration 018); `exists` lets the cron skip
+reviews it already stored without relying on catching the constraint error.
 """
 
 from datetime import datetime
@@ -14,7 +14,7 @@ from app.services.supabase_client import get_supabase_admin
 
 Row = dict[str, Any]
 
-Status = str  # pending | published | dismissed | failed
+Status = str  # pending | published | dismissed | failed | approved
 
 
 def exists(tenant_id: str, google_review_id: str) -> bool:
@@ -33,13 +33,14 @@ def exists(tenant_id: str, google_review_id: str) -> bool:
 def create(
     *,
     tenant_id: str,
-    google_review_id: str,
+    google_review_id: str | None,
     author: str | None,
     rating: int | None,
     comment: str | None,
     created_at_google: str | None,
     ai_draft: str | None,
     status: Status = "pending",
+    source: str = "google",
 ) -> Row:
     client = get_supabase_admin()
     payload: Row = {
@@ -51,6 +52,7 @@ def create(
         "created_at_google": created_at_google,
         "ai_draft": ai_draft,
         "status": status,
+        "source": source,
     }
     res = client.table("reviews").insert(payload).execute()
     rows = cast(list[Row], res.data or [])
@@ -174,3 +176,21 @@ def mark_published(review_id: str, reply_text: str, published_at: datetime) -> R
             "published_at": published_at.isoformat(),
         },
     )
+
+
+def list_reply_examples(tenant_id: str, *, limit: int = 50) -> list[Row]:
+    """Approved/published replies used as few-shot examples for new drafts.
+    Newest-first; the service re-ranks by rating proximity to the review
+    being answered."""
+    client = get_supabase_admin()
+    res = (
+        client.table("reviews")
+        .select("rating, comment, reply_text")
+        .eq("tenant_id", tenant_id)
+        .in_("status", ["approved", "published"])
+        .not_.is_("reply_text", "null")
+        .order("created_at", desc=True)
+        .limit(limit)
+        .execute()
+    )
+    return cast(list[Row], res.data or [])
