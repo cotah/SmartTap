@@ -8,7 +8,7 @@ import { ReviewSummary } from "./review-summary";
 import { ReviewsClient } from "./reviews-client";
 
 export default async function ReviewsPage() {
-  await getDashboardContext();
+  const ctx = await getDashboardContext();
   const api = getAuthApiClient();
   const [{ items }, stats, googleStatus] = await Promise.all([
     api.listReviews("pending"),
@@ -36,7 +36,10 @@ export default async function ReviewsPage() {
 
       <ReviewSummary stats={stats} />
 
-      <ManualReplyCard />
+      <ManualReplyCard
+        tenants={ctx.tenants.map((t) => ({ id: t.id, name: t.name }))}
+        activeTenantId={ctx.tenant.id}
+      />
 
       <ReviewsClient reviews={items} googleStatus={googleStatus} />
     </main>

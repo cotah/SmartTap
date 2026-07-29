@@ -100,13 +100,15 @@ export async function generateManualReplyAction(input: {
   comment: string;
   rating: number;
   author?: string | null;
+  /** Restaurant selected in the card; backend 403s if not a membership. */
+  tenantId?: string;
 }): Promise<GenerateReplyResult> {
   const comment = (input.comment ?? "").trim();
   if (comment.length === 0) {
     return { ok: false, message: "Paste the review text first." };
   }
   try {
-    const api = getAuthApiClient();
+    const api = getAuthApiClient(input.tenantId);
     const { draft } = await api.generateReviewReply({
       comment,
       rating: input.rating,
@@ -128,13 +130,15 @@ export async function approveManualReplyAction(input: {
   author?: string | null;
   aiDraft?: string | null;
   replyText: string;
+  /** Must match the tenant the draft was generated for. */
+  tenantId?: string;
 }): Promise<ReviewActionResult> {
   const replyText = (input.replyText ?? "").trim();
   if (replyText.length === 0) {
     return { ok: false, message: "Reply can't be empty." };
   }
   try {
-    const api = getAuthApiClient();
+    const api = getAuthApiClient(input.tenantId);
     const review = await api.createManualReview({
       comment: input.comment.trim(),
       rating: input.rating,

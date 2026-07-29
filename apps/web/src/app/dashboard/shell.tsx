@@ -14,6 +14,8 @@ interface Props {
   trialStatus: TrialStatus;
   trialEndsAt: string | null;
   enabledModules: string[];
+  tenants: Array<{ id: string; name: string }>;
+  activeTenantId: string;
   children: React.ReactNode;
 }
 
@@ -35,6 +37,8 @@ export function DashboardShell({
   trialStatus,
   trialEndsAt,
   enabledModules,
+  tenants,
+  activeTenantId,
   children,
 }: Props) {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -60,6 +64,8 @@ export function DashboardShell({
           email={email}
           trialStatus={trialStatus}
           trialEndsAt={trialEndsAt}
+          tenants={tenants}
+          activeTenantId={activeTenantId}
           onMenuClick={() => setDrawerOpen(true)}
         />
         <TrialBanner status={trialStatus} trialEndsAt={trialEndsAt} />

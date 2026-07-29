@@ -16,6 +16,8 @@ export default async function DashboardLayout({
       trialStatus={ctx.tenant.trial_status}
       trialEndsAt={ctx.tenant.trial_ends_at}
       enabledModules={ctx.tenant.enabled_modules ?? ["loyalty", "reviews"]}
+      tenants={ctx.tenants.map((t) => ({ id: t.id, name: t.name }))}
+      activeTenantId={ctx.tenant.id}
     >
       {children}
     </DashboardShell>
