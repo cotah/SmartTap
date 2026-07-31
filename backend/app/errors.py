@@ -30,6 +30,19 @@ class AlreadyRedeemedError(BusinessError):
     code = "already_redeemed"
 
 
+class AlreadyRegisteredError(BusinessError):
+    """Public identify hit a phone that already belongs to a customer.
+
+    409 on purpose: the unauthenticated opt-in flow must never mint or return
+    a session token for an existing account (phone number is not proof of
+    possession). The UI redirects the visitor to the OTP "Already a member?"
+    path instead.
+    """
+
+    status_code = 409
+    code = "already_registered"
+
+
 class ExpiredError(BusinessError):
     status_code = 410
     code = "expired"

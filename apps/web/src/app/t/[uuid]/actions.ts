@@ -103,7 +103,18 @@ export async function optInAction(rawData: unknown): Promise<OptInResult> {
     return { ok: true };
   } catch (err) {
     if (err instanceof ApiError) {
-      const body = err.body as { error?: { message?: string } } | null;
+      const body = err.body as {
+        error?: { code?: string; message?: string };
+      } | null;
+      // Backend refuses to mint a session for a known phone (takeover guard).
+      // Point the visitor at the OTP "Already a member?" path instead.
+      if (body?.error?.code === "already_registered") {
+        return {
+          ok: false,
+          error:
+            "This phone number is already registered. Use “Already a member?” below to sign back in.",
+        };
+      }
       return { ok: false, error: body?.error?.message ?? `Request failed (${err.status})` };
     }
     return { ok: false, error: "Unexpected error. Try again." };

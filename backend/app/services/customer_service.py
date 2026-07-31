@@ -6,7 +6,7 @@ import structlog
 
 from app.db import customers, tenants
 from app.db.customers import FilterMode, SortMode
-from app.errors import InactiveError, NotFoundError
+from app.errors import AlreadyRegisteredError, InactiveError, NotFoundError
 
 log = structlog.get_logger(__name__)
 
@@ -41,12 +41,13 @@ def identify_customer(ctx: IdentifyContext) -> IdentifyResult:
 
     existing = customers.get_by_phone(ctx.tenant_id, ctx.phone)
     if existing is not None:
-        log.info("customer_identified_existing", customer_id=existing["id"])
-        return IdentifyResult(
-            customer_id=existing["id"],
-            magic_link_token=existing["magic_link_token"],
-            stamps_current=existing["current_stamps"],
-            is_new=False,
+        # Never hand out the stored magic_link_token here: this endpoint is
+        # unauthenticated and knowing a phone number is not proof of owning
+        # it. Returning the token would let anyone take over the account.
+        # The customer re-identifies via the OTP flow instead.
+        log.info("customer_identify_conflict", customer_id=existing["id"])
+        raise AlreadyRegisteredError(
+            "This phone number is already registered. Use 'Already a member?' to sign back in."
         )
 
     created = customers.create(
