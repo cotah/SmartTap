@@ -13,6 +13,7 @@ credentials, list/publish no-op, so the cron runs clean and the dashboard works
 against test data — build-to-activate.
 """
 
+import re
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
@@ -38,6 +39,28 @@ class ReviewResponseRunResult:
 
 
 FEW_SHOT_LIMIT = 4
+
+# Data minimisation: stored few-shot examples never keep the reviewer's name.
+NAME_PLACEHOLDER = "[CUSTOMER NAME]"
+
+
+def _anonymize_reply(reply_text: str, author: str | None) -> str:
+    """Replace the review author's name in a reply with NAME_PLACEHOLDER.
+
+    Matches the full name and each name part (whole words only, case-
+    insensitive). Single-letter parts (initials) are skipped so "J Murphy"
+    doesn't blank out every standalone letter."""
+    if not author:
+        return reply_text
+    full = author.strip()
+    parts = [p for p in full.split() if len(p) > 1]
+    candidates = [full, *parts] if len(full) > 1 else parts
+    if not candidates:
+        return reply_text
+    # Longest first so "John Smith" wins over "John".
+    alternatives = sorted({c.lower() for c in candidates}, key=len, reverse=True)
+    pattern = r"\b(?:" + "|".join(re.escape(c) for c in alternatives) + r")\b"
+    return re.sub(pattern, NAME_PLACEHOLDER, reply_text, flags=re.IGNORECASE)
 
 
 def _reply_system_prompt(
@@ -75,6 +98,9 @@ def _reply_system_prompt(
         parts.append(
             "Replies the owner approved before — match their tone and style:\n\n"
             + "\n\n".join(blocks)
+            + f"\n\nIn these examples {NAME_PLACEHOLDER} is a privacy placeholder "
+            "for the reviewer's name. Never write it literally — use the actual "
+            "reviewer's first name if you know it, otherwise no name."
         )
     return "\n\n".join(parts)
 
@@ -132,7 +158,10 @@ def save_manual_review(
     reply_text: str,
 ) -> dict[str, Any]:
     """Persist a pasted review + its approved reply (the owner copied it to
-    post on Google themselves). Feeds the few-shot loop."""
+    post on Google themselves). Feeds the few-shot loop.
+
+    The reply is anonymised before storage (data minimisation): the author's
+    name becomes NAME_PLACEHOLDER so stored examples carry no customer names."""
     row = reviews.create(
         tenant_id=tenant_id,
         google_review_id=None,
@@ -144,7 +173,9 @@ def save_manual_review(
         status="approved",
         source="manual",
     )
-    return reviews.update(row["id"], {"reply_text": reply_text})
+    return reviews.update(
+        row["id"], {"reply_text": _anonymize_reply(reply_text, author)}
+    )
 
 
 def _process_tenant(connection: dict[str, Any]) -> tuple[int, list[str]]:

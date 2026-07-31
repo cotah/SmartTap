@@ -138,7 +138,73 @@ def test_save_stores_manual_approved(stubs: dict[str, Any]) -> None:
     assert created["source"] == "manual"
     assert created["status"] == "approved"
     assert created["google_review_id"] is None
-    assert created["reply_text"] == "Thanks Alex! See you soon."
+    # Data minimisation: the author's name never reaches the stored example.
+    assert created["reply_text"] == "Thanks [CUSTOMER NAME]! See you soon."
+
+
+# ---------------------------------------------------------------------------
+# data minimisation — [CUSTOMER NAME] placeholder in stored examples
+# ---------------------------------------------------------------------------
+
+
+def _saved_reply(stubs: dict[str, Any], *, author: str | None, reply: str) -> str:
+    svc.save_manual_review(
+        TENANT,
+        comment="Nice!",
+        rating=5,
+        author=author,
+        ai_draft=None,
+        reply_text=reply,
+    )
+    return stubs["created"][-1]["reply_text"]
+
+
+def test_save_replaces_full_and_first_name(stubs: dict[str, Any]) -> None:
+    got = _saved_reply(
+        stubs, author="John Smith", reply="Thanks John Smith! Great to see you, John."
+    )
+    assert got == "Thanks [CUSTOMER NAME]! Great to see you, [CUSTOMER NAME]."
+
+
+def test_save_name_replacement_is_case_insensitive(stubs: dict[str, Any]) -> None:
+    got = _saved_reply(stubs, author="Alex", reply="thanks alex, see you!")
+    assert got == "thanks [CUSTOMER NAME], see you!"
+
+
+def test_save_does_not_touch_words_containing_the_name(stubs: dict[str, Any]) -> None:
+    # "Alex" inside "Alexandra's" must survive — word-boundary matching only.
+    got = _saved_reply(stubs, author="Alex", reply="Alexandra's cut suits you, Alex!")
+    assert got == "Alexandra's cut suits you, [CUSTOMER NAME]!"
+
+
+def test_save_without_author_keeps_reply_unchanged(stubs: dict[str, Any]) -> None:
+    got = _saved_reply(stubs, author=None, reply="Thanks for the visit!")
+    assert got == "Thanks for the visit!"
+
+
+def test_save_ignores_single_letter_name_parts(stubs: dict[str, Any]) -> None:
+    # Initials like "J" must not blank out every standalone letter in the reply.
+    got = _saved_reply(stubs, author="J Murphy", reply="Thanks Murphy, grade A cut!")
+    assert got == "Thanks [CUSTOMER NAME], grade A cut!"
+
+
+def test_prompt_explains_placeholder_when_examples_present(
+    stubs: dict[str, Any],
+) -> None:
+    stubs["examples"] = [
+        {"rating": 5, "comment": "five", "reply_text": "Thanks [CUSTOMER NAME]!"}
+    ]
+    svc.generate_manual_reply(TENANT, comment="great", rating=5, author="Sam")
+    assert "[CUSTOMER NAME]" in stubs["captured"]["system"]
+    # The instruction must tell the model it's a placeholder, not literal text.
+    assert "placeholder" in stubs["captured"]["system"]
+
+
+def test_prompt_has_no_placeholder_note_without_examples(
+    stubs: dict[str, Any],
+) -> None:
+    svc.generate_manual_reply(TENANT, comment="great", rating=5, author="Sam")
+    assert "placeholder" not in stubs["captured"]["system"]
 
 
 def test_cron_prompt_still_has_tenant_context(stubs: dict[str, Any]) -> None:
