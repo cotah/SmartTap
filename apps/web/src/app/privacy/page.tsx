@@ -58,11 +58,10 @@ export default function PrivacyPage() {
             </>,
             <>
               <strong className="text-electric-text">
-                If you messaged a business on Instagram, or left it a Google
-                review
+                If you left a business a Google review
               </strong>{" "}
               — the business is the data controller and we are its data
-              processor. We receive and store the message or review on the
+              processor. We receive and store the review on the
               business&apos;s behalf and help it draft a reply. Requests about
               your data can go to the business or directly to us — either
               works.
@@ -94,15 +93,6 @@ export default function PrivacyPage() {
           name, email, business name and type, Google review link, and billing
           details (card data is held by Stripe — it never touches our
           servers).
-        </LegalText>
-        <LegalText>
-          <strong className="text-electric-text">
-            When a customer messages a connected Instagram account:
-          </strong>{" "}
-          the message content, the sender&apos;s Instagram username, and the
-          replies the business sends back. We hold these so the business can
-          see and answer its own conversations — messages are never read for
-          any other purpose, and never used for advertising.
         </LegalText>
         <LegalText>
           <strong className="text-electric-text">
@@ -189,14 +179,14 @@ export default function PrivacyPage() {
                 "SMS delivery of one-time verification codes (account recovery). Phone numbers are used for the code only — never added to any marketing list.",
             },
             {
-              name: "Meta (WhatsApp, Instagram & Messenger)",
+              name: "Meta (WhatsApp)",
               detail:
-                "WhatsApp message delivery (the owner assistant, and review reminders to customers who opted in), and Instagram/Messenger messaging for connected business accounts — receiving customer messages and delivering the business's replies.",
+                "WhatsApp message delivery — the owner assistant, and review reminders to customers who opted in.",
             },
             {
               name: "Anthropic",
               detail:
-                "AI drafting — turns a shop's questions, public review text, and incoming customer messages into draft replies. Processing takes place in the United States under EU Standard Contractual Clauses. Not used to train AI models.",
+                "AI drafting — turns a shop's questions and public review text into draft replies. Processing takes place in the United States under EU Standard Contractual Clauses. Not used to train AI models.",
             },
             {
               name: "Google",
@@ -221,7 +211,6 @@ export default function PrivacyPage() {
             "Customer loyalty records: for as long as the shop uses SmartTap. Shops can delete any customer record from the dashboard at any time; deletion is immediate.",
             "SMS verification codes: stored hashed, expire after 10 minutes.",
             "Business account data: for the life of the account, then removed after closure once billing/tax obligations allow.",
-            "Instagram messages and replies: for as long as the business keeps its Instagram account connected, then removed with the rest of the business's data. Deletion can be requested at any time — see our Data deletion page.",
             "Stored reviews and approved reply examples: for the life of the business account, then removed with the rest of the business's data.",
             "Error logs and analytics: automatically expire on the providers' standard retention windows (typically 90 days).",
           ]}

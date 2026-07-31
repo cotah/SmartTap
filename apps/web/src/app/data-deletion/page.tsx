@@ -85,35 +85,6 @@ export default function DataDeletionPage() {
         />
       </LegalSection>
 
-      <LegalSection title="Deleting data connected to Facebook or Instagram">
-        <LegalText>
-          If you used Facebook or Instagram to connect a business account to
-          SmartTap, or if you exchanged messages with a business through those
-          platforms, you may request deletion of that data using the same
-          email address above.
-        </LegalText>
-        <LegalText>
-          You may also revoke SmartTap&apos;s access at any time directly on
-          the platform:
-        </LegalText>
-        <LegalList
-          items={[
-            <>
-              <strong className="text-electric-text">Facebook:</strong>{" "}
-              Settings &amp; Privacy → Settings → Apps and Websites
-            </>,
-            <>
-              <strong className="text-electric-text">Instagram:</strong>{" "}
-              Settings → Website permissions → Apps and websites
-            </>,
-          ]}
-        />
-        <LegalText>
-          Revoking access stops any further processing. It does not by itself
-          delete data already held — email us to request that.
-        </LegalText>
-      </LegalSection>
-
       <LegalSection title="Deletion when an account is closed">
         <LegalText>
           If a business closes its SmartTap account, we retain its data for{" "}

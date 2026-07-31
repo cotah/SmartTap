@@ -399,7 +399,7 @@ export interface TenantSelf {
   is_active: boolean;
   is_founding_member: boolean;
   trial_ends_at: string | null;
-  // AI assistant context (Instagram DM assistant).
+  // AI assistant context (review reply drafting).
   opening_hours: string | null;
   menu_info: string | null;
   brand_voice: string | null;
@@ -476,23 +476,6 @@ export interface GoogleStatus {
   connected_at?: string | null;
 }
 
-export interface InstagramStatus {
-  connected: boolean;
-  instagram_business_account_id?: string | null;
-  facebook_page_id?: string | null;
-  connected_at?: string | null;
-  page_name?: string | null;
-  ig_username?: string | null;
-}
-
-/** A Page Picker candidate — display data only, never tokens. */
-export interface InstagramPage {
-  facebook_page_id: string;
-  page_name: string | null;
-  instagram_business_account_id: string;
-  ig_username: string | null;
-}
-
 export interface ApiClient {
   tap: (tagUuid: string, body: TapEvent) => Promise<TapResponse>;
   identifyCustomer: (body: CustomerIdentify) => Promise<IdentifyResponse>;
@@ -545,11 +528,6 @@ export interface ApiClient {
   getGoogleConnectUrl: () => Promise<{ url: string }>;
   getGoogleStatus: () => Promise<GoogleStatus>;
   disconnectGoogle: () => Promise<{ ok: boolean }>;
-  getInstagramConnectUrl: () => Promise<{ url: string }>;
-  getInstagramStatus: () => Promise<InstagramStatus>;
-  disconnectInstagram: () => Promise<{ ok: boolean }>;
-  getInstagramPages: () => Promise<{ pages: InstagramPage[] }>;
-  selectInstagramPage: (facebookPageId: string) => Promise<{ ok: boolean }>;
 }
 
 export function createApiClient(opts: ApiClientOptions): ApiClient {
@@ -827,16 +805,5 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
     getGoogleStatus: () => request<GoogleStatus>(`/v1/google/status`),
     disconnectGoogle: () =>
       request<{ ok: boolean }>(`/v1/google/disconnect`, { method: "POST" }),
-    getInstagramConnectUrl: () => request<{ url: string }>(`/v1/instagram/connect`),
-    getInstagramStatus: () => request<InstagramStatus>(`/v1/instagram/status`),
-    disconnectInstagram: () =>
-      request<{ ok: boolean }>(`/v1/instagram/disconnect`, { method: "POST" }),
-    getInstagramPages: () =>
-      request<{ pages: InstagramPage[] }>(`/v1/instagram/pages`),
-    selectInstagramPage: (facebookPageId) =>
-      request<{ ok: boolean }>(`/v1/instagram/select`, {
-        method: "POST",
-        body: JSON.stringify({ facebook_page_id: facebookPageId }),
-      }),
   };
 }

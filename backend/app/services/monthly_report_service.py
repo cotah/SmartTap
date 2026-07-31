@@ -31,7 +31,6 @@ import structlog
 from app.db import (
     campaigns,
     customers,
-    instagram_interactions,
     nfc_tags,
     reviews,
     rewards,
@@ -67,7 +66,7 @@ class PeriodStats:
 
 @dataclass(frozen=True)
 class ReputationStats:
-    """Reviews + Instagram assistant numbers for the CURRENT period only.
+    """Review numbers for the CURRENT period only.
 
     Kept separate from PeriodStats because these lines render in their own
     'Reputation' PDF section without month-over-month deltas — mixing them
@@ -80,8 +79,6 @@ class ReputationStats:
     # Average rating of reviews received in the period; None when the month
     # had no rated reviews (the PDF renders a dash, mirroring delta_pct).
     avg_rating: float | None = None
-    instagram_dms_answered: int = 0
-    instagram_mentions_answered: int = 0
 
 
 @dataclass(frozen=True)
@@ -252,12 +249,10 @@ def _format_tag_label(row: dict[str, Any]) -> str:
 def _reputation_stats(
     tenant_id: str, *, start: datetime, end: datetime
 ) -> ReputationStats:
-    """Reviews + Instagram assistant counters for one period.
+    """Review counters for one period.
 
     'Received' keys on the Google-side timestamp, 'responded' on our publish
-    time, so the two can legitimately diverge in a catch-up month. Instagram
-    counters only include `answered` rows — failed sends aren't service the
-    merchant received.
+    time, so the two can legitimately diverge in a catch-up month.
     """
     ratings = [
         r for r in reviews.list_ratings_in_range(tenant_id, start=start, end=end)
@@ -268,16 +263,6 @@ def _reputation_stats(
         reviews_received=reviews.count_received_in_range(tenant_id, start=start, end=end),
         reviews_responded=reviews.count_published_in_range(tenant_id, start=start, end=end),
         avg_rating=avg_rating,
-        instagram_dms_answered=instagram_interactions.count_in_range(
-            tenant_id, start=start, end=end, interaction_type="dm", status="answered"
-        ),
-        instagram_mentions_answered=instagram_interactions.count_in_range(
-            tenant_id,
-            start=start,
-            end=end,
-            interaction_type="story_mention",
-            status="answered",
-        ),
     )
 
 

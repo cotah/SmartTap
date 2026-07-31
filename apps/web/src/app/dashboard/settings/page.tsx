@@ -1,36 +1,12 @@
 import { getAuthApiClient } from "@/lib/api";
 import { getDashboardContext } from "@/lib/dashboard-data";
 
-import { InstagramCard } from "./instagram-card";
 import { SettingsForm } from "./settings-form";
 
-interface PageProps {
-  searchParams: Promise<{ instagram_connected?: string; instagram_select?: string }>;
-}
-
-export default async function SettingsPage({ searchParams }: PageProps) {
+export default async function SettingsPage() {
   await getDashboardContext();
   const api = getAuthApiClient();
-  const [{ tenant }, instagramStatus, sp] = await Promise.all([
-    api.getTenant(),
-    api.getInstagramStatus(),
-    searchParams,
-  ]);
-
-  // Set by the Meta OAuth callback redirect (?instagram_connected=1/0).
-  const callbackResult =
-    sp.instagram_connected === "1"
-      ? ("success" as const)
-      : sp.instagram_connected === "0"
-        ? ("error" as const)
-        : null;
-
-  // ?instagram_select=1 — the OAuth callback found more than one eligible
-  // Facebook Page and parked a pending connection. Fetch the candidates
-  // server-side so the card can render the picker. An empty list means the
-  // pending selection expired (10 min TTL) — the card asks to reconnect.
-  const pendingPages =
-    sp.instagram_select === "1" ? (await api.getInstagramPages()).pages : null;
+  const { tenant } = await api.getTenant();
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
@@ -43,12 +19,6 @@ export default async function SettingsPage({ searchParams }: PageProps) {
           land on after a tap.
         </p>
       </header>
-
-      <InstagramCard
-        status={instagramStatus}
-        callbackResult={callbackResult}
-        pendingPages={pendingPages}
-      />
 
       <SettingsForm
         initial={{

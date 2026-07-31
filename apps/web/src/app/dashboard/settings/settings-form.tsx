@@ -163,7 +163,7 @@ export function SettingsForm({ initial }: Props) {
 
       <Section
         title="AI assistant context"
-        subtitle="The Instagram assistant uses these details to answer your customers. All optional — leave empty to skip."
+        subtitle="The AI review assistant uses these details when drafting replies. All optional — leave empty to skip."
         icon={Bot}
       >
         <Field

@@ -114,7 +114,6 @@ def _patch_stats(
     reviews_received: int = 0,
     reviews_published: int = 0,
     review_ratings: list[int | None] | None = None,
-    ig_counts: dict[str, int] | None = None,
 ) -> None:
     """One-shot DB stub: every call returns the same numbers regardless of
     the period. Tests that need different numbers in current vs previous
@@ -143,11 +142,6 @@ def _patch_stats(
     monkeypatch.setattr(
         svc.reviews, "list_ratings_in_range", lambda *_a, **_k: review_ratings or []
     )
-
-    def _count_ig(*_a: Any, interaction_type: Any = None, **_k: Any) -> int:
-        return (ig_counts or {}).get(str(interaction_type), 0)
-
-    monkeypatch.setattr(svc.instagram_interactions, "count_in_range", _count_ig)
 
 
 def test_compute_empty_month_does_not_raise(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -310,7 +304,6 @@ def test_compute_includes_previous_stats_for_delta(monkeypatch: pytest.MonkeyPat
     monkeypatch.setattr(svc.reviews, "count_received_in_range", lambda *_a, **_k: 0)
     monkeypatch.setattr(svc.reviews, "count_published_in_range", lambda *_a, **_k: 0)
     monkeypatch.setattr(svc.reviews, "list_ratings_in_range", lambda *_a, **_k: [])
-    monkeypatch.setattr(svc.instagram_interactions, "count_in_range", lambda *_a, **_k: 0)
 
     svc.compute(tenant_id="t-1", year=2026, month=5)
     # Both periods were queried (4+ calls: current taps + current reviews,
