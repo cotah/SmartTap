@@ -8,6 +8,7 @@ import structlog
 from app.db import customers, nfc_tags, rewards, stamps, taps, tenants
 from app.errors import InactiveError, NotFoundError
 from app.services import campaign_service
+from app.services.modules import require_module
 from app.services.stamp_engine import (
     can_award_stamp,
     generate_validation_code,
@@ -71,6 +72,7 @@ def process_tap(ctx: TapContext) -> TapResult:
         raise NotFoundError("Tenant not found")
     if not tenant["is_active"]:
         raise InactiveError("Tenant is no longer active")
+    require_module(tenant, "loyalty")
 
     customer: Row | None = None
     if ctx.magic_link_token:

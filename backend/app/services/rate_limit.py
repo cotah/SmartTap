@@ -2,10 +2,8 @@
 
 A per-process sliding-window counter used to protect a few abuse-sensitive
 PUBLIC endpoints (reward-code validation = brute-force target; customer
-identify = enumeration). Authenticated dashboard endpoints rely on auth +
-tenant scoping; high-volume legitimate endpoints (taps) are intentionally NOT
-limited here to avoid false positives on shared café IPs — those are protected
-at the edge (Cloudflare).
+identify = enumeration; taps = the whole public loyalty write path). Authenticated
+dashboard endpoints rely on auth + tenant scoping.
 
 LIMITATION (documented on purpose): state is per-process, so with multiple
 Railway replicas the effective limit is per-replica, and it resets on deploy.

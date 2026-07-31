@@ -7,6 +7,7 @@ import structlog
 from app.db import customers, tenants
 from app.db.customers import FilterMode, SortMode
 from app.errors import AlreadyRegisteredError, InactiveError, NotFoundError
+from app.services.modules import require_module
 
 log = structlog.get_logger(__name__)
 
@@ -38,6 +39,7 @@ def identify_customer(ctx: IdentifyContext) -> IdentifyResult:
         raise NotFoundError("Tenant not found", detail={"tenant_id": ctx.tenant_id})
     if not tenant["is_active"]:
         raise InactiveError("Tenant is no longer active")
+    require_module(tenant, "loyalty")
 
     existing = customers.get_by_phone(ctx.tenant_id, ctx.phone)
     if existing is not None:

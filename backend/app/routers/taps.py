@@ -1,4 +1,6 @@
-from fastapi import APIRouter, BackgroundTasks, Request
+from typing import Annotated
+
+from fastapi import APIRouter, BackgroundTasks, Depends, Request
 
 from app.schemas.tap import (
     ActiveCampaign,
@@ -10,10 +12,16 @@ from app.schemas.tap import (
     TenantPublic,
 )
 from app.services import visit_thankyou_service
+from app.services.rate_limit import rate_limited
 from app.services.stamp_engine import compute_reward_state, multiplier_for_campaign
 from app.services.tap_service import TapContext, process_tap
 
 router = APIRouter(tags=["taps"])
+
+# Public endpoint, per-IP. 30/min comfortably covers a busy café behind one
+# NAT (legit use is 1-2 taps per visit) while capping scripted abuse. Note:
+# in-memory per process — exact only while prod runs 1 replica x 1 worker.
+_tap_rl = rate_limited("tap", limit=30, window_seconds=60)
 
 
 def _client_ip(request: Request) -> str | None:
@@ -31,6 +39,7 @@ def register_tap(
     body: TapEventIn,
     request: Request,
     background_tasks: BackgroundTasks,
+    _rl: Annotated[None, Depends(_tap_rl)] = None,
 ) -> TapResponse:
     ctx = TapContext(
         tag_uuid=tag_uuid,

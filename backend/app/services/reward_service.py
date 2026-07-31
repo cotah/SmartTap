@@ -4,13 +4,14 @@ from typing import Any
 
 import structlog
 
-from app.db import customers, rewards
+from app.db import customers, rewards, tenants
 from app.errors import (
     AlreadyRedeemedError,
     ExpiredError,
     InvalidCodeError,
     NotFoundError,
 )
+from app.services.modules import require_module
 
 log = structlog.get_logger(__name__)
 
@@ -58,6 +59,12 @@ def validate_and_redeem(
     reward = rewards.get_by_id(reward_id)
     if reward is None:
         raise NotFoundError("Reward not found", detail={"reward_id": reward_id})
+    # Public endpoint: hide the loyalty surface entirely when the tenant's
+    # loyalty module is off (enabled_modules gate, 404 like any unknown id).
+    tenant = tenants.get_by_id(reward["tenant_id"])
+    if tenant is None:
+        raise NotFoundError("Reward not found", detail={"reward_id": reward_id})
+    require_module(tenant, "loyalty")
     if reward["validation_code"] != validation_code:
         raise InvalidCodeError("Validation code does not match")
     return _redeem_checked(reward, redeemed_by_user)

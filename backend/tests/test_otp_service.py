@@ -20,6 +20,18 @@ TENANT = "t-1"
 PHONE = "+353871234567"
 
 
+@pytest.fixture(autouse=True)
+def _loyalty_tenant(monkeypatch: pytest.MonkeyPatch) -> None:
+    """OTP is gated by enabled_modules (loyalty); these tests exercise the OTP
+    rules themselves, so give them a tenant that passes the gate. The gate's
+    own behavior is covered in test_module_gate.py."""
+    monkeypatch.setattr(
+        svc.tenants,
+        "get_by_id",
+        lambda _t: {"id": TENANT, "is_active": True, "enabled_modules": ["loyalty"]},
+    )
+
+
 # ---------------------------------------------------------------------------
 # request_code
 # ---------------------------------------------------------------------------

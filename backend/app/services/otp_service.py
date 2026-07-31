@@ -22,9 +22,10 @@ from datetime import UTC, datetime, timedelta
 
 import structlog
 
-from app.db import customers, otp_codes
-from app.errors import ExpiredError, InvalidCodeError, RateLimitError
+from app.db import customers, otp_codes, tenants
+from app.errors import ExpiredError, InvalidCodeError, NotFoundError, RateLimitError
 from app.services import twilio_sms_client
+from app.services.modules import require_module
 
 log = structlog.get_logger(__name__)
 
@@ -33,6 +34,15 @@ OTP_TTL_MINUTES = 10
 MAX_OTP_ATTEMPTS = 5
 SEND_COOLDOWN_SECONDS = 60
 MAX_SENDS_PER_HOUR = 3
+
+
+def _require_loyalty_tenant(tenant_id: str) -> None:
+    """OTP re-identification is loyalty surface — 404 unless the tenant exists
+    and has the loyalty module on (enabled_modules gate)."""
+    tenant = tenants.get_by_id(tenant_id)
+    if tenant is None:
+        raise NotFoundError("Not found")
+    require_module(tenant, "loyalty")
 
 
 def _hash_code(tenant_id: str, phone: str, code: str) -> str:
@@ -49,6 +59,7 @@ def request_code(*, tenant_id: str, phone: str, now: datetime | None = None) -> 
     the caller can't enumerate members. Rate-limited per phone+tenant.
     """
     current = now or datetime.now(UTC)
+    _require_loyalty_tenant(tenant_id)
 
     # Per phone+tenant cooldown + hourly cap (durable, counted from the DB).
     cooldown_start = current - timedelta(seconds=SEND_COOLDOWN_SECONDS)
@@ -89,6 +100,7 @@ def verify_code(
     it fails the same way a wrong code does — no enumeration oracle on verify.
     """
     current = now or datetime.now(UTC)
+    _require_loyalty_tenant(tenant_id)
     otp = otp_codes.get_latest(tenant_id, phone)
     if otp is None or otp.get("consumed_at"):
         raise InvalidCodeError("Invalid or expired code")
