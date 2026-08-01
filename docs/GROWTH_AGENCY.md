@@ -15,8 +15,14 @@ n8n: `https://n8n-production-db31.up.railway.app`
 | Creative Agent | ✅ Funcionando | `/webhook/smarttap-creative` |
 | Landing Page Agent | ✅ Funcionando (v4 + AOS) | `/webhook/capivarex-landing` |
 
-Landing page de teste ao vivo: `https://www.smarttap.ie/test/test-landing.html`
-(usar sempre `www.` — o apex `smarttap.ie` faz redirect 307 e perde o header CSP)
+> ⚠️ **Atualização 01/08/2026:** os artefatos no repo do SmartTap foram removidos
+> (`apps/web/public/test/` + a regra de CSP permissiva no `next.config.mjs`).
+> O workflow está fail-closed e não escreve mais no repo automaticamente — os
+> arquivos vinham de testes manuais. Se voltar a usar o SmartTap como alvo de
+> publicação, é preciso recriar a pasta `public/test/` E a regra de CSP
+> específica do path (o CSP global atual não libera `unsafe-inline`/`unsafe-eval`).
+
+~~Landing page de teste ao vivo: `https://www.smarttap.ie/test/test-landing.html`~~ (removida 01/08/2026)
 
 ---
 
