@@ -186,8 +186,8 @@ def run_daily(*, now: datetime | None = None) -> ReactivationRunResult:
 def run_for_tenant(
     tenant_id: str, *, now: datetime | None = None
 ) -> TenantReactivationResult:
-    """Run the reactivation pass for a SINGLE tenant — triggered on demand by
-    the WhatsApp bot ("send reactivation to my inactive customers", S5 F1 B).
+    """Run the reactivation pass for a SINGLE tenant — on-demand variant of
+    the daily cron.
 
     Same policy and safety contract as the daily cron (mark-before-send,
     30-day inactivity, 90-day cooldown, GDPR filtered in SQL) — it just scopes

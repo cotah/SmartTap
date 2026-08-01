@@ -12,7 +12,7 @@ import { optInAction } from "./actions";
 import { AlreadyMember } from "./already-member";
 
 const CONSENT_TEXT =
-  "I agree to receive offers and updates from this business via SMS or WhatsApp. " +
+  "I agree to receive offers and updates from this business via SMS or email. " +
   "I can ask to be removed at any time.";
 
 interface Props {
@@ -155,7 +155,7 @@ export function OptInForm({ tenantId, tenantName }: Props) {
           </span>
           <span className="flex-1 text-xs leading-relaxed text-electric-text-muted">
             I agree to receive offers from <strong>{tenantName}</strong> via SMS
-            or WhatsApp. I can ask to be removed at any time.
+            or email. I can ask to be removed at any time.
           </span>
         </label>
         {errors.gdpr_consent ? (

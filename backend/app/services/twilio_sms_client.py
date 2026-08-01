@@ -1,7 +1,7 @@
 """Twilio SMS client (Sprint 5.6 — customer phone OTP).
 
-Same configuration discipline as the other external clients (resend, Meta
-WhatsApp, Google): `is_configured()` gates everything and the client no-ops
+Same configuration discipline as the other external clients (resend, Google):
+`is_configured()` gates everything and the client no-ops
 cleanly without credentials so dev/CI run without a Twilio account.
 
 Single responsibility: send a transactional SMS via the Twilio REST API.

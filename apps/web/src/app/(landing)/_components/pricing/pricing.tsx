@@ -28,8 +28,8 @@ export function Pricing() {
         </h2>
         <p className="max-w-[640px] text-base leading-relaxed text-electric-text-muted md:text-lg">
           Setup fee covers your custom 3D-printed stand, shipped from Dublin.
-          Monthly covers the software, the data hosting, the WhatsApp send,
-          and the founder on email when something breaks.
+          Monthly covers the software, the data hosting, and the founder on
+          email when something breaks.
         </p>
       </header>
 

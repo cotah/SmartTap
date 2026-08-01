@@ -49,7 +49,7 @@ const PLANS: PlanDef[] = [
     customers: "Unlimited customers",
     features: [
       "Everything in Loyalty",
-      "WhatsApp campaigns",
+      "Email campaigns",
       "AI review responses",
       "Priority support",
     ],

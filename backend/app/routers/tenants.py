@@ -1,6 +1,6 @@
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 
 from app.dependencies import get_current_tenant_id, require_active_tenant
 from app.schemas.tenant import (
@@ -88,9 +88,3 @@ def update_settings_endpoint(
         ),
     )
     return TenantSelfResponse(tenant=_to_self(updated))
-
-
-@router.get("/public/tenants/{slug}")
-def get_public_tenant(slug: str) -> dict[str, str]:
-    _ = slug
-    raise HTTPException(status_code=501, detail="Not implemented yet")

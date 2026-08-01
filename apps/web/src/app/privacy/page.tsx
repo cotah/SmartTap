@@ -179,11 +179,6 @@ export default function PrivacyPage() {
                 "SMS delivery of one-time verification codes (account recovery). Phone numbers are used for the code only — never added to any marketing list.",
             },
             {
-              name: "Meta (WhatsApp)",
-              detail:
-                "WhatsApp message delivery — the owner assistant, and review reminders to customers who opted in.",
-            },
-            {
               name: "Anthropic",
               detail:
                 "AI drafting — turns a shop's questions and public review text into draft replies. Processing takes place in the United States under EU Standard Contractual Clauses. Not used to train AI models.",

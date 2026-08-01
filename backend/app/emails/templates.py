@@ -31,7 +31,7 @@ SITE_URL = "https://smarttap.ie"
 SUPPORT_EMAIL = "support@smarttap.ie"
 
 # Dark Electric (hybrid email) palette.
-DARK = "#0A0A0F"  # header strip + CTA text + OTP chip bg
+DARK = "#0A0A0F"  # header strip + CTA text
 CYAN = "#00D4FF"  # fills only — CTA, monogram, step badges
 PAGE_BG = "#EEF1F4"  # cool light grey canvas behind the card
 CARD = "#FFFFFF"
@@ -461,35 +461,6 @@ def monthly_report_email(
     )
 
 
-def whatsapp_otp_email(*, code: str) -> RenderedEmail:
-    """One-time code emailed to an owner linking their WhatsApp number (S5
-    Feature 1). No link CTA — the action is reading the code, shown in a dark
-    chip. Code is digits only; safe to interpolate."""
-    safe_code = _escape(str(code))
-    body_html = (
-        _h1("Your WhatsApp verification code")
-        + '<p style="margin:0 0 16px 0;">Hi there,</p>'
-        + '<p style="margin:0 0 18px 0;">Use this code in WhatsApp to link your number to your SmartTap account:</p>'
-        + f'<p style="margin:0 0 18px 0;"><span bgcolor="{DARK}" style="display:inline-block;background-color:{DARK};color:{CYAN};font-size:30px;font-weight:700;letter-spacing:8px;padding:14px 22px;border-radius:10px;font-family:{FONT};">{safe_code}</span></p>'
-        + f'<p style="margin:0;color:{MUTED};font-size:13px;">This code expires in 10 minutes. If you didn\'t request it, you can ignore this email.</p>'
-    )
-    text = (
-        "Your WhatsApp verification code\n\n"
-        f"Use this code in WhatsApp to link your number: {code}\n\n"
-        "It expires in 10 minutes. If you didn't request it, ignore this email.\n"
-    )
-    return RenderedEmail(
-        subject="Your SmartTap WhatsApp code",
-        html=_smarttap_doc(
-            preheader="Your SmartTap WhatsApp code expires in 10 minutes.",
-            eyebrow="Verification",
-            body_html=body_html,
-            cta=None,
-        ),
-        text=text,
-    )
-
-
 # ---------------------------------------------------------------------------
 # Merchant → customer templates (white-label)
 # ---------------------------------------------------------------------------
@@ -554,47 +525,6 @@ def reactivation_email(
     )
 
 
-def review_nudge_email(
-    *,
-    tenant: dict[str, Any],
-    customer: dict[str, Any],
-    review_url: str,
-    opt_out_url: str,
-) -> RenderedEmail:
-    """Sent on behalf of the merchant to a customer who tapped (earned a stamp)
-    but didn't click the review button within the nudge window (S5 Feature 2)."""
-    business = (tenant.get("name") or "us").strip()
-    customer_name = (customer.get("name") or "").strip()
-    greeting = (
-        f"Hey {_escape(customer_name.split(' ')[0])}," if customer_name else "Hey there,"
-    )
-
-    body_html = (
-        _h1(f"Thanks for visiting {_escape(business)}")
-        + f'<p style="margin:0 0 14px 0;">{greeting}</p>'
-        + f'<p style="margin:0 0 14px 0;">Thanks for stopping by <strong>{_escape(business)}</strong>. If you enjoyed your visit, a quick Google review means the world to a small local business — it takes under a minute.</p>'
-        + '<p style="margin:0 0 14px 0;">Tap the button below to leave one.</p>'
-    )
-    text = (
-        f"Thanks for visiting {business}\n\n"
-        "If you enjoyed your visit, a quick Google review means the world to a "
-        "small local business — it takes under a minute.\n\n"
-        f"Leave a review: {review_url}\n\n"
-        f"Don't email me again: {opt_out_url}\n"
-    )
-    return RenderedEmail(
-        subject=f"Thanks for visiting {business}",
-        html=_merchant_doc(
-            preheader=f"A quick Google review for {business} takes under a minute.",
-            business=business,
-            body_html=body_html,
-            cta=("Leave a review", review_url),
-            opt_out_url=opt_out_url,
-        ),
-        text=text,
-    )
-
-
 def visit_thankyou_email(
     *,
     tenant: dict[str, Any],
@@ -607,7 +537,7 @@ def visit_thankyou_email(
 
     The warm, immediate "thanks for visiting" — it shows the customer their
     stamp progress and (when the merchant has a Google review URL) nudges a
-    review, gently. White-label like reactivation/review_nudge: the "From" is
+    review, gently. White-label like reactivation: the "From" is
     hello@smarttap.ie but the voice is the local business, and the footer
     attributes SmartTap so it's not deceptive.
 
@@ -719,9 +649,7 @@ __all__ = [
     "payment_failed_email",
     "payment_succeeded_email",
     "reactivation_email",
-    "review_nudge_email",
     "subscription_canceled_email",
     "visit_thankyou_email",
     "welcome_email",
-    "whatsapp_otp_email",
 ]

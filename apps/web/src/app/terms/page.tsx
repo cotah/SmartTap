@@ -107,7 +107,7 @@ export default function TermsPage() {
         <LegalText>
           To deliver certain features, you may grant SmartTap access to
           accounts you control on third-party platforms, including Google
-          Business Profile and Meta (WhatsApp).
+          Business Profile.
         </LegalText>
         <LegalText>By granting this access, you confirm that:</LegalText>
         <LegalList

@@ -1,14 +1,14 @@
 """Post-visit thank-you — the real-time email that fires the moment a tap
 earns a stamp.
 
-Sibling in spirit to `review_nudge_service`, but with one defining difference:
-this is NOT a daily cron. The send is triggered synchronously off a single tap
+Unlike the reactivation pass, this is NOT a daily cron. The send is triggered
+synchronously off a single tap
 via FastAPI BackgroundTasks (see `routers/taps.py`), so the customer-facing
 `/t/[uuid]` page never waits on Resend. This module owns the *policy* for that
 single customer; it does NOT own HTTP concerns and never raises into the tap
 request.
 
-Policy (hardcoded for v1, matching how reactivation/review_nudge started):
+Policy (hardcoded for v1, matching how reactivation started):
     THANKYOU_ENABLED   → global kill-switch (config) — the master off lever
     stamp_awarded      → only when this tap actually moved the card
     gdpr_consent       → never email a customer who didn't opt in
@@ -65,8 +65,8 @@ class ThankyouResult:
 
 def _opt_out_url(magic_link_token: str) -> str:
     """Reuses the shared customer opt-out route (`/u/<token>`). Revoking consent
-    there flips gdpr_consent=false, which silences reactivation, review-nudge
-    AND this thank-you — one opt-out covers all merchant-to-customer email."""
+    there flips gdpr_consent=false, which silences reactivation AND this
+    thank-you — one opt-out covers all merchant-to-customer email."""
     base = get_settings().site_url.rstrip("/")
     return f"{base}/u/{magic_link_token}"
 

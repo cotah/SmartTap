@@ -37,8 +37,11 @@ MAX_SENDS_PER_HOUR = 3
 
 
 def _require_loyalty_tenant(tenant_id: str) -> None:
-    """OTP re-identification is loyalty surface — 404 unless the tenant exists
-    and has the loyalty module on (enabled_modules gate)."""
+    """OTP re-identification is loyalty surface — 404 unless Twilio SMS is
+    configured at all (feature off = surface doesn't exist), the tenant exists,
+    and it has the loyalty module on (enabled_modules gate)."""
+    if not twilio_sms_client.is_configured():
+        raise NotFoundError("Not found")
     tenant = tenants.get_by_id(tenant_id)
     if tenant is None:
         raise NotFoundError("Not found")

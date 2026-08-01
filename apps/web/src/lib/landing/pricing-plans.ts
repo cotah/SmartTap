@@ -55,7 +55,7 @@ export const PLANS: Plan[] = [
     customerCap: "Unlimited customers",
     features: [
       "Three NFC stands included",
-      "Campaigns, WhatsApp, monthly reports",
+      "Campaigns and monthly reports",
       "Priority support from the founder",
     ],
   },

@@ -1,8 +1,7 @@
 """DB access for customer phone OTP codes (Sprint 5.6).
 
-Mirrors the owner-bot OTP table (db/whatsapp.py) but scoped by
-(tenant_id, phone): the same number can be a different customer in each
-tenant. Codes are stored hashed; the service owns the verification logic.
+Scoped by (tenant_id, phone): the same number can be a different customer
+in each tenant. Codes are stored hashed; the service owns the verification logic.
 """
 
 from datetime import datetime

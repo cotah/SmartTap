@@ -18,9 +18,7 @@ dependencies = [
     "supabase>=2.10.0",
     "stripe>=11.4.1",
     "resend>=2.6.0",
-    # S5 Feature 1 — WhatsApp owner bot. WhatsApp via the Meta Cloud API uses
-    # plain httpx (already a dep), so no SDK here. Anthropic powers the Sonnet
-    # 4.6 tool-use loop.
+    # Anthropic powers the AI-drafted Google review replies (S5 Feature 3).
     "anthropic>=0.40.0",
     "python-jose[cryptography]>=3.3.0",
     "structlog>=24.4.0",

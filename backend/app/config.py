@@ -32,22 +32,13 @@ class Settings(BaseSettings):
     resend_api_key: str = Field(default="")
     resend_from_email: str = Field(default="hello@smarttap.ie")
 
-    # Sprint 5.6 — customer phone OTP via Twilio SMS. Its own Twilio account
-    # (Sprint 5 moved the owner bot to Meta WhatsApp, which can't send SMS).
-    # Empty values keep it disabled (client no-ops, like resend) so dev/CI run
-    # without credentials; activate by setting all three.
+    # Sprint 5.6 — customer phone OTP via Twilio SMS. Empty values keep it
+    # disabled (client no-ops, like resend) so dev/CI run without credentials;
+    # activate by setting all three.
     twilio_account_sid: str = Field(default="")
     twilio_auth_token: str = Field(default="")
     twilio_sms_from: str = Field(default="")  # E.164, e.g. +353...
 
-    # S5 Feature 1 — WhatsApp bot via Meta WhatsApp Business Cloud API (direct,
-    # no Twilio). Empty values keep the integration disabled (client no-ops,
-    # like resend) so dev/CI run without credentials.
-    whatsapp_access_token: str = Field(default="")  # Bearer token (system user/app)
-    whatsapp_phone_number_id: str = Field(default="")  # number id on the Cloud API
-    whatsapp_app_secret: str = Field(default="")  # validates X-Hub-Signature-256
-    whatsapp_verify_token: str = Field(default="")  # our secret for the GET handshake
-    whatsapp_api_version: str = Field(default="v21.0")
     anthropic_api_key: str = Field(default="")
     anthropic_model: str = Field(default="claude-sonnet-4-6")
 

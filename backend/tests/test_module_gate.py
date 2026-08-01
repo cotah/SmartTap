@@ -103,6 +103,16 @@ def test_process_tap_raises_404_for_reviews_only_tenant(
 # --- OTP --------------------------------------------------------------------
 
 
+@pytest.fixture()
+def _twilio_on(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The module-gate tests below must reach the enabled_modules check, so
+    let them through the earlier Twilio-configured gate."""
+    monkeypatch.setattr(
+        otp_service.twilio_sms_client, "is_configured", lambda: True
+    )
+
+
+@pytest.mark.usefixtures("_twilio_on")
 def test_otp_request_raises_404_for_reviews_only_tenant(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -111,6 +121,7 @@ def test_otp_request_raises_404_for_reviews_only_tenant(
         otp_service.request_code(tenant_id=TENANT, phone=PHONE)
 
 
+@pytest.mark.usefixtures("_twilio_on")
 def test_otp_request_raises_404_for_unknown_tenant(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -119,10 +130,35 @@ def test_otp_request_raises_404_for_unknown_tenant(
         otp_service.request_code(tenant_id=TENANT, phone=PHONE)
 
 
+@pytest.mark.usefixtures("_twilio_on")
 def test_otp_verify_raises_404_for_reviews_only_tenant(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(tenants, "get_by_id", lambda _t: REVIEWS_ONLY)
+    with pytest.raises(NotFoundError):
+        otp_service.verify_code(tenant_id=TENANT, phone=PHONE, code="1234")
+
+
+def test_otp_request_raises_404_when_twilio_not_configured(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """No Twilio credentials → the OTP surface doesn't exist, even for a
+    loyalty tenant. Must 404 before touching the tenant or sending anything."""
+    monkeypatch.setattr(
+        otp_service.twilio_sms_client, "is_configured", lambda: False
+    )
+    monkeypatch.setattr(tenants, "get_by_id", lambda _t: WITH_LOYALTY)
+    with pytest.raises(NotFoundError):
+        otp_service.request_code(tenant_id=TENANT, phone=PHONE)
+
+
+def test_otp_verify_raises_404_when_twilio_not_configured(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        otp_service.twilio_sms_client, "is_configured", lambda: False
+    )
+    monkeypatch.setattr(tenants, "get_by_id", lambda _t: WITH_LOYALTY)
     with pytest.raises(NotFoundError):
         otp_service.verify_code(tenant_id=TENANT, phone=PHONE, code="1234")
 
