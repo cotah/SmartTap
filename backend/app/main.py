@@ -115,8 +115,18 @@ def create_app() -> FastAPI:
         allow_origins=settings.cors_origins_list,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allow_headers=["*"],
+        # Everything the web client actually sends: Supabase JWT, JSON bodies,
+        # and the tenant-scoping header set by packages/api client.ts.
+        allow_headers=["Authorization", "Content-Type", "X-Tenant-Id"],
     )
+
+    @app.middleware("http")
+    async def add_security_headers(request: Request, call_next):  # type: ignore[no-untyped-def]
+        # Railway's edge terminates TLS but doesn't inject these itself.
+        response = await call_next(request)
+        response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        return response
 
     @app.exception_handler(BusinessError)
     async def handle_business_error(_request: Request, exc: BusinessError) -> JSONResponse:
