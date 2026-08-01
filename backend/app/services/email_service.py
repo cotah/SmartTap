@@ -14,6 +14,7 @@ caller can assume these functions always return cleanly.
 
 from typing import Any
 
+import sentry_sdk
 import structlog
 
 from app.db import tenant_members, users
@@ -71,9 +72,12 @@ def _safe_send(
             attachments=attachments,
         )
     except Exception as exc:
-        # Sentry will pick this up via structlog → its integration; we don't
-        # raise because the surrounding business operation (signup, webhook)
-        # must succeed regardless of email deliverability.
+        # structlog uses PrintLogger (stdout only) — it never reaches Sentry's
+        # logging integration, so we capture explicitly. capture_exception is
+        # a safe no-op when Sentry isn't initialized (dev/CI). We don't raise
+        # because the surrounding business operation (signup, webhook) must
+        # succeed regardless of email deliverability.
+        sentry_sdk.capture_exception(exc)
         log.exception(
             "email_send_failed",
             event_name=event_name,

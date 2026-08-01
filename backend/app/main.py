@@ -28,6 +28,40 @@ from app.routers import (
     webhooks,
 )
 
+# Routes whose URL carries a secret. The uvicorn access log (and, via Sentry's
+# logging integration, error-event breadcrumbs) records the full request line,
+# so these get their sensitive part masked before any handler sees them.
+_OPT_OUT_PREFIX = "/v1/customers/opt-out/"
+_GOOGLE_CALLBACK = "/v1/google/callback"
+
+
+def _redact_access_path(path: str) -> str:
+    if path.startswith(_OPT_OUT_PREFIX):
+        # The magic-link token is a permanent customer credential.
+        return _OPT_OUT_PREFIX + "[redacted]"
+    if path.startswith(_GOOGLE_CALLBACK) and "?" in path:
+        # Query carries the OAuth authorization code + signed state.
+        return _GOOGLE_CALLBACK + "?[redacted]"
+    return path
+
+
+class _RedactAccessLog(logging.Filter):
+    """Mask secret-bearing URLs in uvicorn access-log lines.
+
+    We deliberately keep the access log on (it's our only per-request
+    delivery trace — e.g. how missing Meta webhooks were diagnosed) and
+    redact instead of dropping lines. uvicorn.access records carry
+    args = (client_addr, method, full_path, http_version, status_code).
+    """
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        args = record.args
+        if isinstance(args, tuple) and len(args) == 5 and isinstance(args[2], str):
+            redacted = _redact_access_path(args[2])
+            if redacted != args[2]:
+                record.args = (args[0], args[1], redacted, args[3], args[4])
+        return True
+
 
 def _configure_logging(level: str) -> None:
     logging.basicConfig(level=level)
@@ -36,6 +70,12 @@ def _configure_logging(level: str) -> None:
     # those reach the logs.
     logging.getLogger("httpx").setLevel(logging.WARNING)
     logging.getLogger("httpcore").setLevel(logging.WARNING)
+    # stripe logs request payloads at DEBUG and urllib3 gets similarly verbose
+    # — pin them so a LOG_LEVEL=DEBUG incident-debugging session can't leak
+    # payment payloads into Railway logs.
+    logging.getLogger("stripe").setLevel(logging.WARNING)
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
+    logging.getLogger("uvicorn.access").addFilter(_RedactAccessLog())
     structlog.configure(
         processors=[
             structlog.processors.add_log_level,
@@ -57,6 +97,10 @@ def create_app() -> FastAPI:
             dsn=settings.sentry_dsn,
             environment=settings.app_env,
             traces_sample_rate=0.1,
+            # Never attach request bodies to events — identify/identify-verify
+            # bodies carry phone numbers and live OTP codes, and Sentry's
+            # default scrubber doesn't cover `phone`/`code` keys.
+            max_request_body_size="never",
         )
 
     app = FastAPI(

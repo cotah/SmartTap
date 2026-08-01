@@ -15,10 +15,10 @@ out/
 *.tsbuildinfo
 .turbo/
 
-# Environments
+# Environments — cover every .env variant (.env.production, .env.staging,
+# .env.local, ...); only the example templates are tracked.
 .env
-.env.local
-.env.*.local
+.env.*
 !.env.example
 
 # IDE
